@@ -10,7 +10,7 @@ type CircleBadgeProps = {
 
 function CircleBadge({
   diameter = 18,
-  bg = "#D8BF72",      // soft yellow/gold
+  bg = "#D8BF72",      
   dotColor = "#FFFFFF",
   dotSize = 3,
   gap = 3,
@@ -37,4 +37,4 @@ function CircleBadge({
     </Box>
   );
 }
-export  default CircleBadge
+export  default CircleBadge;
