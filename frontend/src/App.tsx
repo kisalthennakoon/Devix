@@ -2,11 +2,11 @@ import { Box, Toolbar } from "@mui/material"
 import { Route, Routes } from "react-router-dom"
 import Transformers from "./pages/tranformers"
 import Settings from "./pages/settings"
+import Trial from "./pages/trial"
 import Sidebar from "./components/sideBar"
 
 
 function App() {
-
   return (
     <Box sx={{ display: "flex" }}>
       <Sidebar />
@@ -15,6 +15,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Transformers />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/trial" element={<Trial />} />
         </Routes>
       </Box>
     </Box>
