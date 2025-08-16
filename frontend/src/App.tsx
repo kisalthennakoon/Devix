@@ -3,6 +3,7 @@ import { Route, Routes } from "react-router-dom"
 import Transformers from "./pages/tranformers"
 import Settings from "./pages/settings"
 import Sidebar from "./components/sideBar"
+import TestTransformersPage from "./pages/test"
 
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Transformers />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/test" element={<TestTransformersPage />} />
         </Routes>
       </Box>
     </Box>
