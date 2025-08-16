@@ -3,7 +3,7 @@ package com.devix.backend.service.Impl;
 import com.devix.backend.dto.TransformerDto;
 import com.devix.backend.model.Transformer;
 import com.devix.backend.repo.TransformerRepo;
-import com.devix.backend.service.DriveService;
+import com.devix.backend.service.GoogleDriveService;
 import com.devix.backend.service.MapperService;
 import com.devix.backend.service.TransformerService;
 import lombok.extern.slf4j.Slf4j;
@@ -21,10 +21,9 @@ public class TransformerServiceImpl implements TransformerService {
     private TransformerRepo transformerRepo;
 
     @Autowired
-    private MapperService mapperService;
+    private GoogleDriveService googleDriveService;
 
-    @Autowired
-    private DriveService driveService;
+    private final MapperService mapperService = MapperService.INSTANCE;
 
     @Override
     public void createTransformer(TransformerDto transformerDto) throws Exception {
@@ -35,18 +34,34 @@ public class TransformerServiceImpl implements TransformerService {
             if (transformerRepo.findByTransformerNo(transformerDto.getTransformerNo()) != null) {
                 throw new Exception("Transformer with this number already exists");
             }
-            MultipartFile multipartFile = transformerDto.getTransformerBaseImage();
-            java.io.File tempFile = java.io.File.createTempFile("upload-", multipartFile.getOriginalFilename());
-            multipartFile.transferTo(tempFile);
-
-            String link = driveService.uploadFile(tempFile);
-            transformerDto.setTransformerBaseImageUrl(link);
 
             transformerRepo.save(mapperService.toTransformerEntity(transformerDto));
             log.info("Transformer created");
         }catch (Exception e) {
             log.error("Error creating transformer: {}", e.getMessage());
             throw new Exception("Error creating transformer: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void addBaseImage(String transformerNo, MultipartFile baseImage) throws Exception {
+        try {
+            log.info("Adding base image for transformer: {}", transformerNo);
+            Transformer transformer = transformerRepo.findByTransformerNo(transformerNo);
+            if (transformer == null) {
+                throw new Exception("Transformer not found");
+            }
+            //MultipartFile multipartFile = transformerDto.getTransformerBaseImage();
+//            java.io.File tempFile = java.io.File.createTempFile("upload-", baseImage.getOriginalFilename());
+//            baseImage.transferTo(tempFile);
+
+            String imageUrl = googleDriveService.uploadFile(baseImage);
+            transformer.setTransformerBaseImageUrl(imageUrl);
+            transformerRepo.save(transformer);
+            log.info("Base image added successfully");
+        } catch (Exception e) {
+            log.error("Error adding base image: {}", e.getMessage());
+            throw new Exception("Error adding base image: " + e.getMessage());
         }
     }
 

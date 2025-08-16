@@ -11,7 +11,7 @@ public class TransformerDto {
     private String transformerPoleNo;
     private String transformerRegion;
     private String transformerLocation;
-    private MultipartFile transformerBaseImage;
+
     private String transformerBaseImageUrl;
 
 }
