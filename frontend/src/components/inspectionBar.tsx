@@ -17,9 +17,10 @@ interface InspectionDetails {
 
 type InspectionBarProps = {
     inspectionDetails: InspectionDetails;
+    onBaselineClick?: () => void;
 };
 
-function InspectionBar({ inspectionDetails }: InspectionBarProps) {
+function InspectionBar({ inspectionDetails, onBaselineClick }: InspectionBarProps) {
     return (
         <Box sx={{ backgroundColor: '#ffffffff', boxShadow: 5, borderRadius: 2, p: 2 }}>
 
@@ -84,10 +85,14 @@ function InspectionBar({ inspectionDetails }: InspectionBarProps) {
                         </Box>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, backgroundColor: '#e0e0e0', borderRadius: 2, p: 1 }}>
-                        <Typography sx={{ display: 'flex', alignItems: 'center', mr: 1 }}>
-                            <ImageIcon sx={{ mr: 1 }} />
+                        <Button
+                            size="small"
+                            startIcon={<ImageIcon />}
+                            onClick={onBaselineClick}
+                            sx={{ mr: 1, textTransform: 'none' }}
+                        >
                             Baseline Image
-                        </Typography>
+                        </Button>
                         <IconButton aria-label="view" color="primary" onClick={() => alert('View clicked!')} sx={{ mr: 1 }}>
                             <VisibilityIcon />
                         </IconButton>
