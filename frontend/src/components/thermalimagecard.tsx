@@ -10,7 +10,7 @@ const colors = {
   chipBorder: "#F6D9A1",
   chipText: "#B88700",
   track: "#eeeeee",
-  active: "#F6D9A1", // yellow progress color
+  active: "#F6D9A1", 
 };
 
 function ThermalImageCard() {
@@ -26,7 +26,9 @@ function ThermalImageCard() {
         boxShadow: 5,
         borderRadius: 2,
         p: 3,
-        width: "100%", // parent controls final column width
+        width: "100%",
+        maxWidth: 520,
+        alignSelf: "flex-start", 
       }}
     >
       {/* Title */}
@@ -67,7 +69,7 @@ function ThermalImageCard() {
             <MenuItem value="Sunny">Sunny</MenuItem>
             <MenuItem value="Cloudy">Cloudy</MenuItem>
             <MenuItem value="Rainy">Rainy</MenuItem>
-            <MenuItem value="Windy">Windy</MenuItem>
+            
           </Select>
         </FormControl>
 

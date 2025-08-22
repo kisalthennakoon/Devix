@@ -1,6 +1,6 @@
-import { Typography, Box } from "@mui/material";
-import TransformerTable from "../components/TestComponent";
-import type { TransformerDetails } from "../components/TestComponent"; 
+// import { Typography, Box } from "@mui/material";
+// import TransformerTable from "../components/transformerTable";
+// import type { TransformerDetails } from "../components/transformerTable"; 
 
 
 
@@ -24,17 +24,17 @@ const transformersData: TransformerDetails[] = [
 ];
 
 
-function TestTransformersPage() {
-  return (
-    <div>
-      <Box>
-        <Typography variant="h4">Transformers</Typography>
-      </Box>
-      <Box sx={{ marginTop: 5 }}>
-        <TransformerTable transformers={transformersData} />
-      </Box>
-    </div>
-  );
-}
+// function TestTransformersPage() {
+//   return (
+//     <div>
+//       <Box>
+//         <Typography variant="h4">Transformers</Typography>
+//       </Box>
+//       <Box sx={{ marginTop: 5 }}>
+//         <TransformerTable transformers={transformersData} />
+//       </Box>
+//     </div>
+//   );
+// }
 
-export default TestTransformersPage;
+// export default TestTransformersPage;

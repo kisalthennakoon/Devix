@@ -1,10 +1,12 @@
 import { Box, Toolbar } from "@mui/material"
 import { Route, Routes } from "react-router-dom"
-import Transformers from "./pages/inspectionTest"
 import Settings from "./pages/settings"
-import Trial from "./pages/trial"
+//import Trial from "./pages/trial"
 import Sidebar from "./components/sideBar"
-import TestTransformersPage from "./pages/test"
+//import TestTransformersPage from "./pages/test"
+import InspectionTest from "./pages/inspectionTest"
+import TransformerTable from "./components/transformerTable"
+import Transformers from "./pages/tranformers"
 
 
 function App() {
@@ -17,9 +19,9 @@ function App() {
           <Route path="/" element={<Transformers />} />
           <Route path="/settings" element={<Settings />} />
 
-          <Route path="/test" element={<TestTransformersPage />} />
+          {/* <Route path="/test" element={<TestTransformersPage />} /> */}
 
-          <Route path="/trial" element={<Trial />} />
+          {/* <Route path="/trial" element={<Trial />} /> */}
 
         </Routes>
       </Box>
