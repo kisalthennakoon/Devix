@@ -5,7 +5,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 // Updated import for GsonFactory
-import com.google.api.client.json.gson.GsonFactory; 
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
@@ -22,8 +22,8 @@ import java.util.List;
 
 @Configuration
 public class GoogleDriveConfig {
+
     private static final String APPLICATION_NAME = "DevixDrive";
-    // Updated to use GsonFactory
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
     private static final String TOKENS_DIRECTORY_PATH = "src/main/resources";
 

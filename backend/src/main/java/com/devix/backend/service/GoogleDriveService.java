@@ -1,15 +1,13 @@
 package com.devix.backend.service;
 
-import com.devix.backend.Config.GoogleDriveConfig;
+
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import com.google.api.client.http.FileContent;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -17,8 +15,11 @@ import java.util.Collections;
 @Service
 public class GoogleDriveService {
 
-    @Autowired
-    private Drive drive;
+    private final Drive drive;
+
+    public GoogleDriveService(Drive drive) {
+        this.drive = drive;
+    }
 
     public String uploadFile(MultipartFile multipartFile) throws IOException {
         // Convert MultipartFile → temp file

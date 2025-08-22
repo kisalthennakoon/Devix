@@ -22,5 +22,7 @@ public class Transformer {
     private String transformerPoleNo;
     private String transformerRegion;
     private String transformerLocation;
-    private String transformerBaseImageUrl;
+    private String baseImageSunnyUrl;
+    private String baseImageRainyUrl;
+    private String baseImageCloudyUrl;
 }

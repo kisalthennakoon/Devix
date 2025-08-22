@@ -3,7 +3,6 @@ package com.devix.backend.controller;
 import com.devix.backend.dto.TransformerRequestDto;
 import com.devix.backend.service.TransformerService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,12 +13,15 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/transformer")
 public class TransformerController {
 
-    @Autowired
-    private TransformerService transformerService;
+    private final TransformerService transformerService;
+
+    public TransformerController(TransformerService transformerService) {
+        this.transformerService = transformerService;
+    }
 
     @PostMapping("/create")
     public ResponseEntity<?> createTransformer(@RequestBody TransformerRequestDto transformerRequestDto) {
-        log.info("Creating transformer in Controller " + transformerRequestDto);
+        log.info("Creating transformer in Controller {}", transformerRequestDto);
         try{
             transformerService.createTransformer(transformerRequestDto);
             return ResponseEntity.ok("Transformer created successfully");
@@ -30,10 +32,14 @@ public class TransformerController {
     }
 
     @PutMapping(value = "/addBaseImage/{transformerNo}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> addBaseImage(@PathVariable String transformerNo, @RequestParam("baseImage") MultipartFile baseImage) {
+    public ResponseEntity<?> addBaseImage(@PathVariable("transformerNo") String transformerNo,
+                                          @RequestParam("baseImageSunny") MultipartFile baseImageSunny,
+                                          @RequestParam("baseImageCloudy") MultipartFile baseImageCloudy,
+                                          @RequestParam("baseImageRainy") MultipartFile baseImageRainy) {
+
         log.info("Adding base image for transformer: {}", transformerNo);
         try {
-            transformerService.addBaseImage(transformerNo, baseImage);
+            transformerService.addBaseImage(transformerNo, baseImageSunny, baseImageCloudy, baseImageRainy);
             return ResponseEntity.ok("Base image added successfully");
         } catch (Exception e) {
             log.error("Error adding base image: {}", e.getMessage(), e);
@@ -49,6 +55,17 @@ public class TransformerController {
         } catch (Exception e) {
             log.error("Error fetching transformers: {}", e.getMessage(), e);
             return ResponseEntity.status(500).body("Error fetching transformers: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/get/{transformerNo}")
+    public ResponseEntity<?> getBaseImages(@PathVariable("transformerNo") String transformerNo) {
+        log.info("Fetching base images for transformer: {}", transformerNo);
+        try {
+            return ResponseEntity.ok(transformerService.getBaseImage(transformerNo));
+        } catch (Exception e) {
+            log.error("Error fetching base images: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body("Error fetching base images: " + e.getMessage());
         }
     }
 }

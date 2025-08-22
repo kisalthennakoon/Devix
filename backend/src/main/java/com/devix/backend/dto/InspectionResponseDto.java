@@ -9,5 +9,6 @@ public class InspectionResponseDto {
     private String inspectionDate;
     private String inspectionTime;
     private String inspectionBranch;
-
+    private String transformerNo;
+    private String inspectionStatus;
 }

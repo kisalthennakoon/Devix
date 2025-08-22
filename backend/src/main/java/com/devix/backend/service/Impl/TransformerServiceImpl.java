@@ -8,23 +8,25 @@ import com.devix.backend.service.GoogleDriveService;
 import com.devix.backend.service.MapperService;
 import com.devix.backend.service.TransformerService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
 public class TransformerServiceImpl implements TransformerService {
 
-    @Autowired
-    private TransformerRepo transformerRepo;
+    private final TransformerRepo transformerRepo;
+    private final GoogleDriveService googleDriveService;
+    private final MapperService mapperService;
 
-    @Autowired
-    private GoogleDriveService googleDriveService;
-
-    private final MapperService mapperService = MapperService.INSTANCE;
+    public TransformerServiceImpl(TransformerRepo transformerRepo, GoogleDriveService googleDriveService) {
+        this.transformerRepo = transformerRepo;
+        this.googleDriveService = googleDriveService;
+        this.mapperService = MapperService.INSTANCE;
+    }
 
     @Override
     public void createTransformer(TransformerRequestDto transformerRequestDto) throws Exception {
@@ -45,7 +47,7 @@ public class TransformerServiceImpl implements TransformerService {
     }
 
     @Override
-    public void addBaseImage(String transformerNo, MultipartFile baseImage) throws Exception {
+    public void addBaseImage(String transformerNo, MultipartFile baseImageSunny, MultipartFile baseImageCloudy, MultipartFile baseImageRainy) throws Exception {
         try {
             log.info("Adding base image for transformer: {}", transformerNo);
             Transformer transformer = transformerRepo.findByTransformerNo(transformerNo);
@@ -53,8 +55,14 @@ public class TransformerServiceImpl implements TransformerService {
                 throw new Exception("Transformer not found");
             }
 
-            String imageUrl = googleDriveService.uploadFile(baseImage);
-            transformer.setTransformerBaseImageUrl(imageUrl);
+            String sunnyImageUrl = googleDriveService.uploadFile(baseImageSunny);
+            String cloudyImageUrl = googleDriveService.uploadFile(baseImageCloudy);
+            String rainyImageUrl = googleDriveService.uploadFile(baseImageRainy);
+
+            transformer.setBaseImageSunnyUrl(sunnyImageUrl);
+            transformer.setBaseImageCloudyUrl(cloudyImageUrl);
+            transformer.setBaseImageRainyUrl(rainyImageUrl);
+
             transformerRepo.save(transformer);
             log.info("Base image added successfully");
         } catch (Exception e) {
@@ -122,6 +130,25 @@ public class TransformerServiceImpl implements TransformerService {
         } catch (Exception e) {
             log.error("Error deleting transformer: {}", e.getMessage());
             throw new Exception("Error deleting transformer: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Map<String, String> getBaseImage(String transformerNo) throws Exception {
+        try {
+            log.info("Fetching base image for transformer: {}", transformerNo);
+            Transformer transformer = transformerRepo.findByTransformerNo(transformerNo);
+            if (transformer == null) {
+                throw new Exception("Transformer not found");
+            }
+            return Map.of(
+                    "sunny", transformer.getBaseImageSunnyUrl(),
+                    "cloudy", transformer.getBaseImageCloudyUrl(),
+                    "rainy", transformer.getBaseImageRainyUrl()
+            );
+        } catch (Exception e) {
+            log.error("Error fetching base image: {}", e.getMessage());
+            throw new Exception("Error fetching base image: " + e.getMessage());
         }
     }
 
