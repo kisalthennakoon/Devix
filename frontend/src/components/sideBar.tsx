@@ -21,6 +21,7 @@ const drawerWidth = 240;
 const menuItems = [
     { text: "Transformers", icon: <FlashOn />, path: "/" },
     { text: "Settings", icon: <SettingsIcon />, path: "/settings" },
+    { text: "Trial", icon: <SettingsIcon />, path: "/trial" },
 ];
 
 const Sidebar: React.FC = () => {
