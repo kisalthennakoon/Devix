@@ -1,4 +1,19 @@
-import { Typography, Box, Button, TextField, Select, MenuItem, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import {
+  Typography,
+  Box,
+  Button,
+  TextField,
+  Select,
+  MenuItem,
+  ToggleButton,
+  ToggleButtonGroup,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "@mui/material";
+import axios from "axios";
+import { useEffect } from "react";
 import { useState } from "react";
 
 // Interface for a transformer
@@ -12,9 +27,10 @@ export interface TransformerDetails {
 // Props type
 type TransformerTableProps = {
   transformers: TransformerDetails[];
+  onView?: (t: TransformerDetails) => void;
 };
 
-function TransformerTable({ transformers }: TransformerTableProps) {
+function TransformerTable({ transformers, onView }: TransformerTableProps) {
   const [view, setView] = useState<"transformers" | "inspections">("transformers");
 
   // Filter states
@@ -22,10 +38,29 @@ function TransformerTable({ transformers }: TransformerTableProps) {
   const [searchBy, setSearchBy] = useState<"no" | "pole" | "region" | "type">("no");
   const [regionFilter, setRegionFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
+  const [transformersData, setTransformersData] = useState<TransformerDetails[]>([]);
+
+useEffect(() => {
+  axios.get("http://localhost:8080/api/transformer/getAll")
+    .then((res) => setTransformersData(res.data))
+    .catch((err) => console.error("Failed to fetch transformers:", err));
+}, []);
 
   // Pagination states
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;
+
+
+
+  // Dialog states
+  const [open, setOpen] = useState(false);
+  const [newTransformer, setNewTransformer] = useState({
+    region: "",
+    no: "",
+    pole: "",
+    type: "",
+    location: "",
+  });
 
   const handleViewChange = (
     event: React.MouseEvent<HTMLElement>,
@@ -66,6 +101,7 @@ function TransformerTable({ transformers }: TransformerTableProps) {
           <Button
             variant="contained"
             sx={{ bgcolor: "primary.main", "&:hover": { bgcolor: "secondary.main" } }}
+            onClick={() => setOpen(true)}
           >
             Add Transformer
           </Button>
@@ -181,7 +217,9 @@ function TransformerTable({ transformers }: TransformerTableProps) {
             <Box sx={{ flex: 1 }}>{t.region}</Box>
             <Box sx={{ flex: 1 }}>{t.type}</Box>
             <Box sx={{ width: 100 }}>
-              <Button variant="contained" size="small">View</Button>
+              <Button variant="contained" size="small" onClick={() => onView?.(t)}>
+                View
+              </Button>
             </Box>
           </Box>
         ))}
@@ -215,8 +253,82 @@ function TransformerTable({ transformers }: TransformerTableProps) {
           </Button>
         </Box>
       )}
+     {/* Add Transformer Dialog */}
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Add Transformer</DialogTitle>
+        <DialogContent
+          sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}
+        >
+          <Select
+            value={newTransformer.region}
+            onChange={(e) =>
+              setNewTransformer({ ...newTransformer, region: e.target.value })
+            }
+            displayEmpty
+          >
+            <MenuItem value="">Select Region</MenuItem>
+            <MenuItem value="Nugegoda">Nugegoda</MenuItem>
+            <MenuItem value="Maharagama">Maharagama</MenuItem>
+          </Select>
+
+          <TextField
+            label="Transformer No"
+            value={newTransformer.no}
+            onChange={(e) =>
+              setNewTransformer({ ...newTransformer, no: e.target.value })
+            }
+          />
+          <TextField
+            label="Pole No"
+            value={newTransformer.pole}
+            onChange={(e) =>
+              setNewTransformer({ ...newTransformer, pole: e.target.value })
+            }
+          />
+
+          <Select
+            value={newTransformer.type}
+            onChange={(e) =>
+              setNewTransformer({ ...newTransformer, type: e.target.value })
+            }
+            displayEmpty
+          >
+            <MenuItem value="">Select Type</MenuItem>
+            <MenuItem value="Bulk">Bulk</MenuItem>
+            <MenuItem value="Distribution">Distribution</MenuItem>
+          </Select>
+
+          <TextField
+            label="Location Details"
+            value={newTransformer.location}
+            onChange={(e) =>
+              setNewTransformer({ ...newTransformer, location: e.target.value })
+            }
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpen(false)} color="secondary">
+            Cancel
+          </Button>
+          <Button
+            onClick={() => {
+              console.log("Transformer Added:", newTransformer);
+              setOpen(false);
+            }}
+            variant="contained"
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
+
 }
 
 export default TransformerTable;

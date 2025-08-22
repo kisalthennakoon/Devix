@@ -18,15 +18,15 @@ const transformerDetails = {
     location: "Keels, Embuldeniya"
 };
 
-function Transformers() {
+function InspectionTest() {
     return (
         <div>
             <Box sx={{ marginTop: 1 }}>
-                <TransformerHead transformerDetails={transformerDetails} />
+                <TransformerHead transformerDetails={transformerDetails} onBaselineClick={() => alert('Baseline Image clicked!')} />
             </Box>
         <TransformerInspections />
         </div>
     );
 }
 
-export default Transformers;
+export default InspectionTest;

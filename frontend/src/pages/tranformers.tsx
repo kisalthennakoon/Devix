@@ -1,42 +1,116 @@
-import React from "react";
-import { Box, Typography} from "@mui/material";
-import InspectionBar from "../components/inspectionBar";
-import ThermalImageCard from "../components/thermalimagecard";
+import React, { useState } from "react";
+import { Box, Typography } from "@mui/material";
+import TransformerTable from "../components/transformerTable";
+import TransformerHead from "../components/transformerHead";
+import { TransformerInspections } from "../components/transformerInspections";
+import type { TransformerDetails } from "../components/transformerTable";
+import InspectionBar from "../components/inspectionBar";         
+import ThermalImageCard from "../components/thermalimagecard";    
 
 
-const inspectionDetails = {
-    id: "0123456",
-    transformerNo: "AZ-123",
-    poleNo: "2023-10-01",
-    branch: "Nugegoda",
-    inspectedBy: "John Doe",
-    updatedDate: "2023-10-02",
-    updatedTime: "10:00 AM",
-    status: "In Progress"
-};
+
+
+const transformersData: TransformerDetails[] = [
+  { no: "AZ-8890", pole: "EN-122-A", region: "Nugegoda", type: "Bulk" },
+  { no: "AZ-1649", pole: "EN-122-A", region: "Nugegoda", type: "Bulk" },
+  { no: "AZ-7316", pole: "EN-122-B", region: "Nugegoda", type: "Bulk" },
+  { no: "AZ-4613", pole: "EN-122-B", region: "Maharagama", type: "Bulk" },
+  { no: "AX-8993", pole: "EN-122-A", region: "Nugegoda", type: "Distribution" },
+  { no: "AY-8790", pole: "EN-122-B", region: "Maharagama", type: "Distribution" },
+  { no: "AY-8798", pole: "EN-122-A", region: "Maharagama", type: "Distribution" },
+  { no: "AY-8799", pole: "EN-122-B", region: "Maharagama", type: "Distribution" },
+  { no: "AZ-88901", pole: "EN-122-A", region: "Nugegoda", type: "Bulk" },
+  { no: "AZ-16491", pole: "EN-122-A", region: "Nugegoda", type: "Bulk" },
+  { no: "AZ-731611", pole: "EN-122-B", region: "Nugegoda", type: "Bulk" },
+  { no: "AZ-4613111", pole: "EN-122-B", region: "Maharagama", type: "Bulk" },
+  { no: "AX-89931111", pole: "EN-122-A", region: "Nugegoda", type: "Distribution" },
+  { no: "AY-87902222", pole: "EN-122-B", region: "Maharagama", type: "Distribution" },
+  { no: "AY-87981123", pole: "EN-122-A", region: "Maharagama", type: "Distribution" },
+  { no: "AY-87990988", pole: "EN-122-B", region: "Maharagama", type: "Distribution" },
+];
+
+
 
 function Transformers() {
-    return (
-        <div>
-            <Box>
-                <Typography variant="h4">Transformer</Typography>
-            </Box>
-            <Box sx={{ marginTop: 5 }}>
-                <InspectionBar inspectionDetails={inspectionDetails} />
-            </Box>
+  const [selected, setSelected] = useState<TransformerDetails | null>(null);
+  type SelectedInspection = {
+  id: string;
+  inspectionNo: string;
+  inspectedDate: string;
+  maintenanceDate: string | null;
+  status: "completed" | "progress" | "pending";
+  isFavorite: boolean;
+};
+const [selectedInspection, setSelectedInspection] = useState<SelectedInspection | null>(null); // NEW
+  // adapter to satisfy your existing TransformerHead props shape
+  const toHeadProps = (t: TransformerDetails) => ({
+    id: t.no,
+    transformerNo: t.no,
+    poleNo: t.pole,
+    branch: t.region,
+    inspectedBy: "-",
+    updatedDate: "-",
+    updatedTime: "-",
+    status: "-",
+    capacity: "-",
+    noOfFreeders: "-",
+    type: t.type,
+    location: "-",
+  });
 
-          
-<Box sx={{ mt: 3, display: "flex", justifyContent: "flex-start", alignItems: "flex-start" }}>
-  <Box sx={{ flex: { xs: "1 1 100%", md: "0 0 360px" }, maxWidth: { md: 360 } }}>
+  const toInspectionBarProps = (t: TransformerDetails, i: SelectedInspection) => ({
+  id: i.inspectionNo,
+  transformerNo: t.no,
+  poleNo: t.pole,
+  branch: t.region,
+  inspectedBy: "-",
+  updatedDate: i.inspectedDate,
+  updatedTime: "",
+  status:
+    i.status === "progress"
+      ? "In Progress"
+      : i.status.charAt(0).toUpperCase() + i.status.slice(1),
+});
+
+  return (
+    <div>
+      <Box>
+        <Typography variant="h4">Transformer</Typography>
+      </Box>
+
+      {/* List view */}
+      {!selected && (
+        <Box sx={{ mt: 5 }}>
+          <TransformerTable
+            transformers={transformersData}
+            onView={(t) => setSelected(t)}     // ← open details
+          />
+        </Box>
+      )}
+
+      {/* Details view */}
+      {selected && !selectedInspection && (
+  <Box sx={{ mt: 3, display: "grid", gap: 3 }}>
+    <TransformerHead
+      transformerDetails={toHeadProps(selected)}
+      onBack={() => setSelected(null)}
+    />
+    <TransformerInspections
+      onView={(ins) => setSelectedInspection(ins)}   
+    />
+  </Box>
+)}
+      {selected && selectedInspection && (
+  <Box sx={{ mt: 3, display: "grid", gap: 3 }}>
+    <InspectionBar
+      inspectionDetails={toInspectionBarProps(selected, selectedInspection)}
+      onBack={() => setSelectedInspection(null)}     
+      onBaselineClick={() => {/* open your baseline modal later */}}
+    />
     <ThermalImageCard />
   </Box>
-</Box>
-
-          
-            
-        </div>
-    );
-
+)}
+    </div>
+  );
 }
-
 export default Transformers;

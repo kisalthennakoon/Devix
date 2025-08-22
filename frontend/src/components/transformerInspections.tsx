@@ -34,6 +34,9 @@ interface Inspection {
   status: "completed" | "progress" | "pending";
   isFavorite: boolean;
 }
+type Props = {
+  onView?: (inspection: Inspection) => void; 
+};
 
 const mockInspections: Inspection[] = [
   {
@@ -110,7 +113,7 @@ const mockInspections: Inspection[] = [
   }
 ];
 
-export const TransformerInspections = () => {
+export const TransformerInspections = ({ onView }: Props) => { 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const toggleFavorite = (id: string) => {
@@ -191,13 +194,14 @@ export const TransformerInspections = () => {
                         <StatusBadge status={inspection.status} />
                       </TableCell>
                       <TableCell>
-                        <Button 
-                          variant="contained"
-                          size="small" 
-                          sx={{ bgcolor: '#1976d2', '&:hover': { bgcolor: '#1565c0' } }}
-                        >
-                          View
-                        </Button>
+                        <Button
+                        variant="contained"
+                        size="small"
+                        sx={{ bgcolor: '#1976d2', '&:hover': { bgcolor: '#1565c0' } }}
+                        onClick={() => onView?.(inspection)}  // NEW
+                      >
+                        View
+                      </Button>
                       </TableCell>
                     </TableRow>
                   ))}
