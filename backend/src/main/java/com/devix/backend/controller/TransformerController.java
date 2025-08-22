@@ -1,6 +1,6 @@
 package com.devix.backend.controller;
 
-import com.devix.backend.dto.TransformerDto;
+import com.devix.backend.dto.TransformerRequestDto;
 import com.devix.backend.service.TransformerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +18,10 @@ public class TransformerController {
     private TransformerService transformerService;
 
     @PostMapping("/create")
-    public ResponseEntity<?> createTransformer(@RequestBody TransformerDto transformerDto) {
-        log.info("Creating transformer in Controller " + transformerDto);
+    public ResponseEntity<?> createTransformer(@RequestBody TransformerRequestDto transformerRequestDto) {
+        log.info("Creating transformer in Controller " + transformerRequestDto);
         try{
-            transformerService.createTransformer(transformerDto);
+            transformerService.createTransformer(transformerRequestDto);
             return ResponseEntity.ok("Transformer created successfully");
         } catch (Exception e) {
             log.error("Error creating transformer: {}", e.getMessage(), e);

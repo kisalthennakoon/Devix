@@ -1,6 +1,7 @@
 package com.devix.backend.service.Impl;
 
-import com.devix.backend.dto.TransformerDto;
+import com.devix.backend.dto.TransformerRequestDto;
+import com.devix.backend.dto.TransformerResponseDto;
 import com.devix.backend.model.Transformer;
 import com.devix.backend.repo.TransformerRepo;
 import com.devix.backend.service.GoogleDriveService;
@@ -26,16 +27,16 @@ public class TransformerServiceImpl implements TransformerService {
     private final MapperService mapperService = MapperService.INSTANCE;
 
     @Override
-    public void createTransformer(TransformerDto transformerDto) throws Exception {
+    public void createTransformer(TransformerRequestDto transformerRequestDto) throws Exception {
 
         try {
-            log.info("Creating transformer with details: {}", transformerDto);
+            log.info("Creating transformer with details: {}", transformerRequestDto);
 
-            if (transformerRepo.findByTransformerNo(transformerDto.getTransformerNo()) != null) {
+            if (transformerRepo.findByTransformerNo(transformerRequestDto.getTransformerNo()) != null) {
                 throw new Exception("Transformer with this number already exists");
             }
 
-            transformerRepo.save(mapperService.toTransformerEntity(transformerDto));
+            transformerRepo.save(mapperService.toTransformerEntity(transformerRequestDto));
             log.info("Transformer created");
         }catch (Exception e) {
             log.error("Error creating transformer: {}", e.getMessage());
@@ -51,9 +52,6 @@ public class TransformerServiceImpl implements TransformerService {
             if (transformer == null) {
                 throw new Exception("Transformer not found");
             }
-            //MultipartFile multipartFile = transformerDto.getTransformerBaseImage();
-//            java.io.File tempFile = java.io.File.createTempFile("upload-", baseImage.getOriginalFilename());
-//            baseImage.transferTo(tempFile);
 
             String imageUrl = googleDriveService.uploadFile(baseImage);
             transformer.setTransformerBaseImageUrl(imageUrl);
@@ -66,7 +64,7 @@ public class TransformerServiceImpl implements TransformerService {
     }
 
     @Override
-    public TransformerDto getTransformer(String transformerNo) throws Exception {
+    public TransformerResponseDto getTransformer(String transformerNo) throws Exception {
         try {
             log.info("Fetching transformer with number: {}", transformerNo);
             Transformer transformer = transformerRepo.findByTransformerNo(transformerNo);
@@ -81,10 +79,14 @@ public class TransformerServiceImpl implements TransformerService {
     }
 
     @Override
-    public List<Transformer> getAllTransformers() throws Exception {
+    public List<TransformerResponseDto> getAllTransformers() throws Exception {
         try {
             log.info("Fetching all transformers");
-            return transformerRepo.findAll();
+            List<Transformer> transformers = transformerRepo.findAll();
+            return transformers.stream()
+                    .map(mapperService::toTransformerDto)
+                    .toList();
+
         } catch (Exception e) {
             log.error("Error fetching all transformers: {}", e.getMessage());
             throw new Exception("Error fetching all transformers: " + e.getMessage());
@@ -92,14 +94,14 @@ public class TransformerServiceImpl implements TransformerService {
     }
 
     @Override
-    public void updateTransformer(TransformerDto transformerDto) throws Exception {
+    public void updateTransformer(TransformerRequestDto transformerRequestDto) throws Exception {
         try {
-            log.info("Updating transformer with details: {}", transformerDto);
-            Transformer existingTransformer = transformerRepo.findByTransformerNo(transformerDto.getTransformerNo());
+            log.info("Updating transformer with details: {}", transformerRequestDto);
+            Transformer existingTransformer = transformerRepo.findByTransformerNo(transformerRequestDto.getTransformerNo());
             if (existingTransformer == null) {
                 throw new Exception("Transformer not found");
             }
-            transformerRepo.save(mapperService.toTransformerEntity(transformerDto));
+            transformerRepo.save(mapperService.toTransformerEntity(transformerRequestDto));
             log.info("Transformer updated");
         } catch (Exception e) {
             log.error("Error updating transformer: {}", e.getMessage());

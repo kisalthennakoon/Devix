@@ -1,6 +1,7 @@
 package com.devix.backend.service;
 
-import com.devix.backend.dto.TransformerDto;
+import com.devix.backend.dto.TransformerRequestDto;
+import com.devix.backend.dto.TransformerResponseDto;
 import com.devix.backend.model.Transformer;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -10,11 +11,11 @@ public interface TransformerService {
 
     //CRUD operations for Transformer
 
-    void createTransformer(TransformerDto transformer) throws Exception;
+    void createTransformer(TransformerRequestDto transformer) throws Exception;
     void addBaseImage(String transformerNo, MultipartFile baseImage) throws Exception;
-    TransformerDto getTransformer(String transformerNo) throws Exception;
-    List<Transformer> getAllTransformers() throws Exception;
-    void updateTransformer(TransformerDto transformer) throws Exception;
+    TransformerResponseDto getTransformer(String transformerNo) throws Exception;
+    List<TransformerResponseDto> getAllTransformers() throws Exception;
+    void updateTransformer(TransformerRequestDto transformer) throws Exception;
     void deleteTransformer(String transformerNo) throws Exception;
 
 }
