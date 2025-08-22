@@ -4,6 +4,7 @@ import Transformers from "./pages/tranformers"
 import Settings from "./pages/settings"
 import Trial from "./pages/trial"
 import Sidebar from "./components/sideBar"
+import TestTransformersPage from "./pages/test"
 
 
 function App() {
@@ -15,7 +16,11 @@ function App() {
         <Routes>
           <Route path="/" element={<Transformers />} />
           <Route path="/settings" element={<Settings />} />
+
+          <Route path="/test" element={<TestTransformersPage />} />
+
           <Route path="/trial" element={<Trial />} />
+
         </Routes>
       </Box>
     </Box>
