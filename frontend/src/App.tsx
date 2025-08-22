@@ -1,6 +1,6 @@
 import { Box, Toolbar } from "@mui/material"
 import { Route, Routes } from "react-router-dom"
-import Transformers from "./pages/tranformers"
+import Transformers from "./pages/inspectionTest"
 import Settings from "./pages/settings"
 import Sidebar from "./components/sideBar"
 

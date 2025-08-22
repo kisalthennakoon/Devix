@@ -1,10 +1,9 @@
-import React from "react";
-import { Box, Typography} from "@mui/material";
-import InspectionBar from "../components/inspectionBar";
+import { Box} from "@mui/material";
+import TransformerHead from "../components/transformerHead";
 import { TransformerInspections } from "../components/transformerInspections";
 
 
-const inspectionDetails = {
+const transformerDetails = {
     id: "0123456",
     transformerNo: "AZ-8370",
     poleNo: "EN-122-A",
@@ -23,7 +22,7 @@ function Transformers() {
     return (
         <div>
             <Box sx={{ marginTop: 1 }}>
-                <InspectionBar inspectionDetails={inspectionDetails} />
+                <TransformerHead transformerDetails={transformerDetails} />
             </Box>
         <TransformerInspections />
         </div>
