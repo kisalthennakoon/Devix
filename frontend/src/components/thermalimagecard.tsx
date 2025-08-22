@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
 import {
   Box, Typography, Chip, Stack,
-  FormControl, InputLabel, Select, MenuItem, Button
+  FormControl, InputLabel, Select, MenuItem, Button,
+  Dialog, DialogTitle, DialogContent, DialogActions
 } from "@mui/material";
 import CircleBadge from "./circlebadge";
 
@@ -17,6 +18,23 @@ function ThermalImageCard() {
   const [weather, setWeather] = useState("Sunny");
   const [fileName, setFileName] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [tempFile, setTempFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const dialogInputRef = useRef<HTMLInputElement>(null);
+
+  const setTemp = (file: File | null) => {
+    // revoke old preview to avoid leaks
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    if (file) {
+      setTempFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    } else {
+      setTempFile(null);
+      setPreviewUrl(null);
+    }
+  };
+
 
   return (
     <Box
@@ -84,10 +102,12 @@ function ThermalImageCard() {
           }}
         />
 
-        <Button variant="contained" size="large" onClick={() => fileRef.current?.click()}>
+        <Button variant="contained" size="large" onClick={() => setUploadOpen(true)}>
           {fileName ? `Selected: ${fileName}` : "Upload thermal Image"}
         </Button>
       </Stack>
+
+
 
       {/* Progress section */}
       <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
@@ -99,6 +119,84 @@ function ThermalImageCard() {
         <ProgressItem label="AI Analysis" status="Pending" />
         <ProgressItem label="Thermal Image Review" status="Pending" />
       </Stack>
+
+      <Dialog open={uploadOpen} onClose={() => setUploadOpen(false)} maxWidth="sm" fullWidth>
+  <DialogTitle>Upload Thermal Image</DialogTitle>
+  <DialogContent>
+    {/* Drop zone */}
+    <Box
+      sx={{
+        mt: 1,
+        border: "2px dashed",
+        borderColor: previewUrl ? "success.light" : "divider",
+        borderRadius: 2,
+        p: 3,
+        textAlign: "center",
+        bgcolor: "background.paper",
+        cursor: "pointer",
+      }}
+      onClick={() => dialogInputRef.current?.click()}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        e.preventDefault();
+        const f = e.dataTransfer.files?.[0];
+        if (f && f.type.startsWith("image/")) setTemp(f);
+      }}
+    >
+      {previewUrl ? (
+        <Box
+          component="img"
+          src={previewUrl}
+          alt="preview"
+          sx={{ maxWidth: "100%", maxHeight: 320, borderRadius: 1 }}
+        />
+      ) : (
+        <>
+          <Typography variant="body1" sx={{ mb: 0.5 }}>
+            Drag & drop an image here
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            or click to browse
+          </Typography>
+        </>
+      )}
+      <input
+        ref={dialogInputRef}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={(e) => {
+          const f = e.target.files?.[0] || null;
+          if (f && f.type.startsWith("image/")) setTemp(f);
+          if (dialogInputRef.current) dialogInputRef.current.value = "";
+        }}
+      />
+    </Box>
+  </DialogContent>
+
+  <DialogActions>
+    <Button
+      onClick={() => {
+        setTemp(null);
+        setUploadOpen(false);
+      }}
+      color="secondary"
+    >
+      Cancel
+    </Button>
+    <Button
+      variant="contained"
+      disabled={!tempFile}
+      onClick={() => {
+        if (tempFile) setFileName(tempFile.name); // accept selection
+        setUploadOpen(false);
+      }}
+    >
+      Confirm
+    </Button>
+  </DialogActions>
+</Dialog>
+
     </Box>
   );
 }
