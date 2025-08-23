@@ -4,6 +4,7 @@ import ImageIcon from '@mui/icons-material/Image';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteIcon from '@mui/icons-material/Delete';
+import BaselineButton from "./baselineButton";
 
 interface InspectionDetails {
     id: string;
@@ -91,7 +92,7 @@ function InspectionBar({ inspectionDetails, onBaselineClick, onBack }: Inspectio
 
                         </Box>
                     </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, backgroundColor: '#e0e0e0', borderRadius: 2, p: 1 }}>
+                    {/* <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, backgroundColor: '#e0e0e0', borderRadius: 2, p: 1 }}>
                         <Button
                             size="small"
                             startIcon={<ImageIcon />}
@@ -106,6 +107,9 @@ function InspectionBar({ inspectionDetails, onBaselineClick, onBack }: Inspectio
                         <IconButton aria-label="delete" color="error" onClick={() => alert('Delete clicked!')}>
                             <DeleteIcon />
                         </IconButton>
+                    </Box> */}
+                    <Box>
+                        <BaselineButton transformerNo={inspectionDetails.transformerNo} />
                     </Box>
                 </Box>
             </Box>

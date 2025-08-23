@@ -27,6 +27,7 @@ export default function Comparison({ inspectionNo }: { inspectionNo: string }) {
   if (error) {
     return <ThermalImageCard
         inspectionNo = {inspectionNo}
+        baseImageExist = {true}
     />;
   }
 
@@ -34,14 +35,15 @@ export default function Comparison({ inspectionNo }: { inspectionNo: string }) {
   if (!inspectionImages.baseImageUrl && !inspectionImages.thermal) {
     return <ThermalImageCard
          inspectionNo = {inspectionNo}
+         baseImageExist = {true}
     />;
   }
 
   // CASE 3: Images exist
   return (
     <ThermalImageComparison
-      leftImageUrl={inspectionImages.baseImageUrl}
-      rightImageUrl={inspectionImages.thermal}
+      leftImageUrl={inspectionImages.baseImageUrl ?? ""}
+      rightImageUrl={inspectionImages.thermal ?? ""}
     />
   );
 }

@@ -7,6 +7,7 @@ import Sidebar from "./components/sideBar"
 import InspectionTest from "./pages/inspectionTest"
 import TransformerTable from "./components/transformerTable"
 import Transformers from "./pages/tranformers"
+import Test from "./pages/test"
 
 
 function App() {
@@ -19,7 +20,7 @@ function App() {
           <Route path="/" element={<Transformers />} />
           <Route path="/settings" element={<Settings />} />
 
-          {/* <Route path="/test" element={<TestTransformersPage />} /> */}
+          <Route path="/test" element={<Test />} />
 
           {/* <Route path="/trial" element={<Trial />} /> */}
 

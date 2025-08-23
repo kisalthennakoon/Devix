@@ -5,6 +5,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Navigation } from "@mui/icons-material";
 import type { TransformerDetails } from "./transformerTable";
+import BaselineButton from "./baselineButton";
 
 interface transformerDetails {
     id: string;
@@ -27,7 +28,7 @@ type TransformerBarProps = {
     onBaselineClick?: () => void;
 };
 
-function TransformerHead({transformerDetails, onBack, onBaselineClick}: TransformerBarProps) {
+function TransformerHead({ transformerDetails, onBack, onBaselineClick }: TransformerBarProps) {
     return (
         <Box sx={{ backgroundColor: '#ffffffff', boxShadow: 5, borderRadius: 2, p: 2 }}>
 
@@ -51,7 +52,7 @@ function TransformerHead({transformerDetails, onBack, onBaselineClick}: Transfor
                             { title: 'Pole No', value: transformerDetails.poleNo },
                             { title: 'Capacity', value: transformerDetails.capacity },
                             { title: 'Type', value: transformerDetails.type },
-                            { title: 'No. of Freeders', value: transformerDetails.noOfFreeders}
+                            { title: 'No. of Freeders', value: transformerDetails.noOfFreeders }
                         ].map((item, idx) => (
                             <Box key={idx} sx={{ width: 100, height: 50, backgroundColor: '#e0e0e0', borderRadius: 2, boxShadow: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', p: 1 }}>
 
@@ -75,7 +76,7 @@ function TransformerHead({transformerDetails, onBack, onBaselineClick}: Transfor
                             </Typography>
                         </Box>
                     </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, backgroundColor: '#e0e0e0', borderRadius: 2, p: 1 }}>
+                    {/* <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, backgroundColor: '#e0e0e0', borderRadius: 2, p: 1 }}>
                         <Button
                             size="small"
                             startIcon={<ImageIcon />}
@@ -90,6 +91,9 @@ function TransformerHead({transformerDetails, onBack, onBaselineClick}: Transfor
                         <IconButton aria-label="delete" color="error" onClick={() => alert('Delete clicked!')}>
                             <DeleteIcon />
                         </IconButton>
+                    </Box> */}
+                    <Box>
+                        <BaselineButton transformerNo={transformerDetails?.transformerNo ?? ""} />
                     </Box>
                 </Box>
             </Box>

@@ -24,16 +24,18 @@ type BaselineImageProps = {
   onConfirm: (files: (File | null)[]) => void; // returns up to 3 files (null if empty)
   title?: string;
   subtitle?: string;
+  transformerNo?: string;
 };
 
 const SLOT_LABELS = ["Sunny", "Cloudy", "Rainy"] as const;
 
- function BaselineImage({
+function BaselineImage({
   open,
   onClose,
   onConfirm,
   title = "Upload Baseline Images",
   subtitle = "Drag & drop up to 3 images, or click a slot to select.",
+  transformerNo,
 }: BaselineImageProps) {
   const [slots, setSlots] = useState<SlotFile[]>([
     { file: null, url: null },
@@ -78,6 +80,29 @@ const SLOT_LABELS = ["Sunny", "Cloudy", "Rainy"] as const;
   const fileInputs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
   const anyFilled = useMemo(() => slots.some((s) => s.file), [slots]);
 
+  const [error, setError] = useState<string | null>(null);
+
+  const handleConfirm = async (files: (File | null)[]) => {
+    setError(null); // Clear previous error
+    if (!files[0] || !files[1] || !files[2]) {
+      setError("Please upload all three images before confirming.");
+      return;
+    }
+    const formData = new FormData();
+    if (files[0]) formData.append("baseImageSunny", files[0]);
+    if (files[1]) formData.append("baseImageCloudy", files[1]);
+    if (files[2]) formData.append("baseImageRainy", files[2]);
+
+    await fetch(
+      `https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/transformer/addBaseImage/${transformerNo}`,
+      {
+        method: "PUT",
+        body: formData,
+      }
+    );
+    onClose();
+  };
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle sx={{ pb: 1 }}>{title}</DialogTitle>
@@ -85,6 +110,12 @@ const SLOT_LABELS = ["Sunny", "Cloudy", "Rainy"] as const;
         <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
           {subtitle}
         </Typography>
+
+        {error && (
+          <Typography color="error" sx={{ mb: 2 }}>
+            {error}
+          </Typography>
+        )}
 
         {/* Big container: handles drag & drop for all three slots */}
         <Box
@@ -106,14 +137,13 @@ const SLOT_LABELS = ["Sunny", "Cloudy", "Rainy"] as const;
             bgcolor: dragActive ? "action.hover" : "background.paper",
           }}
         >
-          <Grid container spacing={2}>
+          {/* FLEX ROW: slots side by side */}
+          <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
             {slots.map((s, idx) => (
-              <Grid key={idx} item xs={12} sm={4}>
-                {/* NEW: Weather label above each slot */}
+              <Box key={idx} sx={{ flex: 1, minWidth: 0 }}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.75 }}>
                   {SLOT_LABELS[idx]}
                 </Typography>
-
                 <SlotBox
                   slot={s}
                   onClick={() => fileInputs[idx].current?.click()}
@@ -130,16 +160,16 @@ const SLOT_LABELS = ["Sunny", "Cloudy", "Rainy"] as const;
                     if (fileInputs[idx].current) fileInputs[idx].current.value = "";
                   }}
                 />
-              </Grid>
+              </Box>
             ))}
-          </Grid>
+          </Box>
 
           {/* Footer inside the big box: Cancel (left) and Confirm (right) */}
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 2 }}>
             <Button variant="text" onClick={onClose}>
               Cancel
             </Button>
-            <Button variant="contained" onClick={() => onConfirm(slots.map((s) => s.file))} disabled={!anyFilled}>
+            <Button variant="contained" onClick={() => handleConfirm(slots.map((s) => s.file))} disabled={!anyFilled}>
               Confirm
             </Button>
           </Box>

@@ -1,4 +1,4 @@
-import { useRef, useState , useEffect} from "react";
+import { useRef, useState, useEffect } from "react";
 import {
   Box, Typography, Chip, Stack,
   FormControl, InputLabel, Select, MenuItem, Button,
@@ -12,11 +12,15 @@ const colors = {
   chipBorder: "#F6D9A1",
   chipText: "#B88700",
   track: "#eeeeee",
-  active: "#F6D9A1", 
+  active: "#F6D9A1",
 };
 
+type ThermalImageCardProps = {
+  inspectionNo: string;
+  baseImageExist: boolean;
+};
 
-function ThermalImageCard({inspectionNo}: {inspectionNo : string}) {
+function ThermalImageCard({ inspectionNo, baseImageExist }: ThermalImageCardProps) {
   const [weather, setWeather] = useState("Sunny");
   const [fileName, setFileName] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
@@ -37,8 +41,11 @@ function ThermalImageCard({inspectionNo}: {inspectionNo : string}) {
     }
   };
 
+  const [uploading, setUploading] = useState(false); // Add this state
+
   const confirmImage = async () => {
     if (!tempFile) return; // no file selected
+    setUploading(true);
     const url = `https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/inspection/addThermalImage/${inspectionNo}`; // replace with your backend endpoint
 
     try {
@@ -57,6 +64,8 @@ function ThermalImageCard({inspectionNo}: {inspectionNo : string}) {
     } catch (error: any) {
       console.error("Error uploading:", error.response || error.message);
       alert("Upload failed!");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -71,7 +80,7 @@ function ThermalImageCard({inspectionNo}: {inspectionNo : string}) {
         p: 3,
         width: "100%",
         maxWidth: 520,
-        alignSelf: "flex-start", 
+        alignSelf: "flex-start",
       }}
     >
       {/* Title */}
@@ -112,7 +121,7 @@ function ThermalImageCard({inspectionNo}: {inspectionNo : string}) {
             <MenuItem value="Sunny">Sunny</MenuItem>
             <MenuItem value="Cloudy">Cloudy</MenuItem>
             <MenuItem value="Rainy">Rainy</MenuItem>
-            
+
           </Select>
         </FormControl>
 
@@ -127,9 +136,15 @@ function ThermalImageCard({inspectionNo}: {inspectionNo : string}) {
           }}
         />
 
-        <Button variant="contained" size="large" onClick={() => setUploadOpen(true)}>
-          {fileName ? `Selected: ${fileName}` : "Upload thermal Image"}
-        </Button>
+        {!baseImageExist ? (
+          <Button variant="contained" size="large" disabled>
+            Please upload base images first
+          </Button>
+        ) : (
+          <Button variant="contained" size="large" onClick={() => setUploadOpen(true)}>
+            {fileName ? `Selected: ${fileName}` : "Upload thermal Image"}
+          </Button>
+        )}
       </Stack>
 
 
@@ -146,83 +161,92 @@ function ThermalImageCard({inspectionNo}: {inspectionNo : string}) {
       </Stack>
 
       <Dialog open={uploadOpen} onClose={() => setUploadOpen(false)} maxWidth="sm" fullWidth>
-  <DialogTitle>Upload Thermal Image</DialogTitle>
-  <DialogContent>
-    {/* Drop zone */}
-    <Box
-      sx={{
-        mt: 1,
-        border: "2px dashed",
-        borderColor: previewUrl ? "success.light" : "divider",
-        borderRadius: 2,
-        p: 3,
-        textAlign: "center",
-        bgcolor: "background.paper",
-        cursor: "pointer",
-      }}
-      onClick={() => dialogInputRef.current?.click()}
-      onDragOver={(e) => e.preventDefault()}
-      onDrop={(e) => {
-        e.preventDefault();
-        const f = e.dataTransfer.files?.[0];
-        if (f && f.type.startsWith("image/")) setTemp(f);
-      }}
-    >
-      {previewUrl ? (
-        <Box
-          component="img"
-          src={previewUrl}
-          alt="preview"
-          sx={{ maxWidth: "100%", maxHeight: 320, borderRadius: 1 }}
-        />
-      ) : (
-        <>
-          <Typography variant="body1" sx={{ mb: 0.5 }}>
-            Drag & drop an image here
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            or click to browse
-          </Typography>
-        </>
-      )}
-      <input
-        ref={dialogInputRef}
-        type="file"
-        accept="image/*"
-        hidden
-        onChange={(e) => {
-          const f = e.target.files?.[0] || null;
-          if (f && f.type.startsWith("image/")) setTemp(f);
-          if (dialogInputRef.current) dialogInputRef.current.value = "";
-        }}
-      />
-    </Box>
-  </DialogContent>
+        <DialogTitle>Upload Thermal Image</DialogTitle>
+        <DialogContent>
+          {/* Drop zone */}
+          <Box
+            sx={{
+              mt: 1,
+              border: "2px dashed",
+              borderColor: previewUrl ? "success.light" : "divider",
+              borderRadius: 2,
+              p: 3,
+              textAlign: "center",
+              bgcolor: "background.paper",
+              cursor: "pointer",
+            }}
+            onClick={() => dialogInputRef.current?.click()}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              const f = e.dataTransfer.files?.[0];
+              if (f && f.type.startsWith("image/")) setTemp(f);
+            }}
+          >
+            {previewUrl ? (
+              <Box
+                component="img"
+                src={previewUrl}
+                alt="preview"
+                sx={{ maxWidth: "100%", maxHeight: 320, borderRadius: 1 }}
+              />
+            ) : (
+              <>
+                <Typography variant="body1" sx={{ mb: 0.5 }}>
+                  Drag & drop an image here
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  or click to browse
+                </Typography>
+              </>
+            )}
+            <input
+              ref={dialogInputRef}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={(e) => {
+                const f = e.target.files?.[0] || null;
+                if (f && f.type.startsWith("image/")) setTemp(f);
+                if (dialogInputRef.current) dialogInputRef.current.value = "";
+              }}
+            />
+          </Box>
+        </DialogContent>
 
-  <DialogActions>
-    <Button
-      onClick={() => {
-        setTemp(null);
-        setUploadOpen(false);
-      }}
-      color="secondary"
-    >
-      Cancel
-    </Button>
-    <Button
-      variant="contained"
-      disabled={!tempFile}
-      onClick={() => {
-        if (tempFile) setFileName(tempFile.name); // accept selection
-        setUploadOpen(false); // close the dialog first
-        confirmImage(); // then send the file
-        setTemp(null); // clear preview and tempFile
-      }}
-    >
-      Confirm
-    </Button>
-  </DialogActions>
-</Dialog>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setTemp(null);
+              setUploadOpen(false);
+            }}
+            color="secondary"
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            disabled={!tempFile}
+            onClick={() => {
+              if (tempFile) setFileName(tempFile.name); // accept selection
+              setUploadOpen(false); // close the dialog first
+              confirmImage(); // then send the file
+              setTemp(null); // clear preview and tempFile
+            }}
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={uploading} PaperProps={{ sx: { textAlign: "center", p: 4 } }}>
+        <Box sx={{ p: 4, display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <CircleBadge diameter={40} dotSize={7} />
+          <Typography variant="h6" sx={{ mt: 2 }}>
+            Uploading image...
+          </Typography>
+        </Box>
+      </Dialog>
 
     </Box>
   );
