@@ -1,10 +1,11 @@
-import { useRef, useState } from "react";
+import { useRef, useState , useEffect} from "react";
 import {
   Box, Typography, Chip, Stack,
   FormControl, InputLabel, Select, MenuItem, Button,
   Dialog, DialogTitle, DialogContent, DialogActions
 } from "@mui/material";
 import CircleBadge from "./circlebadge";
+import axios from "axios";
 
 const colors = {
   chipBg: "#FFF1DA",
@@ -14,7 +15,8 @@ const colors = {
   active: "#F6D9A1", 
 };
 
-function ThermalImageCard() {
+
+function ThermalImageCard({inspectionNo}: {inspectionNo : string}) {
   const [weather, setWeather] = useState("Sunny");
   const [fileName, setFileName] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
@@ -32,6 +34,29 @@ function ThermalImageCard() {
     } else {
       setTempFile(null);
       setPreviewUrl(null);
+    }
+  };
+
+  const confirmImage = async () => {
+    if (!tempFile) return; // no file selected
+    const url = `https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/inspection/addThermalImage/${inspectionNo}`; // replace with your backend endpoint
+
+    try {
+      const formData = new FormData();
+      formData.append("thermalImage", tempFile); // file
+      formData.append("imageCondition", weather); // string
+
+      const response = await axios.put(url, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      console.log("Upload response:", response.data);
+      alert("Upload successful!");
+    } catch (error: any) {
+      console.error("Error uploading:", error.response || error.message);
+      alert("Upload failed!");
     }
   };
 
@@ -189,7 +214,9 @@ function ThermalImageCard() {
       disabled={!tempFile}
       onClick={() => {
         if (tempFile) setFileName(tempFile.name); // accept selection
-        setUploadOpen(false);
+        setUploadOpen(false); // close the dialog first
+        confirmImage(); // then send the file
+        setTemp(null); // clear preview and tempFile
       }}
     >
       Confirm

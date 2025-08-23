@@ -7,7 +7,8 @@ import type { TransformerDetails } from "../components/transformerTable";
 import InspectionBar from "../components/inspectionBar";
 import ThermalImageCard from "../components/thermalimagecard";
 import axios from "axios";
-
+import ThermalImageComparison from "../components/thermalimageComparison";
+import Comparison from "../components/comparison";
 
 
 
@@ -120,7 +121,14 @@ function Transformers() {
             onBack={() => setSelectedInspection(null)}
             onBaselineClick={() => {/* open your baseline modal later */ }}
           />
-          <ThermalImageCard />
+          {/* <ThermalImageCard
+           transformerNo = {selected.transformerNo}
+           inspectionNo = {selectedInspection.inspectionNo}
+           /> */}
+           <Comparison
+            inspectionNo = {selectedInspection.inspectionNo}
+           />
+        
         </Box>
       )}
     </div>
