@@ -18,19 +18,20 @@ import { useState } from "react";
 
 // Interface for a transformer
 export interface TransformerDetails {
-  no: string;
-  pole: string;
-  region: string;
-  type: "Bulk" | "Distribution";
+  transformerNo: string;
+  transformerPoleNo: string;
+  transformerRegion: string;
+  transformerType: "string";
+  transformerLocation: "string"
 }
 
 // Props type
 type TransformerTableProps = {
-  transformers: TransformerDetails[];
+  //transformers: TransformerDetails[];
   onView?: (t: TransformerDetails) => void;
 };
 
-function TransformerTable({ transformers, onView }: TransformerTableProps) {
+function TransformerTable({ onView }: TransformerTableProps) {
   const [view, setView] = useState<"transformers" | "inspections">("transformers");
 
   // Filter states
@@ -41,7 +42,7 @@ function TransformerTable({ transformers, onView }: TransformerTableProps) {
   const [transformersData, setTransformersData] = useState<TransformerDetails[]>([]);
 
 useEffect(() => {
-  axios.get("http://localhost:8080/api/transformer/getAll")
+  axios.get("https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/transformer/getAll")
     .then((res) => setTransformersData(res.data))
     .catch((err) => console.error("Failed to fetch transformers:", err));
 }, []);
@@ -70,19 +71,19 @@ useEffect(() => {
   };
 
   // Filtered transformers
-  const filteredTransformers = transformers.filter((t) => {
+  const filteredTransformers = transformersData.filter((t) => {
     const searchValue = search.toLowerCase().trim();
 
     let matchesSearch = true;
     if (searchValue) {
-      if (searchBy === "no") matchesSearch = t.no.toLowerCase().includes(searchValue);
-      if (searchBy === "pole") matchesSearch = t.pole.toLowerCase().includes(searchValue);
-      if (searchBy === "region") matchesSearch = t.region.toLowerCase().includes(searchValue);
-      if (searchBy === "type") matchesSearch = t.type.toLowerCase().includes(searchValue);
+      if (searchBy === "no") matchesSearch = t.transformerNo.toLowerCase().includes(searchValue);
+      if (searchBy === "pole") matchesSearch = t.transformerPoleNo.toLowerCase().includes(searchValue);
+      if (searchBy === "region") matchesSearch = t.transformerRegion.toLowerCase().includes(searchValue);
+      if (searchBy === "type") matchesSearch = t.transformerType.toLowerCase().includes(searchValue);
     }
 
-    const matchesRegion = regionFilter === "" || t.region === regionFilter;
-    const matchesType = typeFilter === "" || t.type === typeFilter;
+    const matchesRegion = regionFilter === "" || t.transformerRegion === regionFilter;
+    const matchesType = typeFilter === "" || t.transformerType === typeFilter;
 
     return matchesSearch && matchesRegion && matchesType;
   });
@@ -203,7 +204,7 @@ useEffect(() => {
         {/* Rows */}
         {currentTransformers.map((t) => (
           <Box
-            key={t.no}
+            key={t.transformerNo}
             sx={{
               display: "flex",
               alignItems: "center",
@@ -212,10 +213,10 @@ useEffect(() => {
               "&:hover": { bgcolor: "#f5f5f5" },
             }}
           >
-            <Box sx={{ flex: 1 }}>{t.no}</Box>
-            <Box sx={{ flex: 1 }}>{t.pole}</Box>
-            <Box sx={{ flex: 1 }}>{t.region}</Box>
-            <Box sx={{ flex: 1 }}>{t.type}</Box>
+            <Box sx={{ flex: 1 }}>{t.transformerNo}</Box>
+            <Box sx={{ flex: 1 }}>{t.transformerPoleNo}</Box>
+            <Box sx={{ flex: 1 }}>{t.transformerRegion}</Box>
+            <Box sx={{ flex: 1 }}>{t.transformerType}</Box>
             <Box sx={{ width: 100 }}>
               <Button variant="contained" size="small" onClick={() => onView?.(t)}>
                 View

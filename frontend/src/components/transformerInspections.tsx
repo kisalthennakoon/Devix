@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -25,101 +25,139 @@ import {
 } from '@mui/icons-material';
 import { StatusBadge } from "./statusBadge";
 import { AddInspectionModal } from "./addInspections";
+import axios from "axios";
 
 interface Inspection {
   id: string;
   inspectionNo: string;
   inspectedDate: string;
+  inspectionTime: string;
   maintenanceDate: string | null;
-  status: "completed" | "progress" | "pending";
+  inspectionStatus: "in progress" | null;
+  transformerNo: string;
+  inspectionBranch: string;
   isFavorite: boolean;
 }
+
+type ApiInspection = {
+  inspectionNo: string;
+  inspectionDate: string;
+  inspectionTime: string;
+  inspectionBranch: string;
+  transformerNo: string;
+  inspectionStatus: "completed" | "progress" | "pending" | null;
+};
+
 type Props = {
+  transformerNo?: string;
   onView?: (inspection: Inspection) => void; 
 };
 
-const mockInspections: Inspection[] = [
-  {
-    id: "1",
-    inspectionNo: "000123589",
-    inspectedDate: "Mon(21), May, 2023 12:55pm",
-    maintenanceDate: null,
-    status: "progress",
-    isFavorite: true
-  },
-  {
-    id: "2",
-    inspectionNo: "000123589",
-    inspectedDate: "Mon(21), May, 2023 12:55pm",
-    maintenanceDate: null,
-    status: "progress",
-    isFavorite: false
-  },
-  {
-    id: "3",
-    inspectionNo: "000123589",
-    inspectedDate: "Mon(21), May, 2023 12:55pm",
-    maintenanceDate: null,
-    status: "pending",
-    isFavorite: false
-  },
-  {
-    id: "4",
-    inspectionNo: "000123589",
-    inspectedDate: "Mon(21), May, 2023 12:55pm",
-    maintenanceDate: "Mon(21), May, 2023 12:55pm",
-    status: "completed",
-    isFavorite: false
-  },
-  {
-    id: "5",
-    inspectionNo: "000123589",
-    inspectedDate: "Mon(21), May, 2023 12:55pm",
-    maintenanceDate: "Mon(21), May, 2023 12:55pm",
-    status: "completed",
-    isFavorite: false
-  },
-  {
-    id: "6",
-    inspectionNo: "000123589",
-    inspectedDate: "Mon(21), May, 2023 12:55pm",
-    maintenanceDate: "Mon(21), May, 2023 12:55pm",
-    status: "completed",
-    isFavorite: false
-  },
-  {
-    id: "7",
-    inspectionNo: "000123589",
-    inspectedDate: "Mon(21), May, 2023 12:55pm",
-    maintenanceDate: "Mon(21), May, 2023 12:55pm",
-    status: "completed",
-    isFavorite: false
-  },
-  {
-    id: "8",
-    inspectionNo: "000123589",
-    inspectedDate: "Mon(21), May, 2023 12:55pm",
-    maintenanceDate: "Mon(21), May, 2023 12:55pm",
-    status: "completed",
-    isFavorite: false
-  },
-  {
-    id: "9",
-    inspectionNo: "000123589",
-    inspectedDate: "Mon(21), May, 2023 12:55pm",
-    maintenanceDate: "Mon(21), May, 2023 12:55pm",
-    status: "completed",
-    isFavorite: false
-  }
-];
+// const mockInspections: Inspection[] = [
+//   {
+//     id: "1",
+//     inspectionNo: "000123589",
+//     inspectedDate: "Mon(21), May, 2023 12:55pm",
+//     maintenanceDate: null,
+//     status: "progress",
+//     isFavorite: true
+//   },
+//   {
+//     id: "2",
+//     inspectionNo: "000123589",
+//     inspectedDate: "Mon(21), May, 2023 12:55pm",
+//     maintenanceDate: null,
+//     status: "progress",
+//     isFavorite: false
+//   },
+//   {
+//     id: "3",
+//     inspectionNo: "000123589",
+//     inspectedDate: "Mon(21), May, 2023 12:55pm",
+//     maintenanceDate: null,
+//     status: "pending",
+//     isFavorite: false
+//   },
+//   {
+//     id: "4",
+//     inspectionNo: "000123589",
+//     inspectedDate: "Mon(21), May, 2023 12:55pm",
+//     maintenanceDate: "Mon(21), May, 2023 12:55pm",
+//     status: "completed",
+//     isFavorite: false
+//   },
+//   {
+//     id: "5",
+//     inspectionNo: "000123589",
+//     inspectedDate: "Mon(21), May, 2023 12:55pm",
+//     maintenanceDate: "Mon(21), May, 2023 12:55pm",
+//     status: "completed",
+//     isFavorite: false
+//   },
+//   {
+//     id: "6",
+//     inspectionNo: "000123589",
+//     inspectedDate: "Mon(21), May, 2023 12:55pm",
+//     maintenanceDate: "Mon(21), May, 2023 12:55pm",
+//     status: "completed",
+//     isFavorite: false
+//   },
+//   {
+//     id: "7",
+//     inspectionNo: "000123589",
+//     inspectedDate: "Mon(21), May, 2023 12:55pm",
+//     maintenanceDate: "Mon(21), May, 2023 12:55pm",
+//     status: "completed",
+//     isFavorite: false
+//   },
+//   {
+//     id: "8",
+//     inspectionNo: "000123589",
+//     inspectedDate: "Mon(21), May, 2023 12:55pm",
+//     maintenanceDate: "Mon(21), May, 2023 12:55pm",
+//     status: "completed",
+//     isFavorite: false
+//   },
+//   {
+//     id: "9",
+//     inspectionNo: "000123589",
+//     inspectedDate: "Mon(21), May, 2023 12:55pm",
+//     maintenanceDate: "Mon(21), May, 2023 12:55pm",
+//     status: "completed",
+//     isFavorite: false
+//   }
+// ];
 
-export const TransformerInspections = ({ onView }: Props) => { 
+export const TransformerInspections = ({ transformerNo, onView }: Props) => { 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const toggleFavorite = (id: string) => {
     // Handle favorite toggle
     console.log("Toggle favorite for:", id);
   };
+
+  const [inspectionsData, setInspectionsData] = useState<Inspection[]>([]);
+
+useEffect(() => {
+    axios
+      .get(`https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/inspection/getAll/${transformerNo}`)
+      .then((res) => {
+        const formattedData = res.data.map((item: any, idx: number) => ({
+          id: item.inspectionNo || String(idx),
+          inspectionNo: item.inspectionNo,
+          inspectedDate: item.inspectionDate + (item.inspectionTime ? ` ${item.inspectionTime}` : ""),
+          inspectionTime: item.inspectionTime,
+          maintenanceDate: null, // Not present in API, set as null
+          status: item.inspectionStatus ?? "pending",
+          transformerNo: item.transformerNo,
+          inspectionBranch: item.inspectionBranch,
+          isFavorite: false, // Default value
+        }));
+        setInspectionsData(formattedData);
+      })
+      .catch((err) => console.error("Failed to fetch inspections:", err));
+  }, []);
+
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#f5f5f5', p: 3 }}>
@@ -154,7 +192,7 @@ export const TransformerInspections = ({ onView }: Props) => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {mockInspections.map((inspection, index) => (
+                  {inspectionsData.map((inspection, index) => (
                     <TableRow 
                       key={inspection.id} 
                       sx={{ 

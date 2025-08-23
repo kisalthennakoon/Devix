@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @Slf4j
 @RequestMapping("/api/transformer")
+@CrossOrigin(origins = "*")
 public class TransformerController {
 
     private final TransformerService transformerService;

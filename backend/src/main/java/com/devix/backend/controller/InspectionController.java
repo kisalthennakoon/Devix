@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api/inspection")
 @Slf4j
+@CrossOrigin(origins = "*"  )
 public class InspectionController {
 
     private final InspectionService inspectionService;
