@@ -36,12 +36,15 @@ function Transformers() {
 
   const [selected, setSelected] = useState<TransformerDetails | null>(null);
   type SelectedInspection = {
-    id: string;
-    inspectionNo: string;
-    inspectedDate: string;
-    maintenanceDate: string | null;
-    status: "completed" | "progress" | "pending";
-    isFavorite: boolean;
+      id: string;
+      inspectionNo: string;
+      inspectedDate: string;
+      inspectionTime: string;
+      maintenanceDate: string | null;
+      inspectionStatus: "in progress" | null;
+      transformerNo: string;
+      inspectionBranch: string;
+      isFavorite: boolean;
   };
   const [selectedInspection, setSelectedInspection] = useState<SelectedInspection | null>(null); // NEW
   // adapter to satisfy your existing TransformerHead props shape
@@ -49,29 +52,27 @@ function Transformers() {
     id: t.transformerNo,
     transformerNo: t.transformerNo,
     poleNo: t.transformerPoleNo,
-    branch: t.transformerRegion,
+    region: t.transformerRegion,
+    location: t.transformerLocation,
     inspectedBy: "-",
     updatedDate: "-",
     updatedTime: "-",
     status: "-",
     capacity: "-",
-    noOfFreeders: "-",
     type: t.transformerType,
-    location: "-",
+    noOfFreeders: "-"
   });
 
   const toInspectionBarProps = (t: TransformerDetails, i: SelectedInspection) => ({
     id: i.inspectionNo,
     transformerNo: t.transformerNo,
     poleNo: t.transformerPoleNo,
-    branch: t.transformerRegion,
+    branch: i.inspectionBranch,
     inspectedBy: "-",
     updatedDate: i.inspectedDate,
     updatedTime: "",
-    status:
-      i.status === "progress"
-        ? "In Progress"
-        : i.status.charAt(0).toUpperCase() + i.status.slice(1),
+    status: i.inspectionStatus || "in progress",
+      
   });
 
   // const [transformersData, setTransformersData] = useState<TransformerDetails[]>([]);
@@ -102,8 +103,9 @@ function Transformers() {
       {selected && !selectedInspection && (
         <Box sx={{ mt: 3, display: "grid", gap: 3 }}>
           <TransformerHead
-            inspectionDetails={toHeadProps(selected)}
+            transformerDetails={toHeadProps(selected)}
             onBack={() => setSelected(null)}
+            onBaselineClick={() => console.log("Baseline clicked")}
           />
           <TransformerInspections
             transformerNo={selected.transformerNo}

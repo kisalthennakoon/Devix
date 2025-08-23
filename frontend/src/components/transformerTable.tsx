@@ -11,6 +11,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import axios from "axios";
 import { useEffect } from "react";
@@ -56,12 +58,74 @@ useEffect(() => {
   // Dialog states
   const [open, setOpen] = useState(false);
   const [newTransformer, setNewTransformer] = useState({
-    region: "",
-    no: "",
-    pole: "",
-    type: "",
-    location: "",
+    transformerNo: "",
+    transformerPoleNo: "",
+    transformerRegion: "",
+    transformerLocation: "",
+    transformerType: "",
   });
+
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  const [formError, setFormError] = useState<string | null>(null);
+  const onClickConfirm = async () => {
+  // Trim and validate all fields
+  if (
+    !newTransformer.transformerNo.trim() ||
+    !newTransformer.transformerPoleNo.trim() ||
+    !newTransformer.transformerRegion.trim() ||
+    !newTransformer.transformerLocation.trim() ||
+    !newTransformer.transformerType.trim()
+  ) {
+    setFormError("All fields are required.");
+    return;
+  }
+  setFormError(null);
+  try {
+      const res = await axios.post(
+        "https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/transformer/create",
+        newTransformer
+      );
+      setOpen(false);
+      setSnackbar({
+        open: true,
+        message: res.data?.message || "Transformer successfully created.",
+        severity: "success",
+      });
+    // Refresh the transformer list
+    const getRes = await axios.get("https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/transformer/getAll");
+    setTransformersData(getRes.data);
+    // Reset form
+    setNewTransformer({
+      transformerNo: "",
+      transformerPoleNo: "",
+      transformerRegion: "",
+      transformerLocation: "",
+      transformerType: "",
+    });
+  } catch (err) {
+    // Handles both string and object error responses
+    let errorMsg = "Failed to add transformer. Please try again.";
+    if (err?.response?.data) {
+      if (typeof err.response.data === "string") {
+        errorMsg = err.response.data;
+      } else if (typeof err.response.data.message === "string") {
+        errorMsg = err.response.data.message;
+      }
+    }
+    setSnackbar({
+        open: true,
+        message: errorMsg,
+        severity: "error",
+    });
+  }
+};
+
+
 
   const handleViewChange = (
     event: React.MouseEvent<HTMLElement>,
@@ -266,9 +330,9 @@ useEffect(() => {
           sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}
         >
           <Select
-            value={newTransformer.region}
+            value={newTransformer.transformerRegion}
             onChange={(e) =>
-              setNewTransformer({ ...newTransformer, region: e.target.value })
+              setNewTransformer({ ...newTransformer, transformerRegion: e.target.value })
             }
             displayEmpty
           >
@@ -279,23 +343,23 @@ useEffect(() => {
 
           <TextField
             label="Transformer No"
-            value={newTransformer.no}
+            value={newTransformer.transformerNo}
             onChange={(e) =>
-              setNewTransformer({ ...newTransformer, no: e.target.value })
+              setNewTransformer({ ...newTransformer, transformerNo: e.target.value })
             }
           />
           <TextField
             label="Pole No"
-            value={newTransformer.pole}
+            value={newTransformer.transformerPoleNo}
             onChange={(e) =>
-              setNewTransformer({ ...newTransformer, pole: e.target.value })
+              setNewTransformer({ ...newTransformer, transformerPoleNo: e.target.value })
             }
           />
 
           <Select
-            value={newTransformer.type}
+            value={newTransformer.transformerType}
             onChange={(e) =>
-              setNewTransformer({ ...newTransformer, type: e.target.value })
+              setNewTransformer({ ...newTransformer, transformerType: e.target.value })
             }
             displayEmpty
           >
@@ -306,27 +370,47 @@ useEffect(() => {
 
           <TextField
             label="Location Details"
-            value={newTransformer.location}
+            value={newTransformer.transformerLocation}
             onChange={(e) =>
-              setNewTransformer({ ...newTransformer, location: e.target.value })
+              setNewTransformer({ ...newTransformer, transformerLocation: e.target.value })
             }
           />
         </DialogContent>
+        {formError && (
+          <Typography color="error" sx={{ mt: 1, ml: 2 }}>
+            {formError}
+          </Typography>
+        )}
         <DialogActions>
-          <Button onClick={() => setOpen(false)} color="secondary">
+          <Button onClick={() => { setOpen(false); setFormError(null); }} color="secondary">
             Cancel
           </Button>
           <Button
             onClick={() => {
               console.log("Transformer Added:", newTransformer);
-              setOpen(false);
+              onClickConfirm();
             }}
             variant="contained"
           >
             Confirm
           </Button>
         </DialogActions>
+        
       </Dialog>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 

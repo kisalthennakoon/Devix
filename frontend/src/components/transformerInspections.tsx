@@ -14,7 +14,9 @@ import {
   Box,
   Grid,
   IconButton,
-  Chip
+  Chip,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import {
   Star,
@@ -138,25 +140,56 @@ export const TransformerInspections = ({ transformerNo, onView }: Props) => {
 
   const [inspectionsData, setInspectionsData] = useState<Inspection[]>([]);
 
+// useEffect(() => {
+//     axios
+//       .get(`https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/inspection/getAll/${transformerNo}`)
+//       .then((res) => {
+//         const formattedData = res.data.map((item: any, idx: number) => ({
+//           id: item.inspectionNo || String(idx),
+//           inspectionNo: item.inspectionNo,
+//           inspectedDate: item.inspectionDate + (item.inspectionTime ? ` ${item.inspectionTime}` : ""),
+//           inspectionTime: item.inspectionTime,
+//           maintenanceDate: null, 
+//           status: item.inspectionStatus ?? "pending",
+//           transformerNo: item.transformerNo,
+//           inspectionBranch: item.inspectionBranch,
+//           isFavorite: false, // Default value
+//         }));
+//         setInspectionsData(formattedData);
+//       })
+//       .catch((err) => console.error("Failed to fetch inspections:", err));
+//   }, []);
+
+const fetchInspections = () => {
+  axios
+    .get(`https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/inspection/getAll/${transformerNo}`)
+    .then((res) => {
+      const formattedData = res.data.map((item: any, idx: number) => ({
+        id: item.inspectionNo || String(idx),
+        inspectionNo: item.inspectionNo,
+        inspectedDate: item.inspectionDate + (item.inspectionTime ? ` ${item.inspectionTime}` : ""),
+        inspectionTime: item.inspectionTime,
+        maintenanceDate: null,
+        status: item.inspectionStatus ?? "pending",
+        transformerNo: item.transformerNo,
+        inspectionBranch: item.inspectionBranch,
+        isFavorite: false,
+      }));
+      setInspectionsData(formattedData);
+    })
+    .catch((err) => console.error("Failed to fetch inspections:", err));
+};
+
 useEffect(() => {
-    axios
-      .get(`https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/inspection/getAll/${transformerNo}`)
-      .then((res) => {
-        const formattedData = res.data.map((item: any, idx: number) => ({
-          id: item.inspectionNo || String(idx),
-          inspectionNo: item.inspectionNo,
-          inspectedDate: item.inspectionDate + (item.inspectionTime ? ` ${item.inspectionTime}` : ""),
-          inspectionTime: item.inspectionTime,
-          maintenanceDate: null, // Not present in API, set as null
-          status: item.inspectionStatus ?? "pending",
-          transformerNo: item.transformerNo,
-          inspectionBranch: item.inspectionBranch,
-          isFavorite: false, // Default value
-        }));
-        setInspectionsData(formattedData);
-      })
-      .catch((err) => console.error("Failed to fetch inspections:", err));
-  }, []);
+  fetchInspections();
+}, []);
+
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
+      open: false,
+      message: "",
+      severity: "success",
+    });
+
 
 
   return (
@@ -251,9 +284,27 @@ useEffect(() => {
       </Box>
 
       <AddInspectionModal 
+        transformerNoInput = {transformerNo}
         open={isAddModalOpen}
         onOpenChange={setIsAddModalOpen}
+        setSnackbar={setSnackbar} // pass this as a prop
+        onInspectionAdded={fetchInspections} 
       />
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

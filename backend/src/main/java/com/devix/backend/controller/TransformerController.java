@@ -28,7 +28,7 @@ public class TransformerController {
             return ResponseEntity.ok("Transformer created successfully");
         } catch (Exception e) {
             log.error("Error creating transformer: {}", e.getMessage(), e);
-            return ResponseEntity.status(500).body("Error creating transformer: " + e.getMessage());
+            return ResponseEntity.status(500).body(e.getMessage());
         }
     }
 
