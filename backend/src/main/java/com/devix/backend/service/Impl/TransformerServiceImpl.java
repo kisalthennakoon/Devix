@@ -2,11 +2,18 @@ package com.devix.backend.service.Impl;
 
 import com.devix.backend.dto.TransformerRequestDto;
 import com.devix.backend.dto.TransformerResponseDto;
+import com.devix.backend.model.BaselineImage;
+import com.devix.backend.model.Inspection;
+import com.devix.backend.model.InspectionImage;
 import com.devix.backend.model.Transformer;
+import com.devix.backend.repo.BaseImageRepo;
+import com.devix.backend.repo.InspectionImageRepo;
+import com.devix.backend.repo.InspectionRepo;
 import com.devix.backend.repo.TransformerRepo;
 import com.devix.backend.service.GoogleDriveService;
 import com.devix.backend.service.MapperService;
 import com.devix.backend.service.TransformerService;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,11 +28,18 @@ public class TransformerServiceImpl implements TransformerService {
     private final TransformerRepo transformerRepo;
     private final GoogleDriveService googleDriveService;
     private final MapperService mapperService;
+    private final InspectionRepo inspectionRepo;
+    private final BaseImageRepo baselineImageRepo;
+    private final InspectionImageRepo inspectionImageRepo;
 
-    public TransformerServiceImpl(TransformerRepo transformerRepo, GoogleDriveService googleDriveService) {
+
+    public TransformerServiceImpl(TransformerRepo transformerRepo, GoogleDriveService googleDriveService, InspectionRepo inspectionRepo, BaseImageRepo baselineImageRepo, InspectionImageRepo inspectionImageRepo) {
         this.transformerRepo = transformerRepo;
         this.googleDriveService = googleDriveService;
         this.mapperService = MapperService.INSTANCE;
+        this.inspectionRepo = inspectionRepo;
+        this.inspectionImageRepo = inspectionImageRepo;
+        this.baselineImageRepo = baselineImageRepo;
     }
 
     @Override
@@ -46,30 +60,7 @@ public class TransformerServiceImpl implements TransformerService {
         }
     }
 
-    @Override
-    public void addBaseImage(String transformerNo, MultipartFile baseImageSunny, MultipartFile baseImageCloudy, MultipartFile baseImageRainy) throws Exception {
-        try {
-            log.info("Adding base image for transformer: {}", transformerNo);
-            Transformer transformer = transformerRepo.findByTransformerNo(transformerNo);
-            if (transformer == null) {
-                throw new Exception("Transformer not found");
-            }
 
-            String sunnyImageUrl = googleDriveService.uploadFile(baseImageSunny);
-            String cloudyImageUrl = googleDriveService.uploadFile(baseImageCloudy);
-            String rainyImageUrl = googleDriveService.uploadFile(baseImageRainy);
-
-            transformer.setBaseImageSunnyUrl(sunnyImageUrl);
-            transformer.setBaseImageCloudyUrl(cloudyImageUrl);
-            transformer.setBaseImageRainyUrl(rainyImageUrl);
-
-            transformerRepo.save(transformer);
-            log.info("Base image added successfully");
-        } catch (Exception e) {
-            log.error("Error adding base image: {}", e.getMessage());
-            throw new Exception("Error adding base image: " + e.getMessage());
-        }
-    }
 
     @Override
     public TransformerResponseDto getTransformer(String transformerNo) throws Exception {
@@ -118,6 +109,7 @@ public class TransformerServiceImpl implements TransformerService {
     }
 
     @Override
+    @Transactional
     public void deleteTransformer(String transformerNo) throws Exception {
         try {
             log.info("Deleting transformer with number: {}", transformerNo);
@@ -126,6 +118,10 @@ public class TransformerServiceImpl implements TransformerService {
                 throw new Exception("Transformer not found");
             }
             transformerRepo.delete(existingTransformer);
+            baselineImageRepo.deleteByTransformerNo(transformerNo);
+            inspectionRepo.deleteAllByTransformerNo(transformerNo);
+            inspectionImageRepo.deleteAllByTransformerNo(transformerNo);
+
             log.info("Transformer deleted");
         } catch (Exception e) {
             log.error("Error deleting transformer: {}", e.getMessage());
@@ -133,43 +129,8 @@ public class TransformerServiceImpl implements TransformerService {
         }
     }
 
-    @Override
-    public Map<String, String> getBaseImage(String transformerNo) throws Exception {
-        try {
-            log.info("Fetching base image for transformer: {}", transformerNo);
-            Transformer transformer = transformerRepo.findByTransformerNo(transformerNo);
-            if (transformer == null) {
-                throw new Exception("Transformer not found");
-            }
-            return Map.of(
-                    "sunny", transformer.getBaseImageSunnyUrl(),
-                    "cloudy", transformer.getBaseImageCloudyUrl(),
-                    "rainy", transformer.getBaseImageRainyUrl()
-            );
-        } catch (Exception e) {
-            log.error("Error fetching base image: {}", e.getMessage());
-            throw new Exception("Error fetching base image: " + e.getMessage());
-        }
-    }
-    @Override
-    public void deleteBaseImage(String transformerNo) throws Exception {
-        try{
-            log.info("Deleting base image for transformer: {}", transformerNo);
-            Transformer transformer = transformerRepo.findByTransformerNo(transformerNo);
-            if (transformer == null) {
-                throw new Exception("Transformer not found");
-            }
-            transformer.setBaseImageSunnyUrl(null);
-            transformer.setBaseImageCloudyUrl(null);
-            transformer.setBaseImageRainyUrl(null);
-            transformerRepo.save(transformer);
-            log.info("Base image deleted successfully");
-        }catch (Exception e){
-            log.error("Error deleting base image: {}", e.getMessage());
-            throw new Exception("Error deleting base image: " + e.getMessage());
 
-        }
-    }
+
 
 
 }

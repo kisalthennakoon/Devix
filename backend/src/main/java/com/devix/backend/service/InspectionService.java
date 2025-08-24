@@ -10,11 +10,10 @@ import java.util.Map;
 public interface InspectionService {
 
     void createInspection(InspectionRequestDto inspection) throws Exception;
-    void addThermalImage(String inspectionNo, String imageCondition, MultipartFile thermalImage) throws Exception;
+
     InspectionResponseDto getInspection(String inspectionNo) throws Exception;
     List<InspectionResponseDto> getAllInspections() throws Exception;
     void updateInspection(String inspectionNo, InspectionRequestDto inspection) throws Exception;
     void deleteInspection(String inspectionNo) throws Exception;
-    Map<String, String> getComparisonImage(String inspectionNo) throws Exception;
     List<InspectionResponseDto> getInspectionsByTransformerNo(String transformerNo) throws Exception;
 }

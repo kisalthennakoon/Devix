@@ -22,7 +22,5 @@ public class Inspection {
     private String inspectionTime;
     private String inspectionBranch;
     private String inspectionStatus;
-    private String thermalImageUrl;
-    private String thermalImageCondition;
     private String transformerNo;
 }
