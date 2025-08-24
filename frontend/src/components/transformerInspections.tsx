@@ -142,7 +142,7 @@ export const TransformerInspections = ({ transformerNo, onView }: Props) => {
 
 // useEffect(() => {
 //     axios
-//       .get(`https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/inspection/getAll/${transformerNo}`)
+//       .get(`/api/inspection/getAll/${transformerNo}`)
 //       .then((res) => {
 //         const formattedData = res.data.map((item: any, idx: number) => ({
 //           id: item.inspectionNo || String(idx),
@@ -162,7 +162,7 @@ export const TransformerInspections = ({ transformerNo, onView }: Props) => {
 
 const fetchInspections = () => {
   axios
-    .get(`https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/inspection/getAll/${transformerNo}`)
+    .get(`/api/inspection/getAll/${transformerNo}`)
     .then((res) => {
       const formattedData = res.data.map((item: any, idx: number) => ({
         id: item.inspectionNo || String(idx),
@@ -225,57 +225,65 @@ useEffect(() => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {inspectionsData.map((inspection, index) => (
-                    <TableRow 
-                      key={inspection.id} 
-                      sx={{ 
-                        '&:hover': { bgcolor: '#f5f5f5' },
-                        bgcolor: index % 2 === 0 ? 'white' : 'rgba(0,0,0,0.02)',
-                        height: 20
-                      }}
-                    >
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <IconButton
-                            size="small"
-                            onClick={() => toggleFavorite(inspection.id)}
-                          >
-                            {inspection.isFavorite ? (
-                              <Star sx={{ fontSize: 14, color: '#ffc107' }} />
-                            ) : (
-                              <StarBorder sx={{ fontSize: 14, color: 'text.secondary' }} />
-                            )}
-                          </IconButton>
-                          <Typography sx={{fontSize: 13}}>
-                            {inspection.inspectionNo}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Typography color="text.secondary" sx={{ fontSize: 13}}>
-                          {inspection.inspectedDate}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography color="text.secondary" sx={{ fontSize: 13}}>
-                          {inspection.maintenanceDate || "-"}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge status={inspection.status} />
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                        variant="contained"
-                        size="small"
-                        sx={{ bgcolor: '#1976d2', '&:hover': { bgcolor: '#1565c0' } }}
-                        onClick={() => onView?.(inspection)}  // NEW
+                  {inspectionsData.length > 0 ? (
+                    inspectionsData.map((inspection, index) => (
+                      <TableRow 
+                        key={inspection.id} 
+                        sx={{ 
+                          '&:hover': { bgcolor: '#f5f5f5' },
+                          bgcolor: index % 2 === 0 ? 'white' : 'rgba(0,0,0,0.02)',
+                          height: 20
+                        }}
                       >
-                        View
-                      </Button>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <IconButton
+                              size="small"
+                              onClick={() => toggleFavorite(inspection.id)}
+                            >
+                              {inspection.isFavorite ? (
+                                <Star sx={{ fontSize: 14, color: '#ffc107' }} />
+                              ) : (
+                                <StarBorder sx={{ fontSize: 14, color: 'text.secondary' }} />
+                              )}
+                            </IconButton>
+                            <Typography sx={{fontSize: 13}}>
+                              {inspection.inspectionNo}
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Typography color="text.secondary" sx={{ fontSize: 13}}>
+                            {inspection.inspectedDate}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography color="text.secondary" sx={{ fontSize: 13}}>
+                            {inspection.maintenanceDate || "-"}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <StatusBadge status={inspection.status} />
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                          variant="contained"
+                          size="small"
+                          sx={{ bgcolor: '#1976d2', '&:hover': { bgcolor: '#1565c0' } }}
+                          onClick={() => onView?.(inspection)}  // NEW
+                        >
+                          View
+                        </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : ( 
+                    <TableRow>
+                      <TableCell colSpan={5} sx={{ textAlign: 'center' }}>
+                        No inspections found.
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>

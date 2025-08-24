@@ -1,5 +1,5 @@
-import { Box, Button, IconButton, Dialog } from "@mui/material";
-import React, { useState } from "react";
+import { Box, Button, IconButton, Dialog, Snackbar, Alert } from "@mui/material";
+import React, { useState, type JSX } from "react";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ImageIcon from "@mui/icons-material/Image";
@@ -8,19 +8,34 @@ import BaselineImageShow from "./baselineImageShow";
 // import BaselineImage from "./BaselineImage"; // adjust path as needed
  // adjust path as needed
 
-function BaselineButton({ transformerNo }: { transformerNo: string }): JSX.Element {
+type Props = {
+    transformerNo?: string;
+    onChange?: () => void;
+};
+
+function BaselineButton({ transformerNo, onChange }: Props): JSX.Element {
     const [openBaseline, setOpenBaseline] = useState(false);
     const [openShow, setOpenShow] = useState(false);
 
+    const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
+        open: false,
+        message: "",
+        severity: "success",
+    });
+    const handleSnackbarClose = () => setSnackbar(s => ({ ...s, open: false }));
+
     const handleDelete = async () => {
         try {
-            await fetch(`https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/transformer/deleteBaseImages/${transformerNo}`, { method: "DELETE" });
-            alert("Deleted!");
+            await fetch(`/api/transformer/deleteBaseImage/${transformerNo}`, { method: "DELETE" });
+            //alert("Deleted!");
+            setSnackbar({ open: true, message: "Baseline Images Deleted!", severity: "success" });
+            if(onChange) onChange();
         } catch (e) {
-            alert("Delete failed!");
+            setSnackbar({ open: true, message: "Baseline Images Delete failed!", severity: "error" });
         }
     };
 
+    
     return (
         <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, backgroundColor: '#e0e0e0', borderRadius: 2, p: 1 }}>
             <Button
@@ -44,6 +59,8 @@ function BaselineButton({ transformerNo }: { transformerNo: string }): JSX.Eleme
                     onClose={() => setOpenBaseline(false)}
                     open={openBaseline}
                     onConfirm={() => setOpenBaseline(false)}
+                    onChange={onChange}
+                    snackBar={setSnackbar}
                 />
             </Dialog>
             <Dialog open={openShow} onClose={() => setOpenShow(false)} maxWidth="md" fullWidth>
@@ -53,6 +70,17 @@ function BaselineButton({ transformerNo }: { transformerNo: string }): JSX.Eleme
                     open={openShow}
                 />
             </Dialog>
+
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={3000}
+                onClose={handleSnackbarClose}
+                anchorOrigin={{ vertical: "top", horizontal: "center" }}
+            >
+                <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%' }}>
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 }

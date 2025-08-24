@@ -25,6 +25,8 @@ type BaselineImageProps = {
   title?: string;
   subtitle?: string;
   transformerNo?: string;
+  onChange?: () => void;
+  snackBar: (snackbar: { open: boolean; message: string; severity: "success" | "error" }) => void;
 };
 
 const SLOT_LABELS = ["Sunny", "Cloudy", "Rainy"] as const;
@@ -36,6 +38,8 @@ function BaselineImage({
   title = "Upload Baseline Images",
   subtitle = "Drag & drop up to 3 images, or click a slot to select.",
   transformerNo,
+  onChange,
+  snackBar
 }: BaselineImageProps) {
   const [slots, setSlots] = useState<SlotFile[]>([
     { file: null, url: null },
@@ -93,15 +97,26 @@ function BaselineImage({
     if (files[1]) formData.append("baseImageCloudy", files[1]);
     if (files[2]) formData.append("baseImageRainy", files[2]);
 
-    await fetch(
-      `https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/transformer/addBaseImage/${transformerNo}`,
-      {
-        method: "PUT",
-        body: formData,
-      }
-    );
-    onClose();
+    try {
+      await fetch(
+        `/api/transformer/addBaseImage/${transformerNo}`,
+        {
+          method: "PUT",
+          body: formData,
+        }
+      );
+      snackBar({ open: true, message: "Baseline Images Uploaded!", severity: "success" });
+      //alert("Upload successful!");
+    } catch (err) {
+      snackBar({ open: true, message: "Baseline Images Upload failed!", severity: "error" });
+      console.error(err);
+    } finally {
+      onClose();
+      if (onChange) onChange();
+    }
+    
   };
+  
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>

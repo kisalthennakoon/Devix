@@ -12,40 +12,19 @@ import Comparison from "../components/comparison";
 
 
 
-// const transformersData: TransformerDetails[] = [
-//   { no: "AZ-8890", pole: "EN-122-A", region: "Nugegoda", type: "Bulk" },
-//   { no: "AZ-1649", pole: "EN-122-A", region: "Nugegoda", type: "Bulk" },
-//   { no: "AZ-7316", pole: "EN-122-B", region: "Nugegoda", type: "Bulk" },
-//   { no: "AZ-4613", pole: "EN-122-B", region: "Maharagama", type: "Bulk" },
-//   { no: "AX-8993", pole: "EN-122-A", region: "Nugegoda", type: "Distribution" },
-//   { no: "AY-8790", pole: "EN-122-B", region: "Maharagama", type: "Distribution" },
-//   { no: "AY-8798", pole: "EN-122-A", region: "Maharagama", type: "Distribution" },
-//   { no: "AY-8799", pole: "EN-122-B", region: "Maharagama", type: "Distribution" },
-//   { no: "AZ-88901", pole: "EN-122-A", region: "Nugegoda", type: "Bulk" },
-//   { no: "AZ-16491", pole: "EN-122-A", region: "Nugegoda", type: "Bulk" },
-//   { no: "AZ-731611", pole: "EN-122-B", region: "Nugegoda", type: "Bulk" },
-//   { no: "AZ-4613111", pole: "EN-122-B", region: "Maharagama", type: "Bulk" },
-//   { no: "AX-89931111", pole: "EN-122-A", region: "Nugegoda", type: "Distribution" },
-//   { no: "AY-87902222", pole: "EN-122-B", region: "Maharagama", type: "Distribution" },
-//   { no: "AY-87981123", pole: "EN-122-A", region: "Maharagama", type: "Distribution" },
-//   { no: "AY-87990988", pole: "EN-122-B", region: "Maharagama", type: "Distribution" },
-// ];
-
-
-
 function Transformers() {
 
   const [selected, setSelected] = useState<TransformerDetails | null>(null);
   type SelectedInspection = {
-      id: string;
-      inspectionNo: string;
-      inspectedDate: string;
-      inspectionTime: string;
-      maintenanceDate: string | null;
-      inspectionStatus: "in progress" | null;
-      transformerNo: string;
-      inspectionBranch: string;
-      isFavorite: boolean;
+    id: string;
+    inspectionNo: string;
+    inspectedDate: string;
+    inspectionTime: string;
+    maintenanceDate: string | null;
+    inspectionStatus: "in progress" | null;
+    transformerNo: string;
+    inspectionBranch: string;
+    isFavorite: boolean;
   };
   const [selectedInspection, setSelectedInspection] = useState<SelectedInspection | null>(null); // NEW
   // adapter to satisfy your existing TransformerHead props shape
@@ -73,16 +52,14 @@ function Transformers() {
     updatedDate: i.inspectedDate,
     updatedTime: "",
     status: i.inspectionStatus || "in progress",
-      
+
   });
 
-  // const [transformersData, setTransformersData] = useState<TransformerDetails[]>([]);
-  
-  // useEffect(() => {
-  //   axios.get("https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/transformer/getAll")
-  //     .then((res) => setTransformersData(res.data))
-  //     .catch((err) => console.error("Failed to fetch transformers:", err));
-  // }, []);
+  const [comparisonKey, setComparisonKey] = useState(0);
+
+  const handleComparisonRefresh = () => setComparisonKey(k => k + 1);
+
+
 
   return (
     <div>
@@ -120,15 +97,18 @@ function Transformers() {
             inspectionDetails={toInspectionBarProps(selected, selectedInspection)}
             onBack={() => setSelectedInspection(null)}
             onBaselineClick={() => {/* open your baseline modal later */ }}
+            onRefresh={handleComparisonRefresh}
           />
           {/* <ThermalImageCard
            transformerNo = {selected.transformerNo}
            inspectionNo = {selectedInspection.inspectionNo}
            /> */}
-           <Comparison
-            inspectionNo = {selectedInspection.inspectionNo}
-           />
-        
+          <Comparison
+            key={comparisonKey}
+            inspectionNo={selectedInspection.inspectionNo}
+            onRefresh={handleComparisonRefresh}
+          />
+
         </Box>
       )}
     </div>

@@ -36,7 +36,7 @@ const BaselineImageShow: React.FC<SideBySideImagesProps> = ({
   
     useEffect(() => {
       axios
-        .get(`https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/transformer/get/${transformerNo}`)
+        .get(`/api/transformer/get/${transformerNo}`)
         .then((res) => {
           setBaselineImages(res.data);
           setError(false);
