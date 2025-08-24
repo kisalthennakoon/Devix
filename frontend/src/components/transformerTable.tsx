@@ -11,48 +11,121 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Snackbar,
+  Alert,
 } from "@mui/material";
+import axios from "axios";
+import { useEffect } from "react";
 import { useState } from "react";
 
 // Interface for a transformer
 export interface TransformerDetails {
-  no: string;
-  pole: string;
-  region: string;
-  type: "Bulk" | "Distribution";
+  transformerNo: string;
+  transformerPoleNo: string;
+  transformerRegion: string;
+  transformerType: "string";
+  transformerLocation: "string"
 }
 
 // Props type
 type TransformerTableProps = {
-  transformers: TransformerDetails[];
+  //transformers: TransformerDetails[];
+  onView?: (t: TransformerDetails) => void;
 };
 
-function TransformerTable({ transformers }: TransformerTableProps) {
-  const [view, setView] = useState<"transformers" | "inspections">(
-    "transformers"
-  );
+function TransformerTable({ onView }: TransformerTableProps) {
+  const [view, setView] = useState<"transformers" | "inspections">("transformers");
 
   // Filter states
   const [search, setSearch] = useState("");
-  const [searchBy, setSearchBy] = useState<"no" | "pole" | "region" | "type">(
-    "no"
-  );
+  const [searchBy, setSearchBy] = useState<"no" | "pole" | "region" | "type">("no");
   const [regionFilter, setRegionFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
+  const [transformersData, setTransformersData] = useState<TransformerDetails[]>([]);
+
+useEffect(() => {
+  axios.get("https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/transformer/getAll")
+    .then((res) => setTransformersData(res.data))
+    .catch((err) => console.error("Failed to fetch transformers:", err));
+}, []);
 
   // Pagination states
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;
 
+
+
   // Dialog states
   const [open, setOpen] = useState(false);
   const [newTransformer, setNewTransformer] = useState({
-    region: "",
-    no: "",
-    pole: "",
-    type: "",
-    location: "",
+    transformerNo: "",
+    transformerPoleNo: "",
+    transformerRegion: "",
+    transformerLocation: "",
+    transformerType: "",
   });
+
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  const [formError, setFormError] = useState<string | null>(null);
+  const onClickConfirm = async () => {
+  // Trim and validate all fields
+  if (
+    !newTransformer.transformerNo.trim() ||
+    !newTransformer.transformerPoleNo.trim() ||
+    !newTransformer.transformerRegion.trim() ||
+    !newTransformer.transformerLocation.trim() ||
+    !newTransformer.transformerType.trim()
+  ) {
+    setFormError("All fields are required.");
+    return;
+  }
+  setFormError(null);
+  try {
+      const res = await axios.post(
+        "https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/transformer/create",
+        newTransformer
+      );
+      setOpen(false);
+      setSnackbar({
+        open: true,
+        message: res.data?.message || "Transformer successfully created.",
+        severity: "success",
+      });
+    // Refresh the transformer list
+    const getRes = await axios.get("https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/transformer/getAll");
+    setTransformersData(getRes.data);
+    // Reset form
+    setNewTransformer({
+      transformerNo: "",
+      transformerPoleNo: "",
+      transformerRegion: "",
+      transformerLocation: "",
+      transformerType: "",
+    });
+  } catch (err) {
+    // Handles both string and object error responses
+    let errorMsg = "Failed to add transformer. Please try again.";
+    if (err?.response?.data) {
+      if (typeof err.response.data === "string") {
+        errorMsg = err.response.data;
+      } else if (typeof err.response.data.message === "string") {
+        errorMsg = err.response.data.message;
+      }
+    }
+    setSnackbar({
+        open: true,
+        message: errorMsg,
+        severity: "error",
+    });
+  }
+};
+
+
 
   const handleViewChange = (
     event: React.MouseEvent<HTMLElement>,
@@ -62,23 +135,19 @@ function TransformerTable({ transformers }: TransformerTableProps) {
   };
 
   // Filtered transformers
-  const filteredTransformers = transformers.filter((t) => {
+  const filteredTransformers = transformersData.filter((t) => {
     const searchValue = search.toLowerCase().trim();
 
     let matchesSearch = true;
     if (searchValue) {
-      if (searchBy === "no")
-        matchesSearch = t.no.toLowerCase().includes(searchValue);
-      if (searchBy === "pole")
-        matchesSearch = t.pole.toLowerCase().includes(searchValue);
-      if (searchBy === "region")
-        matchesSearch = t.region.toLowerCase().includes(searchValue);
-      if (searchBy === "type")
-        matchesSearch = t.type.toLowerCase().includes(searchValue);
+      if (searchBy === "no") matchesSearch = t.transformerNo.toLowerCase().includes(searchValue);
+      if (searchBy === "pole") matchesSearch = t.transformerPoleNo.toLowerCase().includes(searchValue);
+      if (searchBy === "region") matchesSearch = t.transformerRegion.toLowerCase().includes(searchValue);
+      if (searchBy === "type") matchesSearch = t.transformerType.toLowerCase().includes(searchValue);
     }
 
-    const matchesRegion = regionFilter === "" || t.region === regionFilter;
-    const matchesType = typeFilter === "" || t.type === typeFilter;
+    const matchesRegion = regionFilter === "" || t.transformerRegion === regionFilter;
+    const matchesType = typeFilter === "" || t.transformerType === typeFilter;
 
     return matchesSearch && matchesRegion && matchesType;
   });
@@ -86,30 +155,17 @@ function TransformerTable({ transformers }: TransformerTableProps) {
   // Pagination logic
   const totalPages = Math.ceil(filteredTransformers.length / itemsPerPage);
   const startIndex = (page - 1) * itemsPerPage;
-  const currentTransformers = filteredTransformers.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
+  const currentTransformers = filteredTransformers.slice(startIndex, startIndex + itemsPerPage);
 
   return (
     <Box sx={{ p: 3 }}>
       {/* Header */}
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 2,
-        }}
-      >
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
           <Typography variant="h5">Transformers</Typography>
           <Button
             variant="contained"
-            sx={{
-              bgcolor: "primary.main",
-              "&:hover": { bgcolor: "secondary.main" },
-            }}
+            sx={{ bgcolor: "primary.main", "&:hover": { bgcolor: "secondary.main" } }}
             onClick={() => setOpen(true)}
           >
             Add Transformer
@@ -169,7 +225,7 @@ function TransformerTable({ transformers }: TransformerTableProps) {
           <MenuItem value="Nugegoda">Nugegoda</MenuItem>
           <MenuItem value="Maharagama">Maharagama</MenuItem>
         </Select>
-
+        
         <Select
           sx={{ minWidth: 150 }}
           value={typeFilter}
@@ -199,19 +255,9 @@ function TransformerTable({ transformers }: TransformerTableProps) {
       </Box>
 
       {/* Table */}
-      <Box
-        sx={{ border: "1px solid #ddd", borderRadius: 2, overflow: "hidden" }}
-      >
+      <Box sx={{ border: "1px solid #ddd", borderRadius: 2, overflow: "hidden" }}>
         {/* Header */}
-        <Box
-          sx={{
-            display: "flex",
-            bgcolor: "primary.main",
-            color: "white",
-            p: 1,
-            fontWeight: "bold",
-          }}
-        >
+        <Box sx={{ display: "flex", bgcolor: "primary.main", color: "white", p: 1, fontWeight: "bold" }}>
           <Box sx={{ flex: 1 }}>Transformer No.</Box>
           <Box sx={{ flex: 1 }}>Pole No.</Box>
           <Box sx={{ flex: 1 }}>Region</Box>
@@ -222,7 +268,7 @@ function TransformerTable({ transformers }: TransformerTableProps) {
         {/* Rows */}
         {currentTransformers.map((t) => (
           <Box
-            key={t.no}
+            key={t.transformerNo}
             sx={{
               display: "flex",
               alignItems: "center",
@@ -231,12 +277,12 @@ function TransformerTable({ transformers }: TransformerTableProps) {
               "&:hover": { bgcolor: "#f5f5f5" },
             }}
           >
-            <Box sx={{ flex: 1 }}>{t.no}</Box>
-            <Box sx={{ flex: 1 }}>{t.pole}</Box>
-            <Box sx={{ flex: 1 }}>{t.region}</Box>
-            <Box sx={{ flex: 1 }}>{t.type}</Box>
+            <Box sx={{ flex: 1 }}>{t.transformerNo}</Box>
+            <Box sx={{ flex: 1 }}>{t.transformerPoleNo}</Box>
+            <Box sx={{ flex: 1 }}>{t.transformerRegion}</Box>
+            <Box sx={{ flex: 1 }}>{t.transformerType}</Box>
             <Box sx={{ width: 100 }}>
-              <Button variant="contained" size="small">
+              <Button variant="contained" size="small" onClick={() => onView?.(t)}>
                 View
               </Button>
             </Box>
@@ -272,8 +318,7 @@ function TransformerTable({ transformers }: TransformerTableProps) {
           </Button>
         </Box>
       )}
-
-      {/* Add Transformer Dialog */}
+     {/* Add Transformer Dialog */}
       <Dialog
         open={open}
         onClose={() => setOpen(false)}
@@ -285,9 +330,9 @@ function TransformerTable({ transformers }: TransformerTableProps) {
           sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}
         >
           <Select
-            value={newTransformer.region}
+            value={newTransformer.transformerRegion}
             onChange={(e) =>
-              setNewTransformer({ ...newTransformer, region: e.target.value })
+              setNewTransformer({ ...newTransformer, transformerRegion: e.target.value })
             }
             displayEmpty
           >
@@ -298,23 +343,23 @@ function TransformerTable({ transformers }: TransformerTableProps) {
 
           <TextField
             label="Transformer No"
-            value={newTransformer.no}
+            value={newTransformer.transformerNo}
             onChange={(e) =>
-              setNewTransformer({ ...newTransformer, no: e.target.value })
+              setNewTransformer({ ...newTransformer, transformerNo: e.target.value })
             }
           />
           <TextField
             label="Pole No"
-            value={newTransformer.pole}
+            value={newTransformer.transformerPoleNo}
             onChange={(e) =>
-              setNewTransformer({ ...newTransformer, pole: e.target.value })
+              setNewTransformer({ ...newTransformer, transformerPoleNo: e.target.value })
             }
           />
 
           <Select
-            value={newTransformer.type}
+            value={newTransformer.transformerType}
             onChange={(e) =>
-              setNewTransformer({ ...newTransformer, type: e.target.value })
+              setNewTransformer({ ...newTransformer, transformerType: e.target.value })
             }
             displayEmpty
           >
@@ -325,29 +370,50 @@ function TransformerTable({ transformers }: TransformerTableProps) {
 
           <TextField
             label="Location Details"
-            value={newTransformer.location}
+            value={newTransformer.transformerLocation}
             onChange={(e) =>
-              setNewTransformer({ ...newTransformer, location: e.target.value })
+              setNewTransformer({ ...newTransformer, transformerLocation: e.target.value })
             }
           />
         </DialogContent>
+        {formError && (
+          <Typography color="error" sx={{ mt: 1, ml: 2 }}>
+            {formError}
+          </Typography>
+        )}
         <DialogActions>
-          <Button onClick={() => setOpen(false)} color="secondary">
+          <Button onClick={() => { setOpen(false); setFormError(null); }} color="secondary">
             Cancel
           </Button>
           <Button
             onClick={() => {
               console.log("Transformer Added:", newTransformer);
-              setOpen(false);
+              onClickConfirm();
             }}
             variant="contained"
           >
             Confirm
           </Button>
         </DialogActions>
+        
       </Dialog>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
+
 }
 
 export default TransformerTable;

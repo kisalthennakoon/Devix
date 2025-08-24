@@ -1,8 +1,10 @@
+
 import { Box, Button, Typography, IconButton } from "@mui/material";
 import ImageIcon from '@mui/icons-material/Image';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteIcon from '@mui/icons-material/Delete';
+import BaselineButton from "./baselineButton";
 
 interface InspectionDetails {
     id: string;
@@ -17,16 +19,23 @@ interface InspectionDetails {
 
 type InspectionBarProps = {
     inspectionDetails: InspectionDetails;
+    onBaselineClick?: () => void;
+    onBack?: () => void;
 };
 
-function InspectionBar({ inspectionDetails }: InspectionBarProps) {
+function InspectionBar({ inspectionDetails, onBaselineClick, onBack }: InspectionBarProps) {
     return (
         <Box sx={{ backgroundColor: '#ffffffff', boxShadow: 5, borderRadius: 2, p: 2 }}>
 
             <Box sx={{ display: 'flex', flexDirection: 'row' }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                     <Box sx={{ display: 'flex', flexDirection: 'row' }}>
-                        <Button variant="contained" color="primary" sx={{ marginRight: 2, width: 'fit-content' }} onClick={() => alert('Back clicked!')}>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            sx={{ marginRight: 2, width: 'fit-content' }}
+                            onClick={onBack}                     // CHANGED (was alert)
+                            >
                             <ChevronLeftIcon />
                         </Button>
                         <Box>
@@ -83,17 +92,24 @@ function InspectionBar({ inspectionDetails }: InspectionBarProps) {
 
                         </Box>
                     </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, backgroundColor: '#e0e0e0', borderRadius: 2, p: 1 }}>
-                        <Typography sx={{ display: 'flex', alignItems: 'center', mr: 1 }}>
-                            <ImageIcon sx={{ mr: 1 }} />
+                    {/* <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, backgroundColor: '#e0e0e0', borderRadius: 2, p: 1 }}>
+                        <Button
+                            size="small"
+                            startIcon={<ImageIcon />}
+                            onClick={onBaselineClick}
+                            sx={{ mr: 1, textTransform: 'none' }}
+                            >
                             Baseline Image
-                        </Typography>
+                        </Button>
                         <IconButton aria-label="view" color="primary" onClick={() => alert('View clicked!')} sx={{ mr: 1 }}>
                             <VisibilityIcon />
                         </IconButton>
                         <IconButton aria-label="delete" color="error" onClick={() => alert('Delete clicked!')}>
                             <DeleteIcon />
                         </IconButton>
+                    </Box> */}
+                    <Box>
+                        <BaselineButton transformerNo={inspectionDetails.transformerNo} />
                     </Box>
                 </Box>
             </Box>
