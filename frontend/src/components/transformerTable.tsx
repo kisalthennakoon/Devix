@@ -15,47 +15,50 @@ import {
   Alert,
 } from "@mui/material";
 import axios from "axios";
-import { useEffect } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // Interface for a transformer
 export interface TransformerDetails {
   transformerNo: string;
   transformerPoleNo: string;
   transformerRegion: string;
-  transformerType: "string";
-  transformerLocation: "string"
+  transformerType: string;
+  transformerLocation: string;
 }
 
 // Props type
 type TransformerTableProps = {
-  //transformers: TransformerDetails[];
   onView?: (t: TransformerDetails) => void;
 };
 
 function TransformerTable({ onView }: TransformerTableProps) {
-  const [view, setView] = useState<"transformers" | "inspections">("transformers");
+  const [view, setView] = useState<"transformers" | "inspections">(
+    "transformers"
+  );
 
   // Filter states
   const [search, setSearch] = useState("");
-  const [searchBy, setSearchBy] = useState<"no" | "pole" | "region" | "type">("no");
+  const [searchBy, setSearchBy] = useState<"no" | "pole" | "region" | "type">(
+    "no"
+  );
   const [regionFilter, setRegionFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
-  const [transformersData, setTransformersData] = useState<TransformerDetails[]>([]);
+  const [transformersData, setTransformersData] = useState<
+    TransformerDetails[]
+  >([]);
 
-useEffect(() => {
-  axios.get("/api/transformer/getAll")
-    .then((res) => setTransformersData(res.data))
-    .catch((err) => console.error("Failed to fetch transformers:", err));
-}, []);
+  useEffect(() => {
+    axios
+      .get("/api/transformer/getAll")
+      .then((res) => setTransformersData(res.data))
+      .catch((err) => console.error("Failed to fetch transformers:", err));
+  }, []);
 
   // Pagination states
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;
 
-
-
-  // Dialog states
+  // Add Dialog states
   const [open, setOpen] = useState(false);
   const [newTransformer, setNewTransformer] = useState({
     transformerNo: "",
@@ -65,67 +68,122 @@ useEffect(() => {
     transformerType: "",
   });
 
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
+  // Edit Dialog states
+  const [editOpen, setEditOpen] = useState(false);
+  const [editTransformer, setEditTransformer] =
+    useState<TransformerDetails | null>(null);
+
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "error";
+  }>({
     open: false,
     message: "",
     severity: "success",
   });
 
   const [formError, setFormError] = useState<string | null>(null);
+
+  // Add new transformer
   const onClickConfirm = async () => {
-  // Trim and validate all fields
-  if (
-    !newTransformer.transformerNo.trim() ||
-    !newTransformer.transformerPoleNo.trim() ||
-    !newTransformer.transformerRegion.trim() ||
-    !newTransformer.transformerLocation.trim() ||
-    !newTransformer.transformerType.trim()
-  ) {
-    setFormError("All fields are required.");
-    return;
-  }
-  setFormError(null);
-  try {
-      const res = await axios.post(
-        "/api/transformer/create",
-        newTransformer
-      );
+    if (
+      !newTransformer.transformerNo.trim() ||
+      !newTransformer.transformerPoleNo.trim() ||
+      !newTransformer.transformerRegion.trim() ||
+      !newTransformer.transformerLocation.trim() ||
+      !newTransformer.transformerType.trim()
+    ) {
+      setFormError("All fields are required.");
+      return;
+    }
+    setFormError(null);
+    try {
+      const res = await axios.post("/api/transformer/create", newTransformer);
       setOpen(false);
       setSnackbar({
         open: true,
         message: res.data?.message || "Transformer successfully created.",
         severity: "success",
       });
-    // Refresh the transformer list
-    const getRes = await axios.get("/api/transformer/getAll");
-    setTransformersData(getRes.data);
-    // Reset form
-    setNewTransformer({
-      transformerNo: "",
-      transformerPoleNo: "",
-      transformerRegion: "",
-      transformerLocation: "",
-      transformerType: "",
-    });
-  } catch (err) {
-    // Handles both string and object error responses
-    let errorMsg = "Failed to add transformer. Please try again.";
-    if (err?.response?.data) {
-      if (typeof err.response.data === "string") {
-        errorMsg = err.response.data;
-      } else if (typeof err.response.data.message === "string") {
-        errorMsg = err.response.data.message;
-      }
-    }
-    setSnackbar({
+      // Refresh list
+      const getRes = await axios.get("/api/transformer/getAll");
+      setTransformersData(getRes.data);
+      setNewTransformer({
+        transformerNo: "",
+        transformerPoleNo: "",
+        transformerRegion: "",
+        transformerLocation: "",
+        transformerType: "",
+      });
+    } catch (err) {
+      setSnackbar({
         open: true,
-        message: errorMsg,
+        message: "Failed to add transformer. Please try again.",
         severity: "error",
-    });
-  }
-};
+      });
+    }
+  };
 
+  // Edit transformer
+  const handleEdit = (t: TransformerDetails) => {
+    setEditTransformer({ ...t });
+    setEditOpen(true);
+  };
 
+  const handleEditConfirm = async () => {
+    if (
+      !editTransformer?.transformerNo.trim() ||
+      !editTransformer?.transformerPoleNo.trim() ||
+      !editTransformer?.transformerRegion.trim() ||
+      !editTransformer?.transformerLocation.trim() ||
+      !editTransformer?.transformerType.trim()
+    ) {
+      setFormError("All fields are required.");
+      return;
+    }
+    try {
+      await axios.put(
+        `/api/transformer/update/${editTransformer.transformerNo}`,
+        editTransformer
+      );
+      setSnackbar({
+        open: true,
+        message: "Transformer updated successfully.",
+        severity: "success",
+      });
+      setEditOpen(false);
+      const res = await axios.get("/api/transformer/getAll");
+      setTransformersData(res.data);
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: "Failed to update transformer.",
+        severity: "error",
+      });
+    }
+  };
+
+  // Delete transformer
+  const handleDelete = async (t: TransformerDetails) => {
+    try {
+      await axios.delete(`/api/transformer/delete/${t.transformerNo}`);
+      setSnackbar({
+        open: true,
+        message: "Transformer deleted successfully.",
+        severity: "success",
+      });
+      setTransformersData(
+        transformersData.filter((x) => x.transformerNo !== t.transformerNo)
+      );
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: "Failed to delete transformer.",
+        severity: "error",
+      });
+    }
+  };
 
   const handleViewChange = (
     event: React.MouseEvent<HTMLElement>,
@@ -134,38 +192,53 @@ useEffect(() => {
     if (newView !== null) setView(newView);
   };
 
-  // Filtered transformers
+  // Filtering
   const filteredTransformers = transformersData.filter((t) => {
     const searchValue = search.toLowerCase().trim();
-
     let matchesSearch = true;
     if (searchValue) {
-      if (searchBy === "no") matchesSearch = t.transformerNo.toLowerCase().includes(searchValue);
-      if (searchBy === "pole") matchesSearch = t.transformerPoleNo.toLowerCase().includes(searchValue);
-      if (searchBy === "region") matchesSearch = t.transformerRegion.toLowerCase().includes(searchValue);
-      if (searchBy === "type") matchesSearch = t.transformerType.toLowerCase().includes(searchValue);
+      if (searchBy === "no")
+        matchesSearch = t.transformerNo.toLowerCase().includes(searchValue);
+      if (searchBy === "pole")
+        matchesSearch = t.transformerPoleNo.toLowerCase().includes(searchValue);
+      if (searchBy === "region")
+        matchesSearch = t.transformerRegion.toLowerCase().includes(searchValue);
+      if (searchBy === "type")
+        matchesSearch = t.transformerType.toLowerCase().includes(searchValue);
     }
-
-    const matchesRegion = regionFilter === "" || t.transformerRegion === regionFilter;
+    const matchesRegion =
+      regionFilter === "" || t.transformerRegion === regionFilter;
     const matchesType = typeFilter === "" || t.transformerType === typeFilter;
-
     return matchesSearch && matchesRegion && matchesType;
   });
 
   // Pagination logic
   const totalPages = Math.ceil(filteredTransformers.length / itemsPerPage);
   const startIndex = (page - 1) * itemsPerPage;
-  const currentTransformers = filteredTransformers.slice(startIndex, startIndex + itemsPerPage);
+  const currentTransformers = filteredTransformers.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
   return (
     <Box sx={{ p: 3 }}>
       {/* Header */}
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 2,
+        }}
+      >
         <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
           <Typography variant="h5">Transformers</Typography>
           <Button
             variant="contained"
-            sx={{ bgcolor: "primary.main", "&:hover": { bgcolor: "secondary.main" } }}
+            sx={{
+              bgcolor: "primary.main",
+              "&:hover": { bgcolor: "secondary.main" },
+            }}
             onClick={() => setOpen(true)}
           >
             Add Transformer
@@ -208,7 +281,7 @@ useEffect(() => {
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
-            setPage(1); // reset page when searching
+            setPage(1);
           }}
         />
 
@@ -225,7 +298,7 @@ useEffect(() => {
           <MenuItem value="Nugegoda">Nugegoda</MenuItem>
           <MenuItem value="Maharagama">Maharagama</MenuItem>
         </Select>
-        
+
         <Select
           sx={{ minWidth: 150 }}
           value={typeFilter}
@@ -255,17 +328,25 @@ useEffect(() => {
       </Box>
 
       {/* Table */}
-      <Box sx={{ border: "1px solid #ddd", borderRadius: 2, overflow: "hidden" }}>
-        {/* Header */}
-        <Box sx={{ display: "flex", bgcolor: "primary.main", color: "white", p: 1, fontWeight: "bold" }}>
+      <Box
+        sx={{ border: "1px solid #ddd", borderRadius: 2, overflow: "hidden" }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            bgcolor: "primary.main",
+            color: "white",
+            p: 1,
+            fontWeight: "bold",
+          }}
+        >
           <Box sx={{ flex: 1 }}>Transformer No.</Box>
           <Box sx={{ flex: 1 }}>Pole No.</Box>
           <Box sx={{ flex: 1 }}>Region</Box>
           <Box sx={{ flex: 1 }}>Type</Box>
-          <Box sx={{ width: 100 }}>Actions</Box>
+          <Box sx={{ width: 200 }}>Actions</Box>
         </Box>
 
-        {/* Rows */}
         {currentTransformers.length > 0 ? (
           currentTransformers.map((t) => (
             <Box
@@ -282,15 +363,37 @@ useEffect(() => {
               <Box sx={{ flex: 1 }}>{t.transformerPoleNo}</Box>
               <Box sx={{ flex: 1 }}>{t.transformerRegion}</Box>
               <Box sx={{ flex: 1 }}>{t.transformerType}</Box>
-              <Box sx={{ width: 100 }}>
-                <Button variant="contained" size="small" onClick={() => onView?.(t)}>
+              <Box sx={{ display: "flex", gap: 1, width: 200 }}>
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={() => onView?.(t)}
+                >
                   View
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  color="warning"
+                  onClick={() => handleEdit(t)}
+                >
+                  Edit
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  color="error"
+                  onClick={() => handleDelete(t)}
+                >
+                  Delete
                 </Button>
               </Box>
             </Box>
           ))
         ) : (
-          <Box sx={{ p: 1, justifyContent: 'center', display: 'flex' }}>No transformers found</Box>
+          <Box sx={{ p: 1, justifyContent: "center", display: "flex" }}>
+            No transformers found
+          </Box>
         )}
       </Box>
 
@@ -303,7 +406,6 @@ useEffect(() => {
           >
             {"<"}
           </Button>
-
           {[...Array(totalPages)].map((_, i) => (
             <Button
               key={i + 1}
@@ -313,7 +415,6 @@ useEffect(() => {
               {i + 1}
             </Button>
           ))}
-
           <Button
             disabled={page === totalPages}
             onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
@@ -322,7 +423,8 @@ useEffect(() => {
           </Button>
         </Box>
       )}
-     {/* Add Transformer Dialog */}
+
+      {/* Add Transformer Dialog */}
       <Dialog
         open={open}
         onClose={() => setOpen(false)}
@@ -336,7 +438,10 @@ useEffect(() => {
           <Select
             value={newTransformer.transformerRegion}
             onChange={(e) =>
-              setNewTransformer({ ...newTransformer, transformerRegion: e.target.value })
+              setNewTransformer({
+                ...newTransformer,
+                transformerRegion: e.target.value,
+              })
             }
             displayEmpty
           >
@@ -349,21 +454,30 @@ useEffect(() => {
             label="Transformer No"
             value={newTransformer.transformerNo}
             onChange={(e) =>
-              setNewTransformer({ ...newTransformer, transformerNo: e.target.value })
+              setNewTransformer({
+                ...newTransformer,
+                transformerNo: e.target.value,
+              })
             }
           />
           <TextField
             label="Pole No"
             value={newTransformer.transformerPoleNo}
             onChange={(e) =>
-              setNewTransformer({ ...newTransformer, transformerPoleNo: e.target.value })
+              setNewTransformer({
+                ...newTransformer,
+                transformerPoleNo: e.target.value,
+              })
             }
           />
 
           <Select
             value={newTransformer.transformerType}
             onChange={(e) =>
-              setNewTransformer({ ...newTransformer, transformerType: e.target.value })
+              setNewTransformer({
+                ...newTransformer,
+                transformerType: e.target.value,
+              })
             }
             displayEmpty
           >
@@ -376,7 +490,10 @@ useEffect(() => {
             label="Location Details"
             value={newTransformer.transformerLocation}
             onChange={(e) =>
-              setNewTransformer({ ...newTransformer, transformerLocation: e.target.value })
+              setNewTransformer({
+                ...newTransformer,
+                transformerLocation: e.target.value,
+              })
             }
           />
         </DialogContent>
@@ -386,21 +503,110 @@ useEffect(() => {
           </Typography>
         )}
         <DialogActions>
-          <Button onClick={() => { setOpen(false); setFormError(null); }} color="secondary">
-            Cancel
-          </Button>
           <Button
             onClick={() => {
-              console.log("Transformer Added:", newTransformer);
-              onClickConfirm();
+              setOpen(false);
+              setFormError(null);
             }}
-            variant="contained"
+            color="secondary"
           >
+            Cancel
+          </Button>
+          <Button onClick={onClickConfirm} variant="contained">
             Confirm
           </Button>
         </DialogActions>
-        
       </Dialog>
+
+      {/* Edit Transformer Dialog */}
+      <Dialog
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Edit Transformer</DialogTitle>
+        <DialogContent
+          sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}
+        >
+          <Select
+            value={editTransformer?.transformerRegion || ""}
+            onChange={(e) =>
+              setEditTransformer({
+                ...editTransformer!,
+                transformerRegion: e.target.value,
+              })
+            }
+            displayEmpty
+          >
+            <MenuItem value="">Select Region</MenuItem>
+            <MenuItem value="Nugegoda">Nugegoda</MenuItem>
+            <MenuItem value="Maharagama">Maharagama</MenuItem>
+          </Select>
+
+          <TextField
+            label="Transformer No"
+            value={editTransformer?.transformerNo || ""}
+            onChange={(e) =>
+              setEditTransformer({
+                ...editTransformer!,
+                transformerNo: e.target.value,
+              })
+            }
+          />
+          <TextField
+            label="Pole No"
+            value={editTransformer?.transformerPoleNo || ""}
+            onChange={(e) =>
+              setEditTransformer({
+                ...editTransformer!,
+                transformerPoleNo: e.target.value,
+              })
+            }
+          />
+
+          <Select
+            value={editTransformer?.transformerType || ""}
+            onChange={(e) =>
+              setEditTransformer({
+                ...editTransformer!,
+                transformerType: e.target.value,
+              })
+            }
+            displayEmpty
+          >
+            <MenuItem value="">Select Type</MenuItem>
+            <MenuItem value="Bulk">Bulk</MenuItem>
+            <MenuItem value="Distribution">Distribution</MenuItem>
+          </Select>
+
+          <TextField
+            label="Location Details"
+            value={editTransformer?.transformerLocation || ""}
+            onChange={(e) =>
+              setEditTransformer({
+                ...editTransformer!,
+                transformerLocation: e.target.value,
+              })
+            }
+          />
+        </DialogContent>
+        {formError && (
+          <Typography color="error" sx={{ mt: 1, ml: 2 }}>
+            {formError}
+          </Typography>
+        )}
+        <DialogActions>
+          <Button onClick={() => setEditOpen(false)} color="secondary">
+            Cancel
+          </Button>
+          <Button onClick={handleEditConfirm} variant="contained">
+            Save Changes
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
@@ -417,7 +623,6 @@ useEffect(() => {
       </Snackbar>
     </Box>
   );
-
 }
 
 export default TransformerTable;
