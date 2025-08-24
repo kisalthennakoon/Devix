@@ -10,7 +10,7 @@ import java.util.List;
 @Repository
 public interface InspectionRepo extends JpaRepository<Inspection, Long> {
 
-    @Query("SELECT MAX(CAST(SUBSTRING(i.inspectionNo, 5) AS int)) FROM Inspection i")
+    @Query("SELECT MAX(CAST(i.inspectionNo AS int)) FROM Inspection i")
     Integer findMaxInspectionNo();
 
     Inspection findByInspectionNo(String inspectionNo);

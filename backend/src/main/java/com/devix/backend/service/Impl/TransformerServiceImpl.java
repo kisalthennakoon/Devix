@@ -151,6 +151,25 @@ public class TransformerServiceImpl implements TransformerService {
             throw new Exception("Error fetching base image: " + e.getMessage());
         }
     }
+    @Override
+    public void deleteBaseImage(String transformerNo) throws Exception {
+        try{
+            log.info("Deleting base image for transformer: {}", transformerNo);
+            Transformer transformer = transformerRepo.findByTransformerNo(transformerNo);
+            if (transformer == null) {
+                throw new Exception("Transformer not found");
+            }
+            transformer.setBaseImageSunnyUrl(null);
+            transformer.setBaseImageCloudyUrl(null);
+            transformer.setBaseImageRainyUrl(null);
+            transformerRepo.save(transformer);
+            log.info("Base image deleted successfully");
+        }catch (Exception e){
+            log.error("Error deleting base image: {}", e.getMessage());
+            throw new Exception("Error deleting base image: " + e.getMessage());
+
+        }
+    }
 
 
 }
