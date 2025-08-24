@@ -18,5 +18,6 @@ public interface TransformerService {
     List<TransformerResponseDto> getAllTransformers() throws Exception;
     void updateTransformer(TransformerRequestDto transformer) throws Exception;
     void deleteTransformer(String transformerNo) throws Exception;
+    void deleteBaseImage(String transformerNo) throws Exception;
 
 }

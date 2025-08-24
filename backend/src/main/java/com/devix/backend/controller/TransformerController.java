@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @Slf4j
 @RequestMapping("/api/transformer")
+@CrossOrigin(origins = "*")
 public class TransformerController {
 
     private final TransformerService transformerService;
@@ -27,7 +28,7 @@ public class TransformerController {
             return ResponseEntity.ok("Transformer created successfully");
         } catch (Exception e) {
             log.error("Error creating transformer: {}", e.getMessage(), e);
-            return ResponseEntity.status(500).body("Error creating transformer: " + e.getMessage());
+            return ResponseEntity.status(500).body(e.getMessage());
         }
     }
 
@@ -66,6 +67,18 @@ public class TransformerController {
         } catch (Exception e) {
             log.error("Error fetching base images: {}", e.getMessage(), e);
             return ResponseEntity.status(500).body("Error fetching base images: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("deleteBaseImage/{transformerNo}")
+    public ResponseEntity<?> deleteBaseImage(@PathVariable("transformerNo") String transformerNo) {
+        log.info("Deleting base image for transformer: {}", transformerNo);
+        try{
+            transformerService.deleteBaseImage(transformerNo);
+            return ResponseEntity.ok("Base image deleted successfully");
+        }catch(Exception e){
+            log.info("Error deleting base image: {}", e.getMessage());
+            return ResponseEntity.status(500).body(e.getMessage());
         }
     }
 }
