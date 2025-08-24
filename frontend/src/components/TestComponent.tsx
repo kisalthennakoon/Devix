@@ -1,4 +1,17 @@
-import { Typography, Box, Button, TextField, Select, MenuItem, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import {
+  Typography,
+  Box,
+  Button,
+  TextField,
+  Select,
+  MenuItem,
+  ToggleButton,
+  ToggleButtonGroup,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "@mui/material";
 import { useState } from "react";
 
 // Interface for a transformer
@@ -15,17 +28,31 @@ type TransformerTableProps = {
 };
 
 function TransformerTable({ transformers }: TransformerTableProps) {
-  const [view, setView] = useState<"transformers" | "inspections">("transformers");
+  const [view, setView] = useState<"transformers" | "inspections">(
+    "transformers"
+  );
 
   // Filter states
   const [search, setSearch] = useState("");
-  const [searchBy, setSearchBy] = useState<"no" | "pole" | "region" | "type">("no");
+  const [searchBy, setSearchBy] = useState<"no" | "pole" | "region" | "type">(
+    "no"
+  );
   const [regionFilter, setRegionFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
 
   // Pagination states
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;
+
+  // Dialog states
+  const [open, setOpen] = useState(false);
+  const [newTransformer, setNewTransformer] = useState({
+    region: "",
+    no: "",
+    pole: "",
+    type: "",
+    location: "",
+  });
 
   const handleViewChange = (
     event: React.MouseEvent<HTMLElement>,
@@ -40,10 +67,14 @@ function TransformerTable({ transformers }: TransformerTableProps) {
 
     let matchesSearch = true;
     if (searchValue) {
-      if (searchBy === "no") matchesSearch = t.no.toLowerCase().includes(searchValue);
-      if (searchBy === "pole") matchesSearch = t.pole.toLowerCase().includes(searchValue);
-      if (searchBy === "region") matchesSearch = t.region.toLowerCase().includes(searchValue);
-      if (searchBy === "type") matchesSearch = t.type.toLowerCase().includes(searchValue);
+      if (searchBy === "no")
+        matchesSearch = t.no.toLowerCase().includes(searchValue);
+      if (searchBy === "pole")
+        matchesSearch = t.pole.toLowerCase().includes(searchValue);
+      if (searchBy === "region")
+        matchesSearch = t.region.toLowerCase().includes(searchValue);
+      if (searchBy === "type")
+        matchesSearch = t.type.toLowerCase().includes(searchValue);
     }
 
     const matchesRegion = regionFilter === "" || t.region === regionFilter;
@@ -55,17 +86,31 @@ function TransformerTable({ transformers }: TransformerTableProps) {
   // Pagination logic
   const totalPages = Math.ceil(filteredTransformers.length / itemsPerPage);
   const startIndex = (page - 1) * itemsPerPage;
-  const currentTransformers = filteredTransformers.slice(startIndex, startIndex + itemsPerPage);
+  const currentTransformers = filteredTransformers.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
   return (
     <Box sx={{ p: 3 }}>
       {/* Header */}
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 2,
+        }}
+      >
         <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
           <Typography variant="h5">Transformers</Typography>
           <Button
             variant="contained"
-            sx={{ bgcolor: "primary.main", "&:hover": { bgcolor: "secondary.main" } }}
+            sx={{
+              bgcolor: "primary.main",
+              "&:hover": { bgcolor: "secondary.main" },
+            }}
+            onClick={() => setOpen(true)}
           >
             Add Transformer
           </Button>
@@ -124,7 +169,7 @@ function TransformerTable({ transformers }: TransformerTableProps) {
           <MenuItem value="Nugegoda">Nugegoda</MenuItem>
           <MenuItem value="Maharagama">Maharagama</MenuItem>
         </Select>
-        
+
         <Select
           sx={{ minWidth: 150 }}
           value={typeFilter}
@@ -154,9 +199,19 @@ function TransformerTable({ transformers }: TransformerTableProps) {
       </Box>
 
       {/* Table */}
-      <Box sx={{ border: "1px solid #ddd", borderRadius: 2, overflow: "hidden" }}>
+      <Box
+        sx={{ border: "1px solid #ddd", borderRadius: 2, overflow: "hidden" }}
+      >
         {/* Header */}
-        <Box sx={{ display: "flex", bgcolor: "primary.main", color: "white", p: 1, fontWeight: "bold" }}>
+        <Box
+          sx={{
+            display: "flex",
+            bgcolor: "primary.main",
+            color: "white",
+            p: 1,
+            fontWeight: "bold",
+          }}
+        >
           <Box sx={{ flex: 1 }}>Transformer No.</Box>
           <Box sx={{ flex: 1 }}>Pole No.</Box>
           <Box sx={{ flex: 1 }}>Region</Box>
@@ -181,7 +236,9 @@ function TransformerTable({ transformers }: TransformerTableProps) {
             <Box sx={{ flex: 1 }}>{t.region}</Box>
             <Box sx={{ flex: 1 }}>{t.type}</Box>
             <Box sx={{ width: 100 }}>
-              <Button variant="contained" size="small">View</Button>
+              <Button variant="contained" size="small">
+                View
+              </Button>
             </Box>
           </Box>
         ))}
@@ -215,6 +272,80 @@ function TransformerTable({ transformers }: TransformerTableProps) {
           </Button>
         </Box>
       )}
+
+      {/* Add Transformer Dialog */}
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Add Transformer</DialogTitle>
+        <DialogContent
+          sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}
+        >
+          <Select
+            value={newTransformer.region}
+            onChange={(e) =>
+              setNewTransformer({ ...newTransformer, region: e.target.value })
+            }
+            displayEmpty
+          >
+            <MenuItem value="">Select Region</MenuItem>
+            <MenuItem value="Nugegoda">Nugegoda</MenuItem>
+            <MenuItem value="Maharagama">Maharagama</MenuItem>
+          </Select>
+
+          <TextField
+            label="Transformer No"
+            value={newTransformer.no}
+            onChange={(e) =>
+              setNewTransformer({ ...newTransformer, no: e.target.value })
+            }
+          />
+          <TextField
+            label="Pole No"
+            value={newTransformer.pole}
+            onChange={(e) =>
+              setNewTransformer({ ...newTransformer, pole: e.target.value })
+            }
+          />
+
+          <Select
+            value={newTransformer.type}
+            onChange={(e) =>
+              setNewTransformer({ ...newTransformer, type: e.target.value })
+            }
+            displayEmpty
+          >
+            <MenuItem value="">Select Type</MenuItem>
+            <MenuItem value="Bulk">Bulk</MenuItem>
+            <MenuItem value="Distribution">Distribution</MenuItem>
+          </Select>
+
+          <TextField
+            label="Location Details"
+            value={newTransformer.location}
+            onChange={(e) =>
+              setNewTransformer({ ...newTransformer, location: e.target.value })
+            }
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpen(false)} color="secondary">
+            Cancel
+          </Button>
+          <Button
+            onClick={() => {
+              console.log("Transformer Added:", newTransformer);
+              setOpen(false);
+            }}
+            variant="contained"
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
