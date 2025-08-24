@@ -15,7 +15,7 @@ export default function Comparison({ inspectionNo, onRefresh }: { inspectionNo: 
 
   const fetchComparisnon = async () => {
     axios
-      .get(`https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/inspection/getComparisonImage/${inspectionNo}`)
+      .get(`/api/inspection/getComparisonImage/${inspectionNo}`)
       .then((res) => {
         setInspectionImages(res.data);
         setError(false);

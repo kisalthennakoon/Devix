@@ -51,7 +51,7 @@ function ThermalImageCard({ inspectionNo, baseImageExist, onUploadSuccess }: The
   const confirmImage = async () => {
     if (!tempFile) return; // no file selected
     setUploading(true);
-    const url = `https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/inspection/addThermalImage/${inspectionNo}`; // replace with your backend endpoint
+    const url = `/api/inspection/addThermalImage/${inspectionNo}`; // replace with your backend endpoint
 
     try {
       const formData = new FormData();

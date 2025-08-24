@@ -99,7 +99,7 @@ function BaselineImage({
 
     try {
       await fetch(
-        `https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/transformer/addBaseImage/${transformerNo}`,
+        `/api/transformer/addBaseImage/${transformerNo}`,
         {
           method: "PUT",
           body: formData,

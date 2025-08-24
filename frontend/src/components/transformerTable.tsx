@@ -44,7 +44,7 @@ function TransformerTable({ onView }: TransformerTableProps) {
   const [transformersData, setTransformersData] = useState<TransformerDetails[]>([]);
 
 useEffect(() => {
-  axios.get("https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/transformer/getAll")
+  axios.get("/api/transformer/getAll")
     .then((res) => setTransformersData(res.data))
     .catch((err) => console.error("Failed to fetch transformers:", err));
 }, []);
@@ -87,7 +87,7 @@ useEffect(() => {
   setFormError(null);
   try {
       const res = await axios.post(
-        "https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/transformer/create",
+        "/api/transformer/create",
         newTransformer
       );
       setOpen(false);
@@ -97,7 +97,7 @@ useEffect(() => {
         severity: "success",
       });
     // Refresh the transformer list
-    const getRes = await axios.get("https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/transformer/getAll");
+    const getRes = await axios.get("/api/transformer/getAll");
     setTransformersData(getRes.data);
     // Reset form
     setNewTransformer({

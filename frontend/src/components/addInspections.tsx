@@ -63,7 +63,7 @@ export const AddInspectionModal = ({ transformerNoInput, open, onOpenChange, set
         inspectionTime: time,
       };
       const res = await axios.post(
-        "https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/inspection/create",
+        "/api/inspection/create",
         payload
       );
       setSnackbar({

@@ -26,7 +26,7 @@ function BaselineButton({ transformerNo, onChange }: Props): JSX.Element {
 
     const handleDelete = async () => {
         try {
-            await fetch(`https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/transformer/deleteBaseImage/${transformerNo}`, { method: "DELETE" });
+            await fetch(`/api/transformer/deleteBaseImage/${transformerNo}`, { method: "DELETE" });
             //alert("Deleted!");
             setSnackbar({ open: true, message: "Baseline Images Deleted!", severity: "success" });
             if(onChange) onChange();

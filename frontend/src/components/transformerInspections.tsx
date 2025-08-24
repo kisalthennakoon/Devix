@@ -142,7 +142,7 @@ export const TransformerInspections = ({ transformerNo, onView }: Props) => {
 
 // useEffect(() => {
 //     axios
-//       .get(`https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/inspection/getAll/${transformerNo}`)
+//       .get(`/api/inspection/getAll/${transformerNo}`)
 //       .then((res) => {
 //         const formattedData = res.data.map((item: any, idx: number) => ({
 //           id: item.inspectionNo || String(idx),
@@ -162,7 +162,7 @@ export const TransformerInspections = ({ transformerNo, onView }: Props) => {
 
 const fetchInspections = () => {
   axios
-    .get(`https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/inspection/getAll/${transformerNo}`)
+    .get(`/api/inspection/getAll/${transformerNo}`)
     .then((res) => {
       const formattedData = res.data.map((item: any, idx: number) => ({
         id: item.inspectionNo || String(idx),
