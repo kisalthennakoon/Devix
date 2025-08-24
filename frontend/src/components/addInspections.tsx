@@ -23,7 +23,7 @@ interface AddInspectionModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   setSnackbar: (snackbar: { open: boolean; message: string; severity: "success" | "error" }) => void;
-  onInspectionAdded: () => void;  
+  onInspectionAdded: () => void;
 }
 
 export const AddInspectionModal = ({ transformerNoInput, open, onOpenChange, setSnackbar, onInspectionAdded }: AddInspectionModalProps) => {
@@ -68,7 +68,7 @@ export const AddInspectionModal = ({ transformerNoInput, open, onOpenChange, set
       );
       setSnackbar({
         open: true,
-        message: res.data?.message ||  "Inspection added successfully!",
+        message: res.data?.message || "Inspection added successfully!",
         severity: "success",
       });
       onInspectionAdded();
@@ -104,7 +104,7 @@ export const AddInspectionModal = ({ transformerNoInput, open, onOpenChange, set
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
           Enter the details for the new transformer inspection.
         </Typography>
-        
+
         <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
           <Box sx={{ display: 'flex', gap: 2 }}>
             <TextField
@@ -115,8 +115,8 @@ export const AddInspectionModal = ({ transformerNoInput, open, onOpenChange, set
               placeholder="Branch"
               required
             />
-            </Box>
-            <Box sx={{display: 'flex', gap: 2}}>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 2 }}>
             <TextField
               fullWidth
               label="Transformer No"
@@ -127,7 +127,7 @@ export const AddInspectionModal = ({ transformerNoInput, open, onOpenChange, set
               InputProps={{ readOnly: true }}
             />
           </Box>
-          
+
           <Box sx={{ display: 'flex', gap: 2 }}>
             <TextField
               fullWidth
@@ -138,32 +138,33 @@ export const AddInspectionModal = ({ transformerNoInput, open, onOpenChange, set
               InputLabelProps={{ shrink: true }}
               required
             />
-          
-          <TextField
-            fullWidth
-            label="Time"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            placeholder="7:00 AM"
-          />
-        </Box>
+
+            <TextField
+              fullWidth
+              label="Time"
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)} // optional: step in seconds (60 = 1 minute)
+              required
+            />
+          </Box>
         </Box>
       </DialogContent>
       {formError && (
-            <Typography color="error" sx={{ mt: 1, ml: 2 }}>
-              {formError}
-            </Typography>
+        <Typography color="error" sx={{ mt: 1, ml: 2 }}>
+          {formError}
+        </Typography>
       )}
       <DialogActions sx={{ p: 3, pt: 1 }}>
-        <Button 
-          onClick={() => { onOpenChange(false); setFormError(null); }} 
+        <Button
+          onClick={() => { onOpenChange(false); setFormError(null); }}
           variant="outlined"
           color="inherit"
         >
           Cancel
         </Button>
-        <Button 
-          onClick={handleSubmit} 
+        <Button
+          onClick={handleSubmit}
           variant="contained"
           color="primary"
         >

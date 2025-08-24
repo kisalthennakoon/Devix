@@ -5,6 +5,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteIcon from '@mui/icons-material/Delete';
 import BaselineButton from "./baselineButton";
+import BaselineButtonInspection from "./baselineButton";
 
 interface InspectionDetails {
     id: string;
@@ -21,9 +22,10 @@ type InspectionBarProps = {
     inspectionDetails: InspectionDetails;
     onBaselineClick?: () => void;
     onBack?: () => void;
+    onRefresh: () => void;
 };
 
-function InspectionBar({ inspectionDetails, onBaselineClick, onBack }: InspectionBarProps) {
+function InspectionBar({ inspectionDetails, onBaselineClick, onBack, onRefresh }: InspectionBarProps) {
     return (
         <Box sx={{ backgroundColor: '#ffffffff', boxShadow: 5, borderRadius: 2, p: 2 }}>
 
@@ -35,7 +37,7 @@ function InspectionBar({ inspectionDetails, onBaselineClick, onBack }: Inspectio
                             color="primary"
                             sx={{ marginRight: 2, width: 'fit-content' }}
                             onClick={onBack}                     // CHANGED (was alert)
-                            >
+                        >
                             <ChevronLeftIcon />
                         </Button>
                         <Box>
@@ -56,7 +58,14 @@ function InspectionBar({ inspectionDetails, onBaselineClick, onBack }: Inspectio
                         ].map((item, idx) => (
                             <Box key={idx} sx={{ width: 100, height: 50, backgroundColor: '#e0e0e0', borderRadius: 2, boxShadow: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', p: 1 }}>
 
-                                <Typography variant="body2" sx={{ fontSize: 18, fontWeight: "bold" }}>
+                                <Typography variant="body2" sx={{
+                                    fontSize: 18,
+                                    fontWeight: "bold",
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                    width: '100%',
+                                }}>
                                     {item.value}
                                 </Typography>
 
@@ -109,7 +118,7 @@ function InspectionBar({ inspectionDetails, onBaselineClick, onBack }: Inspectio
                         </IconButton>
                     </Box> */}
                     <Box>
-                        <BaselineButton transformerNo={inspectionDetails.transformerNo} />
+                        <BaselineButtonInspection transformerNo={inspectionDetails.transformerNo} onChange={onRefresh} />
                     </Box>
                 </Box>
             </Box>

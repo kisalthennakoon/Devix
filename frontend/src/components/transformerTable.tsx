@@ -266,28 +266,32 @@ useEffect(() => {
         </Box>
 
         {/* Rows */}
-        {currentTransformers.map((t) => (
-          <Box
-            key={t.transformerNo}
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              p: 1,
-              borderBottom: "1px solid #eee",
-              "&:hover": { bgcolor: "#f5f5f5" },
-            }}
-          >
-            <Box sx={{ flex: 1 }}>{t.transformerNo}</Box>
-            <Box sx={{ flex: 1 }}>{t.transformerPoleNo}</Box>
-            <Box sx={{ flex: 1 }}>{t.transformerRegion}</Box>
-            <Box sx={{ flex: 1 }}>{t.transformerType}</Box>
-            <Box sx={{ width: 100 }}>
-              <Button variant="contained" size="small" onClick={() => onView?.(t)}>
-                View
-              </Button>
+        {currentTransformers.length > 0 ? (
+          currentTransformers.map((t) => (
+            <Box
+              key={t.transformerNo}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                p: 1,
+                borderBottom: "1px solid #eee",
+                "&:hover": { bgcolor: "#f5f5f5" },
+              }}
+            >
+              <Box sx={{ flex: 1 }}>{t.transformerNo}</Box>
+              <Box sx={{ flex: 1 }}>{t.transformerPoleNo}</Box>
+              <Box sx={{ flex: 1 }}>{t.transformerRegion}</Box>
+              <Box sx={{ flex: 1 }}>{t.transformerType}</Box>
+              <Box sx={{ width: 100 }}>
+                <Button variant="contained" size="small" onClick={() => onView?.(t)}>
+                  View
+                </Button>
+              </Box>
             </Box>
-          </Box>
-        ))}
+          ))
+        ) : (
+          <Box sx={{ p: 1, justifyContent: 'center', display: 'flex' }}>No transformers found</Box>
+        )}
       </Box>
 
       {/* Pagination */}

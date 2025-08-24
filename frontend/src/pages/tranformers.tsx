@@ -37,15 +37,15 @@ function Transformers() {
 
   const [selected, setSelected] = useState<TransformerDetails | null>(null);
   type SelectedInspection = {
-      id: string;
-      inspectionNo: string;
-      inspectedDate: string;
-      inspectionTime: string;
-      maintenanceDate: string | null;
-      inspectionStatus: "in progress" | null;
-      transformerNo: string;
-      inspectionBranch: string;
-      isFavorite: boolean;
+    id: string;
+    inspectionNo: string;
+    inspectedDate: string;
+    inspectionTime: string;
+    maintenanceDate: string | null;
+    inspectionStatus: "in progress" | null;
+    transformerNo: string;
+    inspectionBranch: string;
+    isFavorite: boolean;
   };
   const [selectedInspection, setSelectedInspection] = useState<SelectedInspection | null>(null); // NEW
   // adapter to satisfy your existing TransformerHead props shape
@@ -73,16 +73,22 @@ function Transformers() {
     updatedDate: i.inspectedDate,
     updatedTime: "",
     status: i.inspectionStatus || "in progress",
-      
+
   });
 
   // const [transformersData, setTransformersData] = useState<TransformerDetails[]>([]);
-  
+
   // useEffect(() => {
   //   axios.get("https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev/api/transformer/getAll")
   //     .then((res) => setTransformersData(res.data))
   //     .catch((err) => console.error("Failed to fetch transformers:", err));
   // }, []);
+
+  const [comparisonKey, setComparisonKey] = useState(0);
+
+  const handleComparisonRefresh = () => setComparisonKey(k => k + 1);
+
+
 
   return (
     <div>
@@ -120,15 +126,18 @@ function Transformers() {
             inspectionDetails={toInspectionBarProps(selected, selectedInspection)}
             onBack={() => setSelectedInspection(null)}
             onBaselineClick={() => {/* open your baseline modal later */ }}
+            onRefresh={handleComparisonRefresh} 
           />
           {/* <ThermalImageCard
            transformerNo = {selected.transformerNo}
            inspectionNo = {selectedInspection.inspectionNo}
            /> */}
-           <Comparison
-            inspectionNo = {selectedInspection.inspectionNo}
-           />
-        
+          <Comparison
+            key={comparisonKey}
+            inspectionNo={selectedInspection.inspectionNo}
+            onRefresh={handleComparisonRefresh} 
+          />
+
         </Box>
       )}
     </div>

@@ -56,7 +56,14 @@ function TransformerHead({ transformerDetails, onBack, onBaselineClick }: Transf
                         ].map((item, idx) => (
                             <Box key={idx} sx={{ width: 100, height: 50, backgroundColor: '#e0e0e0', borderRadius: 2, boxShadow: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', p: 1 }}>
 
-                                <Typography variant="body2" sx={{ fontSize: 18, fontWeight: "bold" }}>
+                                <Typography variant="body2" sx={{
+                                    fontSize: 18,
+                                    fontWeight: "bold",
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                    width: '100%',
+                                }}>
                                     {item.value}
                                 </Typography>
 
