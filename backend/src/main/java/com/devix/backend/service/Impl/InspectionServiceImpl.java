@@ -23,13 +23,10 @@ import java.util.stream.Collectors;
 public class InspectionServiceImpl implements InspectionService {
 
     private final InspectionRepo inspectionRepo;
-    private final GoogleDriveService googleDriveService;
     private final TransformerRepo transformerRepo;
     private final MapperService mapperService;
 
-    public InspectionServiceImpl(TransformerRepo transformerRepo, InspectionRepo inspectionRepo,
-            GoogleDriveService googleDriveService) {
-        this.googleDriveService = googleDriveService;
+    public InspectionServiceImpl(TransformerRepo transformerRepo, InspectionRepo inspectionRepo) {
         this.transformerRepo = transformerRepo;
         this.inspectionRepo = inspectionRepo;
         this.mapperService = MapperService.INSTANCE;

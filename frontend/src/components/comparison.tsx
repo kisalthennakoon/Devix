@@ -6,7 +6,7 @@ import { Alert, Box, Snackbar, Typography } from "@mui/material";
 
 
 
-export default function Comparison({ inspectionNo, onRefresh }: { inspectionNo: string, onRefresh: () => void }) {
+export default function Comparison({ inspectionNo, transformerNo, onRefresh }: { inspectionNo: string, transformerNo: string, onRefresh: () => void }) {
   const [inspectionImages, setInspectionImages] = useState({
     baseImageUrl: null as string | null,
     thermal: null as string | null,
@@ -15,7 +15,7 @@ export default function Comparison({ inspectionNo, onRefresh }: { inspectionNo: 
 
   const fetchComparisnon = async () => {
     axios
-      .get(`/api/inspection/getComparisonImage/${inspectionNo}`)
+      .get(`/api/inspectionImage/get/${inspectionNo}`)
       .then((res) => {
         setInspectionImages(res.data);
         setError(false);
@@ -25,10 +25,6 @@ export default function Comparison({ inspectionNo, onRefresh }: { inspectionNo: 
         setError(true); // mark that request failed
       });
   }
-
-  const [snackBar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({ open: false, message: "", severity: "success" });
-  const handleSnackbarClose = () => setSnackbar(s => ({ ...s, open: false }));
-
 
   useEffect(() => {
     fetchComparisnon();
@@ -49,6 +45,7 @@ export default function Comparison({ inspectionNo, onRefresh }: { inspectionNo: 
     return (
         <ThermalImageCard
           inspectionNo={inspectionNo}
+          transformerNo={transformerNo}
           baseImageExist={true}
           onUploadSuccess={onRefresh}          
         />
@@ -59,6 +56,7 @@ export default function Comparison({ inspectionNo, onRefresh }: { inspectionNo: 
   if (!inspectionImages.baseImageUrl && inspectionImages.thermal) {
     return <ThermalImageCard
       inspectionNo={inspectionNo}
+      transformerNo={transformerNo}
       baseImageExist={false}
       onUploadSuccess={onRefresh}
     />;
@@ -67,6 +65,7 @@ export default function Comparison({ inspectionNo, onRefresh }: { inspectionNo: 
   if (!inspectionImages.baseImageUrl && !inspectionImages.thermal) {
     return <ThermalImageCard
       inspectionNo={inspectionNo}
+      transformerNo={transformerNo}
       baseImageExist={false}
       onUploadSuccess={onRefresh}
     />;

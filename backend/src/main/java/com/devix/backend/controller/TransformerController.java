@@ -69,4 +69,15 @@ public class TransformerController {
         }
     }
 
+    @GetMapping("getLastInspected/{transformerNo}")
+    public ResponseEntity<?> getLastInspectedDate(@PathVariable("transformerNo") String transformerNo) {
+        log.info("Fetching last inspected date for transformerNo: {}", transformerNo);
+        try {
+            return ResponseEntity.ok(transformerService.lastInspectedDate(transformerNo));
+        } catch (Exception e) {
+            log.error("Error fetching last inspected date: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
 }

@@ -19,12 +19,13 @@ const colors = {
 
 type ThermalImageCardProps = {
   inspectionNo: string;
+  transformerNo: string;
   baseImageExist: boolean;
   onUploadSuccess: () => void;
-  
+
 };
 
-function ThermalImageCard({ inspectionNo, baseImageExist, onUploadSuccess }: ThermalImageCardProps) {
+function ThermalImageCard({ inspectionNo, transformerNo, baseImageExist, onUploadSuccess }: ThermalImageCardProps) {
   const [weather, setWeather] = useState("Sunny");
   const [fileName, setFileName] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
@@ -47,18 +48,26 @@ function ThermalImageCard({ inspectionNo, baseImageExist, onUploadSuccess }: The
 
   const [uploading, setUploading] = useState(false); // Add this state
 
-  
+
   const confirmImage = async () => {
     if (!tempFile) return; // no file selected
     setUploading(true);
-    const url = `/api/inspection/addThermalImage/${inspectionNo}`; // replace with your backend endpoint
+    const url = `/api/inspectionImage/add/${inspectionNo}`; // replace with your backend endpoint
 
     try {
       const formData = new FormData();
+      const now = new Date();
+      const dateStr = now.toISOString().split('T')[0]; // "YYYY-MM-DD"
+      const timeStr = now.toTimeString().split(' ')[0]; // "HH:mm:ss"
+
+      formData.append("uploadedDate", dateStr);
+      formData.append("uploadedTime", timeStr);
+      formData.append("uploadedBy", "Devix");
       formData.append("thermalImage", tempFile); // file
       formData.append("imageCondition", weather); // string
+      formData.append("transformerNo", transformerNo);
 
-      const response = await axios.put(url, formData, {
+      const response = await axios.post(url, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -67,7 +76,7 @@ function ThermalImageCard({ inspectionNo, baseImageExist, onUploadSuccess }: The
       console.log("Upload response:", response.data);
       //alert("Upload successful!");
       //alert("Thermal Image Upload successful!");
-      if(onUploadSuccess) onUploadSuccess();
+      if (onUploadSuccess) onUploadSuccess();
     } catch (error: any) {
       console.error("Error uploading:", error.response || error.message);
       alert("Thermal Image Upload failed!");
@@ -254,7 +263,7 @@ function ThermalImageCard({ inspectionNo, baseImageExist, onUploadSuccess }: The
           </Typography>
         </Box>
       </Dialog>
-      
+
     </Box>
   );
 }

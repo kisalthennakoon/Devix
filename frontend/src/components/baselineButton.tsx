@@ -26,7 +26,7 @@ function BaselineButton({ transformerNo, onChange }: Props): JSX.Element {
 
     const handleDelete = async () => {
         try {
-            await fetch(`/api/transformer/deleteBaseImage/${transformerNo}`, { method: "DELETE" });
+            await fetch(`/api/baseImage/delete/${transformerNo}`, { method: "DELETE" });
             //alert("Deleted!");
             setSnackbar({ open: true, message: "Baseline Images Deleted!", severity: "success" });
             if(onChange) onChange();

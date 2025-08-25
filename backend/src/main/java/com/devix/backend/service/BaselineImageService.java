@@ -9,4 +9,5 @@ public interface BaselineImageService {
     void addBaseImage(String transformerNo, MultipartFile baseImageSunny, MultipartFile baseImageCloudy, MultipartFile baseImageRainy, String uploadedBy, String uploadedDate, String uploadedTime ) throws Exception;
     Map<String, String> getBaseImage(String transformerNo) throws Exception;
     void deleteBaseImage(String transformerNo) throws Exception;
+    
 }

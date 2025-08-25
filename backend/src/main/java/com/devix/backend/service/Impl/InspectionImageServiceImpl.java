@@ -45,39 +45,58 @@ public class InspectionImageServiceImpl implements InspectionImageService {
             BaselineImage baselineImage = baseImageRepo.findByTransformerNo(inspection.getTransformerNo());
 
             String baseImageUrl = null;
+            String baseImageUploadedDate = null;
+            String baseImageUploadedTime = null;
+            String baseImageUploadedBy = null;
+
             String inspectionImageUrl = null;
-            // Always handle thermal image safely
+            String inspectionImageUploadedDate = null;
+            String inspectionImageUploadedTime = null;
+            String inspectionImageUploadedBy = null;
+
             if (inspectionImage != null) {
-                inspectionImageUrl = (inspectionImage.getThermalImageUrl() != null
-                        && !inspectionImage.getThermalImageUrl().isEmpty())
-                        ? inspectionImage.getThermalImageUrl()
-                        : null;
+                inspectionImageUrl = inspectionImage.getThermalImageUrl();
+                inspectionImageUploadedDate = inspectionImage.getUploadedDate();
+                inspectionImageUploadedTime = inspectionImage.getUploadedTime();
+                inspectionImageUploadedBy = inspectionImage.getUploadedBy();
             }
-            //String baseImageUrl = (baselineImage.getSunnyImageUrl() != null) ? "exist" : null;
+            if (baselineImage != null) {
+                baseImageUrl = "exist";
+            }
 
-            if (baselineImage != null && inspectionImage.getThermalImageCondition() != null) {
+            if (baselineImage != null && inspectionImage != null) {
                 switch (inspectionImage.getThermalImageCondition()) {
-                    case "Sunny" -> baseImageUrl = (baselineImage.getSunnyImageUrl() != null
-                            && !baselineImage.getSunnyImageUrl().isEmpty())
-                            ? baselineImage.getSunnyImageUrl()
-                            : null;
 
-                    case "Cloudy" -> baseImageUrl = (baselineImage.getCloudyImageUrl() != null
-                            && !baselineImage.getCloudyImageUrl().isEmpty())
-                            ? baselineImage.getCloudyImageUrl()
-                            : null;
-
-                    case "Rainy" -> baseImageUrl = (baselineImage.getRainyImageUrl() != null
-                            && baselineImage.getRainyImageUrl() .isEmpty())
-                            ? baselineImage.getRainyImageUrl()
-                            : null;
-
-
+                    case "Sunny" -> {
+                        baseImageUrl = baselineImage.getSunnyImageUrl();
+                        baseImageUploadedDate = baselineImage.getUploadedDate();
+                        baseImageUploadedTime = baselineImage.getUploadedTime();
+                        baseImageUploadedBy = baselineImage.getUploadedBy();
+                    }
+                    case "Cloudy" -> {
+                        baseImageUrl = baselineImage.getCloudyImageUrl();
+                        baseImageUploadedDate = baselineImage.getUploadedDate();
+                        baseImageUploadedTime = baselineImage.getUploadedTime();
+                        baseImageUploadedBy = baselineImage.getUploadedBy();
+                    }
+                    case "Rainy" -> {
+                        baseImageUrl = baselineImage.getRainyImageUrl();
+                        baseImageUploadedDate = baselineImage.getUploadedDate();
+                        baseImageUploadedTime = baselineImage.getUploadedTime();
+                        baseImageUploadedBy = baselineImage.getUploadedBy();
+                    }
                 }
             }
 
             images.put("baseImageUrl", baseImageUrl);
+            images.put("baseImageUploadedDate", baseImageUploadedDate);
+            images.put("baseImageUploadedTime", baseImageUploadedTime);
+            images.put("baseImageUploadedBy", baseImageUploadedBy);
+
             images.put("thermal", inspectionImageUrl);
+            images.put("thermalUploadedDate", inspectionImageUploadedDate);
+            images.put("thermalUploadedTime", inspectionImageUploadedTime);
+            images.put("thermalUploadedBy", inspectionImageUploadedBy);
 
             return images;
         } catch (Exception e) {
@@ -108,6 +127,28 @@ public class InspectionImageServiceImpl implements InspectionImageService {
         } catch (Exception e) {
             log.error("Error adding thermal image: {}", e.getMessage());
             throw new Exception("Error adding thermal image: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Map<String, String> getLastUpdatedDate(String inspectionNo) throws Exception {
+        try {
+            log.info("Fetching last updated date for inspection: {}", inspectionNo);
+            InspectionImage inspectionImage = inspectionImageRepo.findByInspectionNo(inspectionNo);
+            Inspection inspection = inspectionRepo.findByInspectionNo(inspectionNo);
+            Map<String, String> lastUpdatedInfo = new HashMap<>();
+
+            if (inspectionImage != null) {
+                lastUpdatedInfo.put("lastUpdatedDate", inspectionImage.getUploadedDate());
+                lastUpdatedInfo.put("lastUpdatedTime", inspectionImage.getUploadedTime());
+            } else if (inspection != null) {
+                lastUpdatedInfo.put("lastUpdatedDate", inspection.getInspectionDate());
+                lastUpdatedInfo.put("lastUpdatedTime", inspection.getInspectionTime());
+            }
+            return lastUpdatedInfo;
+        } catch (Exception e) {
+            log.error("Error fetching last updated date: {}", e.getMessage());
+            throw new Exception("Error fetching last updated date: " + e.getMessage());
         }
     }
 }

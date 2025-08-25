@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -26,16 +27,14 @@ import java.util.Map;
 public class TransformerServiceImpl implements TransformerService {
 
     private final TransformerRepo transformerRepo;
-    private final GoogleDriveService googleDriveService;
     private final MapperService mapperService;
     private final InspectionRepo inspectionRepo;
     private final BaseImageRepo baselineImageRepo;
     private final InspectionImageRepo inspectionImageRepo;
 
 
-    public TransformerServiceImpl(TransformerRepo transformerRepo, GoogleDriveService googleDriveService, InspectionRepo inspectionRepo, BaseImageRepo baselineImageRepo, InspectionImageRepo inspectionImageRepo) {
+    public TransformerServiceImpl(TransformerRepo transformerRepo, InspectionRepo inspectionRepo, BaseImageRepo baselineImageRepo, InspectionImageRepo inspectionImageRepo) {
         this.transformerRepo = transformerRepo;
-        this.googleDriveService = googleDriveService;
         this.mapperService = MapperService.INSTANCE;
         this.inspectionRepo = inspectionRepo;
         this.inspectionImageRepo = inspectionImageRepo;
@@ -129,8 +128,24 @@ public class TransformerServiceImpl implements TransformerService {
         }
     }
 
+    @Override
+    public Map<String, String> lastInspectedDate(String transformerNo) throws Exception {
+        try {
+            log.info("Fetching last inspected date for transformer: {}", transformerNo);
+            Inspection lastInspection = inspectionRepo.findTopByTransformerNoOrderByInspectionDateDescInspectionTimeDesc(transformerNo);
 
+            if (lastInspection == null) {
+                throw new Exception("No inspections found for transformer");
+            }
+            Map<String, String> dateTime = new HashMap<>();
+            dateTime.put("date", lastInspection.getInspectionDate());
+            dateTime.put("time", lastInspection.getInspectionTime());
 
-
+            return dateTime;
+        } catch (Exception e) {
+            log.error("Error fetching last inspected date: {}", e.getMessage());
+            throw new Exception("Error fetching last inspected date: " + e.getMessage());
+        }
+    }
 
 }

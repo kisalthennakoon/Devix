@@ -47,4 +47,15 @@ public class InspectionImageController {
             return ResponseEntity.status(500).body(e.getMessage());
         }
     }
+
+    @GetMapping("/getLastUpdatedDate/{inspectionNo}")
+    public ResponseEntity<?> getLastUpdatedDate(@PathVariable("inspectionNo") String inspectionNo) {
+        try {
+            log.info("Fetching last updated date for inspection: {}", inspectionNo);
+            return ResponseEntity.ok(inspectionImageService.getLastUpdatedDate(inspectionNo));
+        } catch (Exception e) {
+            log.error("Error fetching last updated date: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
 }
