@@ -58,7 +58,7 @@ function ThermalImageCard({ inspectionNo, transformerNo, baseImageExist, onUploa
       const formData = new FormData();
       const now = new Date();
       const dateStr = now.toISOString().split('T')[0]; // "YYYY-MM-DD"
-      const timeStr = now.toTimeString().split(' ')[0]; // "HH:mm:ss"
+      const timeStr = now.toTimeString().split(' ')[0].slice(0, 5); // "HH:mm"
 
       formData.append("uploadedDate", dateStr);
       formData.append("uploadedTime", timeStr);
