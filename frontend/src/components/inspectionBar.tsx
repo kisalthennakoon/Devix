@@ -6,6 +6,8 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteIcon from '@mui/icons-material/Delete';
 import BaselineButton from "./baselineButton";
 import BaselineButtonInspection from "./baselineButton";
+import axios from "axios";
+import { useEffect, useState } from "react";
 
 interface InspectionDetails {
     id: string;
@@ -26,6 +28,27 @@ type InspectionBarProps = {
 };
 
 function InspectionBar({ inspectionDetails, onBaselineClick, onBack, onRefresh }: InspectionBarProps) {
+
+        const [lastUpdatedDate, setLastUpdatedDate] = useState(
+            {
+                lastUpdatedDate: null,
+                lastUpdatedTime: null
+            }
+        );
+        const getLastUpdatedDate = async () => {
+           try{
+               const res = await axios.get(`/api/inspectionImage/getLastUpdatedDate/${inspectionDetails?.id}`);
+               setLastUpdatedDate(res.data);
+           }catch(err){
+               console.error(err);
+               return null;
+           }
+        }
+    
+        useEffect(() => {
+            getLastUpdatedDate();
+        }, []);
+
     return (
         <Box sx={{ backgroundColor: '#ffffffff', boxShadow: 5, borderRadius: 2, p: 2 }}>
 
@@ -81,7 +104,7 @@ function InspectionBar({ inspectionDetails, onBaselineClick, onBack, onRefresh }
                     <Box sx={{ display: 'flex', flexDirection: 'row' }}>
                         <Box>
                             <Typography variant="subtitle1" sx={{ fontSize: 12, color: '#666' }}>
-                                Last Updated: {inspectionDetails.updatedDate} {inspectionDetails.updatedTime}
+                                Last Updated: {lastUpdatedDate?.lastUpdatedDate} {lastUpdatedDate?.lastUpdatedTime}
                             </Typography>
                         </Box>
                         <Box sx={{

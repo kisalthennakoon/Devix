@@ -99,7 +99,13 @@ public class TransformerServiceImpl implements TransformerService {
             if (existingTransformer == null) {
                 throw new Exception("Transformer not found");
             }
-            transformerRepo.save(mapperService.toTransformerEntity(transformerRequestDto));
+            
+            existingTransformer.setTransformerLocation(transformerRequestDto.getTransformerLocation());
+            existingTransformer.setTransformerPoleNo(transformerRequestDto.getTransformerPoleNo());
+            existingTransformer.setTransformerRegion(transformerRequestDto.getTransformerRegion());
+            existingTransformer.setTransformerType(transformerRequestDto.getTransformerType());
+
+            transformerRepo.save(existingTransformer);
             log.info("Transformer updated");
         } catch (Exception e) {
             log.error("Error updating transformer: {}", e.getMessage());
