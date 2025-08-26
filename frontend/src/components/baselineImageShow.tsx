@@ -36,7 +36,7 @@ const BaselineImageShow: React.FC<SideBySideImagesProps> = ({
   
     useEffect(() => {
       axios
-        .get(`/api/transformer/get/${transformerNo}`)
+        .get(`/api/baseImage/get/${transformerNo}`)
         .then((res) => {
           setBaselineImages(res.data);
           setError(false);

@@ -97,11 +97,19 @@ function BaselineImage({
     if (files[1]) formData.append("baseImageCloudy", files[1]);
     if (files[2]) formData.append("baseImageRainy", files[2]);
 
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0]; // "YYYY-MM-DD"
+    const timeStr = now.toTimeString().split(' ')[0].slice(0, 5); // "HH:mm"
+
+    formData.append("uploadedDate", dateStr);
+    formData.append("uploadedTime", timeStr);
+    formData.append("uploadedBy", "Devix");
+
     try {
       await fetch(
-        `/api/transformer/addBaseImage/${transformerNo}`,
+        `/api/baseImage/add/${transformerNo}`,
         {
-          method: "PUT",
+          method: "POST",
           body: formData,
         }
       );
@@ -114,9 +122,9 @@ function BaselineImage({
       onClose();
       if (onChange) onChange();
     }
-    
+
   };
-  
+
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>

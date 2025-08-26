@@ -32,21 +32,7 @@ public class TransformerController {
         }
     }
 
-    @PutMapping(value = "/addBaseImage/{transformerNo}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> addBaseImage(@PathVariable("transformerNo") String transformerNo,
-                                          @RequestParam("baseImageSunny") MultipartFile baseImageSunny,
-                                          @RequestParam("baseImageCloudy") MultipartFile baseImageCloudy,
-                                          @RequestParam("baseImageRainy") MultipartFile baseImageRainy) {
 
-        log.info("Adding base image for transformer: {}", transformerNo);
-        try {
-            transformerService.addBaseImage(transformerNo, baseImageSunny, baseImageCloudy, baseImageRainy);
-            return ResponseEntity.ok("Base image added successfully");
-        } catch (Exception e) {
-            log.error("Error adding base image: {}", e.getMessage(), e);
-            return ResponseEntity.status(500).body("Error adding base image: " + e.getMessage());
-        }
-    }
 
     @GetMapping("/getAll")
     public ResponseEntity<?> getAllTransformers() {
@@ -59,26 +45,39 @@ public class TransformerController {
         }
     }
 
-    @GetMapping("/get/{transformerNo}")
-    public ResponseEntity<?> getBaseImages(@PathVariable("transformerNo") String transformerNo) {
-        log.info("Fetching base images for transformer: {}", transformerNo);
+    @PutMapping("/update")
+    public ResponseEntity<?> updateTransformer(@RequestBody TransformerRequestDto transformerRequestDto) {
+        log.info("Updating transformer {} ", transformerRequestDto);
         try {
-            return ResponseEntity.ok(transformerService.getBaseImage(transformerNo));
+            transformerService.updateTransformer(transformerRequestDto);
+            return ResponseEntity.ok("Transformer updated successfully");
         } catch (Exception e) {
-            log.error("Error fetching base images: {}", e.getMessage(), e);
-            return ResponseEntity.status(500).body("Error fetching base images: " + e.getMessage());
-        }
-    }
-
-    @DeleteMapping("deleteBaseImage/{transformerNo}")
-    public ResponseEntity<?> deleteBaseImage(@PathVariable("transformerNo") String transformerNo) {
-        log.info("Deleting base image for transformer: {}", transformerNo);
-        try{
-            transformerService.deleteBaseImage(transformerNo);
-            return ResponseEntity.ok("Base image deleted successfully");
-        }catch(Exception e){
-            log.info("Error deleting base image: {}", e.getMessage());
+            log.error("Error updating transformer: {}", e.getMessage(), e);
             return ResponseEntity.status(500).body(e.getMessage());
         }
     }
+
+    @DeleteMapping("/delete/{transformerNo}")
+    public ResponseEntity<?> deleteTransformer(@PathVariable String transformerNo) {
+        log.info("Deleting transformer with transformerNo: {}", transformerNo);
+        try {
+            transformerService.deleteTransformer(transformerNo);
+            return ResponseEntity.ok("Transformer deleted successfully");
+        } catch (Exception e) {
+            log.error("Error deleting transformer: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("getLastInspected/{transformerNo}")
+    public ResponseEntity<?> getLastInspectedDate(@PathVariable("transformerNo") String transformerNo) {
+        log.info("Fetching last inspected date for transformerNo: {}", transformerNo);
+        try {
+            return ResponseEntity.ok(transformerService.lastInspectedDate(transformerNo));
+        } catch (Exception e) {
+            log.error("Error fetching last inspected date: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
 }

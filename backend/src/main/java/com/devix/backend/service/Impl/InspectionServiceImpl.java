@@ -23,13 +23,10 @@ import java.util.stream.Collectors;
 public class InspectionServiceImpl implements InspectionService {
 
     private final InspectionRepo inspectionRepo;
-    private final GoogleDriveService googleDriveService;
     private final TransformerRepo transformerRepo;
     private final MapperService mapperService;
 
-    public InspectionServiceImpl(TransformerRepo transformerRepo, InspectionRepo inspectionRepo,
-            GoogleDriveService googleDriveService) {
-        this.googleDriveService = googleDriveService;
+    public InspectionServiceImpl(TransformerRepo transformerRepo, InspectionRepo inspectionRepo) {
         this.transformerRepo = transformerRepo;
         this.inspectionRepo = inspectionRepo;
         this.mapperService = MapperService.INSTANCE;
@@ -55,27 +52,7 @@ public class InspectionServiceImpl implements InspectionService {
 
     }
 
-    @Override
-    public void addThermalImage(String inspectionNo, String imageCondition, MultipartFile thermalImage)
-            throws Exception {
-        try {
-            log.info("Adding thermal image for inspection: {}", inspectionNo);
-            Inspection inspection = inspectionRepo.findByInspectionNo(inspectionNo);
-            if (inspection == null) {
-                throw new Exception("Inspection not found");
-            }
 
-            String imageUrl = googleDriveService.uploadFile(thermalImage);
-            inspection.setThermalImageUrl(imageUrl);
-            inspection.setThermalImageCondition(imageCondition);
-
-            inspectionRepo.save(inspection);
-            log.info("Thermal image added successfully");
-        } catch (Exception e) {
-            log.error("Error adding thermal image: {}", e.getMessage());
-            throw new Exception("Error adding thermal image: " + e.getMessage());
-        }
-    }
 
     @Override
     public InspectionResponseDto getInspection(String inspectionNo) throws Exception {
@@ -143,56 +120,7 @@ public class InspectionServiceImpl implements InspectionService {
 
     }
 
-    @Override
-    public Map<String, String> getComparisonImage(String inspectionNo) throws Exception {
-        try {
-            log.info("Fetching comparison images for inspection: {}", inspectionNo);
-            Inspection inspection = inspectionRepo.findByInspectionNo(inspectionNo);
-            if (inspection == null) {
-                throw new Exception("Inspection not found");
-            }
 
-            Map<String, String> images = new HashMap<>();
-            Transformer transformer = transformerRepo.findByTransformerNo(inspection.getTransformerNo());
-
-            // Always handle thermal image safely
-            String thermalImage = (inspection.getThermalImageUrl() != null
-                    && !inspection.getThermalImageUrl().isEmpty())
-                            ? inspection.getThermalImageUrl()
-                            : null;
-
-            String baseImage = (transformer.getBaseImageSunnyUrl() != null) ? "exist" : null;
-
-            if (transformer != null && inspection.getThermalImageCondition() != null) {
-                switch (inspection.getThermalImageCondition()) {
-                    case "Sunny" -> baseImage = (transformer.getBaseImageSunnyUrl() != null
-                            && !transformer.getBaseImageSunnyUrl().isEmpty())
-                                    ? transformer.getBaseImageSunnyUrl()
-                                    : null;
-
-                    case "Cloudy" -> baseImage = (transformer.getBaseImageCloudyUrl() != null
-                            && !transformer.getBaseImageCloudyUrl().isEmpty())
-                                    ? transformer.getBaseImageCloudyUrl()
-                                    : null;
-
-                    case "Rainy" -> baseImage = (transformer.getBaseImageRainyUrl() != null
-                            && !transformer.getBaseImageRainyUrl().isEmpty())
-                                    ? transformer.getBaseImageRainyUrl()
-                                    : null;
-
-                    default -> baseImage = null; // if unknown condition
-                }
-            }
-
-            images.put("baseImageUrl", baseImage);
-            images.put("thermal", thermalImage);
-
-            return images;
-        } catch (Exception e) {
-            log.error("Error fetching comparison images: {}", e.getMessage());
-            throw new Exception("Error fetching comparison images: " + e.getMessage());
-        }
-    }
 
     private String generateInspectionNo() {
         Integer maxInspectionNo = inspectionRepo.findMaxInspectionNo();
