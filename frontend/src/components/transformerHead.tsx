@@ -6,6 +6,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { Navigation } from "@mui/icons-material";
 import type { TransformerDetails } from "./transformerTable";
 import BaselineButton from "./baselineButton";
+import axios from "axios";
+import { useEffect, useState } from "react";
 
 interface transformerDetails {
     id: string;
@@ -29,6 +31,28 @@ type TransformerBarProps = {
 };
 
 function TransformerHead({ transformerDetails, onBack, onBaselineClick }: TransformerBarProps) {
+
+    const [lastInspectedDate, setLastInspectedDate] = useState(
+        {
+            date: null,
+            time: null
+        }
+    );
+    const getLastInspectedDate = async () => {
+       
+        try{
+            const res = await axios.get(`/api/transformer/getLastInspected/${transformerDetails?.transformerNo}`);
+            setLastInspectedDate(res.data);
+        }catch(err){
+            console.error(err);
+            return null;
+        }
+    }
+
+    useEffect(() => {
+        getLastInspectedDate();
+    }, []);
+
     return (
         <Box sx={{ backgroundColor: '#ffffffff', boxShadow: 5, borderRadius: 2, p: 2 }}>
 
@@ -40,19 +64,19 @@ function TransformerHead({ transformerDetails, onBack, onBaselineClick }: Transf
                         </Button>
                         <Box>
                             <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                                {transformerDetails.transformerNo}
+                                {transformerDetails?.transformerNo}
                             </Typography>
                             <Typography variant="subtitle1" sx={{ fontSize: 12, color: '#666', display: 'flex', alignItems: 'center' }}>
-                                {transformerDetails.region} <Navigation sx={{ color: 'red', fontSize: 16, mr: 0.5 }} /> {transformerDetails.location}
+                                {transformerDetails?.region} <Navigation sx={{ color: 'red', fontSize: 16, mr: 0.5 }} /> {transformerDetails.location}
                             </Typography>
                         </Box>
                     </Box>
                     <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, mt: 2 }}>
                         {[
-                            { title: 'Pole No', value: transformerDetails.poleNo },
-                            { title: 'Capacity', value: transformerDetails.capacity },
-                            { title: 'Type', value: transformerDetails.type },
-                            { title: 'No. of Freeders', value: transformerDetails.noOfFreeders }
+                            { title: 'Pole No', value: transformerDetails?.poleNo },
+                            { title: 'Capacity', value: transformerDetails?.capacity },
+                            { title: 'Type', value: transformerDetails?.type },
+                            { title: 'No. of Freeders', value: transformerDetails?.noOfFreeders }
                         ].map((item, idx) => (
                             <Box key={idx} sx={{ width: 100, height: 50, backgroundColor: '#e0e0e0', borderRadius: 2, boxShadow: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', p: 1 }}>
 
@@ -79,7 +103,7 @@ function TransformerHead({ transformerDetails, onBack, onBaselineClick }: Transf
                     <Box sx={{ display: 'flex', flexDirection: 'row' }}>
                         <Box>
                             <Typography variant="subtitle1" sx={{ fontSize: 12, color: '#666' }}>
-                                Last Inspected Date: {transformerDetails.updatedDate} {transformerDetails.updatedTime}
+                                Last Inspected Date: {lastInspectedDate?.date} {lastInspectedDate?.time}
                             </Typography>
                         </Box>
                     </Box>
