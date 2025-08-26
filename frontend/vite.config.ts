@@ -9,8 +9,8 @@ export default defineConfig({
         proxy: {
             // when frontend calls `/api/...`, proxy it to your backend
             '/api': {
-                target: 'https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev',
-                changeOrigin: true,                
+                target: 'http://localhost:8080',
+                changeOrigin: true,
             },
         },
     },

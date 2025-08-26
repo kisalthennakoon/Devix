@@ -5,8 +5,9 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import ImageIcon from "@mui/icons-material/Image";
 import BaselineImage from "./baselineImage";
 import BaselineImageShow from "./baselineImageShow";
-// import BaselineImage from "./BaselineImage"; // adjust path as needed
- // adjust path as needed
+
+// import BaselineImage from "./BaselineImage"; 
+
 
 type Props = {
     transformerNo?: string;
