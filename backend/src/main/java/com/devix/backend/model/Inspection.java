@@ -23,4 +23,5 @@ public class Inspection {
     private String inspectionBranch;
     private String inspectionStatus;
     private String transformerNo;
+    private String inspectedby;
 }

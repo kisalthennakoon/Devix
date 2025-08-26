@@ -39,6 +39,7 @@ interface Inspection {
   transformerNo: string;
   inspectionBranch: string;
   isFavorite: boolean;
+  inspectedby: string;
 }
 
 type ApiInspection = {
@@ -169,6 +170,7 @@ const fetchInspections = () => {
         inspectionNo: item.inspectionNo,
         inspectedDate: item.inspectionDate + (item.inspectionTime ? ` ${item.inspectionTime}` : ""),
         inspectionTime: item.inspectionTime,
+        inspectedby: item.inspectedby,
         maintenanceDate: null,
         status: item.inspectionStatus ?? "pending",
         transformerNo: item.transformerNo,

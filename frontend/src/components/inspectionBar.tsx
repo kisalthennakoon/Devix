@@ -14,7 +14,7 @@ interface InspectionDetails {
     transformerNo: string;
     poleNo: string;
     branch: string;
-    inspectedBy: string;
+    inspectedby: string;
     updatedDate: string;
     updatedTime: string;
     status: string;
@@ -77,7 +77,7 @@ function InspectionBar({ inspectionDetails, onBaselineClick, onBack, onRefresh }
                             { title: 'Transformer No', value: inspectionDetails.transformerNo },
                             { title: 'Pole No', value: inspectionDetails.poleNo },
                             { title: 'Branch', value: inspectionDetails.branch },
-                            { title: 'Inspected By', value: inspectionDetails.inspectedBy }
+                            { title: 'Inspected By', value: inspectionDetails.inspectedby }
                         ].map((item, idx) => (
                             <Box key={idx} sx={{ width: 100, height: 50, backgroundColor: '#e0e0e0', borderRadius: 2, boxShadow: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', p: 1 }}>
 

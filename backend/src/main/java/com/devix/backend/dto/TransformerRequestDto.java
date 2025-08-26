@@ -10,5 +10,6 @@ public class TransformerRequestDto {
     private String transformerPoleNo;
     private String transformerRegion;
     private String transformerLocation;
+    private String transformerCapacity;
 
 }

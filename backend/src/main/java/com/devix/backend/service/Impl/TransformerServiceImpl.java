@@ -104,6 +104,7 @@ public class TransformerServiceImpl implements TransformerService {
             existingTransformer.setTransformerPoleNo(transformerRequestDto.getTransformerPoleNo());
             existingTransformer.setTransformerRegion(transformerRequestDto.getTransformerRegion());
             existingTransformer.setTransformerType(transformerRequestDto.getTransformerType());
+            existingTransformer.setTransformerCapacity(transformerRequestDto.getTransformerCapacity());
 
             transformerRepo.save(existingTransformer);
             log.info("Transformer updated");

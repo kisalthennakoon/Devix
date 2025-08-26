@@ -11,4 +11,6 @@ public class InspectionResponseDto {
     private String inspectionBranch;
     private String transformerNo;
     private String inspectionStatus;
+    private String inspectedby;
+
 }

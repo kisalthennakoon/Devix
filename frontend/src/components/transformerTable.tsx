@@ -1,19 +1,4 @@
-import {
-  Typography,
-  Box,
-  Button,
-  TextField,
-  Select,
-  MenuItem,
-  ToggleButton,
-  ToggleButtonGroup,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Snackbar,
-  Alert,
-} from "@mui/material";
+import { Typography, Box, Button, TextField, Select, MenuItem, ToggleButton, ToggleButtonGroup, Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, Alert, Autocomplete } from "@mui/material";
 import axios from "axios";
 import { useEffect } from "react";
 import { useState } from "react";
@@ -21,6 +6,18 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { DialogContentText } from "@mui/material";
 
+const SRI_LANKA_REGIONS = [
+  "Colombo","Sri Jayawardenepura Kotte","Dehiwala-Mount Lavinia","Negombo",
+  "Gampaha","Kalutara","Panadura","Moratuwa","Ja-Ela","Katunayake",
+  "Kandy","Gampola","Nuwara Eliya","Matale","Hatton","Bandarawela",
+  "Galle","Matara","Hambantota",
+  "Jaffna","Kilinochchi","Mannar","Vavuniya","Mullaitivu",
+  "Trincomalee","Batticaloa","Ampara","Kalmunai","Kattankudy",
+  "Anuradhapura","Polonnaruwa",
+  "Kurunegala","Puttalam","Chilaw",
+  "Ratnapura","Kegalle",
+  "Badulla","Monaragala", "Beliatta"
+];
 
 // Interface for a transformer
 export interface TransformerDetails {
@@ -29,6 +26,7 @@ export interface TransformerDetails {
   transformerRegion: string;
   transformerType: "string";
   transformerLocation: "string"
+  transformerCapacity?: string;
 }
 
 // Props type
@@ -46,11 +44,7 @@ function TransformerTable({ onView }: TransformerTableProps) {
   const [regionFilter, setRegionFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [transformersData, setTransformersData] = useState<TransformerDetails[]>([]);
-  const [openEdit, setOpenEdit] = useState(false);
-  const [editTransformer, setEditTransformer] = useState<TransformerDetails | null>(null);
-  const [openDelete, setOpenDelete] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<TransformerDetails | null>(null);
-
+  
 
 useEffect(() => {
   axios.get("/api/transformer/getAll")
@@ -66,12 +60,20 @@ useEffect(() => {
 
   // Dialog states
   const [open, setOpen] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
+  const [editTransformer, setEditTransformer] = useState<TransformerDetails | null>(null);
+  const [openDelete, setOpenDelete] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<TransformerDetails | null>(null);
+
   const [newTransformer, setNewTransformer] = useState({
     transformerNo: "",
     transformerPoleNo: "",
     transformerRegion: "",
     transformerLocation: "",
     transformerType: "",
+    transformerCapacity: "",
+  
   });
 
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
@@ -88,6 +90,7 @@ useEffect(() => {
     !newTransformer.transformerPoleNo.trim() ||
     !newTransformer.transformerRegion.trim() ||
     !newTransformer.transformerLocation.trim() ||
+    !newTransformer.transformerCapacity.trim() ||
     !newTransformer.transformerType.trim()
   ) {
     setFormError("All fields are required.");
@@ -115,6 +118,7 @@ useEffect(() => {
       transformerRegion: "",
       transformerLocation: "",
       transformerType: "",
+      transformerCapacity: "",
     });
   } catch (err) {
     // Handles both string and object error responses
@@ -155,7 +159,9 @@ useEffect(() => {
       if (searchBy === "type") matchesSearch = t.transformerType.toLowerCase().includes(searchValue);
     }
 
-    const matchesRegion = regionFilter === "" || t.transformerRegion === regionFilter;
+    const matchesRegion =
+      !regionFilter ||
+      t.transformerRegion?.toLowerCase().includes(regionFilter.toLowerCase());
     const matchesType = typeFilter === "" || t.transformerType === typeFilter;
 
     return matchesSearch && matchesRegion && matchesType;
@@ -278,19 +284,19 @@ const onConfirmDelete = async () => {
           }}
         />
 
-        <Select
-          sx={{ minWidth: 150 }}
-          value={regionFilter}
-          onChange={(e) => {
-            setRegionFilter(e.target.value);
+        <Autocomplete
+          options={SRI_LANKA_REGIONS}
+          value={regionFilter || null}
+          onChange={(_, value) => {
+            setRegionFilter(value || "");
             setPage(1);
           }}
-          displayEmpty
-        >
-          <MenuItem value="">All Regions</MenuItem>
-          <MenuItem value="Nugegoda">Nugegoda</MenuItem>
-          <MenuItem value="Maharagama">Maharagama</MenuItem>
-        </Select>
+          clearOnEscape
+          sx={{ minWidth: 240 }}
+          renderInput={(params) => (
+            <TextField {...params} size="small" label="Region (city)" placeholder="Search region" />
+          )}
+        />
         
         <Select
           sx={{ minWidth: 150 }}
@@ -416,17 +422,16 @@ const onConfirmDelete = async () => {
         <DialogContent
           sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}
         >
-          <Select
-            value={newTransformer.transformerRegion}
-            onChange={(e) =>
-              setNewTransformer({ ...newTransformer, transformerRegion: e.target.value })
+          <Autocomplete
+            options={SRI_LANKA_REGIONS}
+            value={newTransformer.transformerRegion || null}
+            onChange={(_, value) =>
+              setNewTransformer({ ...newTransformer, transformerRegion: value || "" })
             }
-            displayEmpty
-          >
-            <MenuItem value="">Select Region</MenuItem>
-            <MenuItem value="Nugegoda">Nugegoda</MenuItem>
-            <MenuItem value="Maharagama">Maharagama</MenuItem>
-          </Select>
+            renderInput={(params) => (
+              <TextField {...params} label="Region" placeholder="Search region" />
+            )}
+          />
 
           <TextField
             label="Transformer No"
@@ -454,6 +459,14 @@ const onConfirmDelete = async () => {
             <MenuItem value="Bulk">Bulk</MenuItem>
             <MenuItem value="Distribution">Distribution</MenuItem>
           </Select>
+
+          <TextField
+            label="Capacity"
+            value={newTransformer.transformerCapacity}
+            onChange={(e) =>
+              setNewTransformer({ ...newTransformer, transformerCapacity: e.target.value })
+            }
+          />
 
           <TextField
             label="Location Details"
@@ -489,25 +502,35 @@ const onConfirmDelete = async () => {
       <Dialog open={openEdit} onClose={() => setOpenEdit(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Edit Transformer {editTransformer?.transformerNo ? `– ${editTransformer.transformerNo}` : ""}</DialogTitle>
         <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
-          <Select
-            value={editTransformer?.transformerRegion ?? ""}
-            onChange={(e) =>
-              setEditTransformer((prev) => prev ? { ...prev, transformerRegion: e.target.value } : prev)
+          <Autocomplete
+            options={SRI_LANKA_REGIONS}
+            value={editTransformer?.transformerRegion || null}
+            onChange={(_, value) =>
+              setEditTransformer(prev => (prev ? { ...prev, transformerRegion: value || "" } : prev))
             }
-            displayEmpty
-          >
-            <MenuItem value="">Select Region</MenuItem>
-            <MenuItem value="Nugegoda">Nugegoda</MenuItem>
-            <MenuItem value="Maharagama">Maharagama</MenuItem>
-          </Select>
+            renderInput={(params) => (
+              <TextField {...params} label="Region" placeholder="Search region" />
+            )}
+          />
 
           <TextField
             label="Transformer No"
             value={editTransformer?.transformerNo ?? ""}
             onChange={(e) =>
-              setEditTransformer((prev) => prev ? { ...prev, transformerNo: e.target.value } : prev)
+              setEditTransformer(prev => (prev ? { ...prev, transformerNo: e.target.value } : prev))
             }
+            disabled
+            inputProps={{ tabIndex: -1 }}
+            sx={{
+              "& .MuiOutlinedInput-root.Mui-disabled": { backgroundColor: "#f5f5f5" },
+              "& .MuiInputBase-input.Mui-disabled": {
+                WebkitTextFillColor: "rgba(0,0,0,0.87)",
+                cursor: "not-allowed",
+              },
+            }}
           />
+
+
           <TextField
             label="Pole No"
             value={editTransformer?.transformerPoleNo ?? ""}
@@ -527,6 +550,14 @@ const onConfirmDelete = async () => {
             <MenuItem value="Bulk">Bulk</MenuItem>
             <MenuItem value="Distribution">Distribution</MenuItem>
           </Select>
+          
+          <TextField
+            label="Capacity"
+            value={editTransformer?.transformerCapacity ?? ""}
+            onChange={(e) =>
+              setEditTransformer((prev) => prev ? { ...prev, transformerCapacity: e.target.value } : prev)
+            }
+          />
 
           <TextField
             label="Location Details"
