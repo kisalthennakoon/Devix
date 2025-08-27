@@ -14,7 +14,24 @@ The backend uploads images to **Google Drive**, generates shareable links, and s
 - **Issue on localhost**: Google Drive does not allow embedding images when accessed from an **HTTP localhost** environment, causing broken image previews in the UI.  
 - **Workaround**: This issue does not occur when the system is deployed in a secure environment (e.g., GitHub Codespaces with HTTPS) or when hosted on any HTTPS-enabled server.  
 
-## Setup Instructions
+## ⚙️ Setup Instructions
+
+### 🗄️ Database
+Set up the PostgreSQL database using Docker:  
+
+1. Stop and remove any existing containers and volumes (clean reset):  
+   ```bash
+   docker compose down -v
+      ```
+   2. Start the containerized PostgreSQL database:
+   ```bash
+   docker-compose up -d postgres
+   ```
+   3. Load the dummy dataset (five transformers with baseline images) into the database:
+   ```bash
+   docker exec -i dev-postgres psql -U postgres -d Test < dump.sql
+   ``` 
+   This initializes the PostgreSQL database inside a container. The project `docker-compose.yml` file is configured to include both the frontend and backend services.
 
 ### Frontend
 1. Navigate to the frontend project directory.
@@ -29,12 +46,7 @@ The backend uploads images to **Google Drive**, generates shareable links, and s
 4. Open the browser and visit the URL displayed in the terminal (usually http://localhost:5173).
 
 ### Backend
-1. Set up the PostgreSQL database using Docker:
-   ```bash
-   docker-compose up -d postgres
-   ```
-   This starts the PostgreSQL database in a container. The Docker path includes both the frontend and backend projects.
-2. Configure Google Drive API for image uploads:
+1. Configure Google Drive API for image uploads (Only if the token file has expired):
 * The backend uploads images to Google Drive, generates links, and saves them in PostgreSQL.
 * Two files are required for authentication:
   * Credential file
@@ -44,7 +56,7 @@ The backend uploads images to **Google Drive**, generates shareable links, and s
   1. Create a new OAuth account and generate a new credential file.
   2. Replace the existing file in `resources` named `ABCD`.
   3. Run the manual authentication script located in the service folder. This will open a browser window and follow the instructions to generate a new token file.
-3. Start the backend server after the database and authentication setup.
+2. Start the backend server after the database and authentication setup.
 
 ### Implemented Features (Phase 1)
 
