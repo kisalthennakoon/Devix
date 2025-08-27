@@ -1,8 +1,18 @@
-# Transformer Thermal Image Management System – Phase 1
+# Transformer Thermal Image Management System
 
-## Overview
+## 📌 Overview
+This project is a **web-based platform** for managing transformer records and their associated thermal images under different environmental conditions.  
 
-This project is a web-based system to manage transformer records and their associated thermal images under various environmental conditions. Phase 1 focuses on building the foundation of the system, including an admin interface for transformer management, image uploading, and metadata tagging.
+**Phase 1** focuses on building the system foundation, including:  
+- An **admin interface** for transformer management  
+- **Thermal image uploading**  
+- **Metadata tagging** for organization and retrieval
+
+⚠️ **Important Note**:  
+The backend uploads images to **Google Drive**, generates shareable links, and stores them in **PostgreSQL**. The frontend then retrieves and displays these links.  
+
+- **Issue on localhost**: Google Drive does not allow embedding images when accessed from an **HTTP localhost** environment, causing broken image previews in the UI.  
+- **Workaround**: This issue does not occur when the system is deployed in a secure environment (e.g., GitHub Codespaces with HTTPS) or when hosted on any HTTPS-enabled server.  
 
 ## Setup Instructions
 
@@ -30,10 +40,10 @@ This project is a web-based system to manage transformer records and their assoc
   * Credential file
   * Token file
 * These files are located in the `resources` folder in the backend project.
-* If the token file has expired:
+* If the token file has expired it will showing a error message in the backend terminal while uploading images:
   1. Create a new OAuth account and generate a new credential file.
   2. Replace the existing file in `resources` named `ABCD`.
-  3. Run the manual authentication script located in the `service` folder to generate a new token.
+  3. Run the manual authentication script located in the service folder. This will open a browser window and follow the instructions to generate a new token file.
 3. Start the backend server after the database and authentication setup.
 
 ### Implemented Features (Phase 1)
@@ -57,7 +67,6 @@ This project is a web-based system to manage transformer records and their assoc
 ### Known Limitations / Issues
 
 * Manual Google Drive authentication may be required if token expires.
-* Current system only supports the three environmental conditions provided.
 * No automated anomaly detection yet (Phase 2 requirement).
 * Limited test data included (5 transformers with baseline images).
 * Some UI elements may need refinement for responsiveness on smaller screens.
