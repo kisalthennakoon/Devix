@@ -25,6 +25,7 @@ function Transformers() {
     transformerNo: string;
     inspectionBranch: string;
     isFavorite: boolean;
+    inspectedby: string;
   };
   const [selectedInspection, setSelectedInspection] = useState<SelectedInspection | null>(null); // NEW
   // adapter to satisfy your existing TransformerHead props shape
@@ -38,7 +39,7 @@ function Transformers() {
     updatedDate: "-",
     updatedTime: "-",
     status: "-",
-    capacity: "-",
+    capacity: t.transformerCapacity || "-",
     type: t.transformerType,
     noOfFreeders: "-"
   });
@@ -48,7 +49,7 @@ function Transformers() {
     transformerNo: t.transformerNo,
     poleNo: t.transformerPoleNo,
     branch: i.inspectionBranch,
-    inspectedBy: "-",
+    inspectedby: i.inspectedby || "-",
     updatedDate: i.inspectedDate,
     updatedTime: "",
     status: i.inspectionStatus || "in progress",

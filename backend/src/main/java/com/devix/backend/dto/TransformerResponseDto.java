@@ -10,5 +10,6 @@ public class TransformerResponseDto {
     private String transformerPoleNo;
     private String transformerRegion;
     private String transformerLocation;
+    private String transformerCapacity;
 
 }

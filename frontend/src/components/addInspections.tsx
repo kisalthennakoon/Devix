@@ -61,6 +61,7 @@ export const AddInspectionModal = ({ transformerNoInput, open, onOpenChange, set
         transformerNo,
         inspectionDate: inspectionDate.toISOString().split('T')[0],
         inspectionTime: time,
+        inspectedby: "Devix"
       };
       const res = await axios.post(
         "/api/inspection/create",
