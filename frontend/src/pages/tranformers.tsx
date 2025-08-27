@@ -106,6 +106,7 @@ function Transformers() {
           <Comparison
             key={comparisonKey}
             inspectionNo={selectedInspection.inspectionNo}
+            transformerNo={selected.transformerNo}
             onRefresh={handleComparisonRefresh}
           />
 

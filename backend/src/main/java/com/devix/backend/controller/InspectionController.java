@@ -54,30 +54,6 @@ public class InspectionController {
         }
     }
 
-    @PutMapping(value = "/addThermalImage/{inspectionNo}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> addThermalImage(@PathVariable("inspectionNo") String inspectionNo,
-                                             @RequestParam("imageCondition") String imageCondition,
-                                             @RequestParam("thermalImage") MultipartFile thermalImage) {
-        try {
-            log.info("Adding thermal image for inspection: {}", inspectionNo);
-            inspectionService.addThermalImage(inspectionNo, imageCondition, thermalImage);
-            return ResponseEntity.ok("Thermal image added successfully");
-        } catch (Exception e) {
-            log.error("Error adding thermal image: {}", e.getMessage(), e);
-            return ResponseEntity.status(500).body(e.getMessage());
-        }
-    }
-
-    @GetMapping("/getComparisonImage/{inspectionNo}")
-    public ResponseEntity<?> getComparisonImage(@PathVariable("inspectionNo") String inspectionNo) {
-        try {
-            log.info("Fetching comparison image for inspection: {}", inspectionNo);
-            return ResponseEntity.ok(inspectionService.getComparisonImage(inspectionNo));
-        } catch (Exception e) {
-            log.error("Error fetching comparison image: {}", e.getMessage(), e);
-            return ResponseEntity.status(500).body(e.getMessage());
-        }
-    }
 
     @GetMapping("/getAll/{transformerNo}")
     public ResponseEntity<?> getInspectionsByTransformerNo(@PathVariable("transformerNo") String transformerNo) {
