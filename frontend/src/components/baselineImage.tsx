@@ -9,6 +9,7 @@ import {
   Typography,
   Grid,
   IconButton,
+  CircularProgress,
 } from "@mui/material";
 import ImageIcon from "@mui/icons-material/Image";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -27,6 +28,7 @@ type BaselineImageProps = {
   transformerNo?: string;
   onChange?: () => void;
   snackBar: (snackbar: { open: boolean; message: string; severity: "success" | "error" }) => void;
+  baseImageExist?: () => void;
 };
 
 const SLOT_LABELS = ["Sunny", "Cloudy", "Rainy"] as const;
@@ -39,7 +41,8 @@ function BaselineImage({
   subtitle = "Drag & drop up to 3 images, or click a slot to select.",
   transformerNo,
   onChange,
-  snackBar
+  snackBar,
+  baseImageExist,
 }: BaselineImageProps) {
   const [slots, setSlots] = useState<SlotFile[]>([
     { file: null, url: null },
@@ -85,6 +88,7 @@ function BaselineImage({
   const anyFilled = useMemo(() => slots.some((s) => s.file), [slots]);
 
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleConfirm = async (files: (File | null)[]) => {
     setError(null); // Clear previous error
@@ -92,6 +96,7 @@ function BaselineImage({
       setError("Please upload all three images before confirming.");
       return;
     }
+    setLoading(true);
     const formData = new FormData();
     if (files[0]) formData.append("baseImageSunny", files[0]);
     if (files[1]) formData.append("baseImageCloudy", files[1]);
@@ -104,7 +109,7 @@ function BaselineImage({
     formData.append("uploadedDate", dateStr);
     formData.append("uploadedTime", timeStr);
     formData.append("uploadedBy", "Devix");
-
+    
     try {
       await fetch(
         `/api/baseImage/add/${transformerNo}`,
@@ -115,11 +120,14 @@ function BaselineImage({
       );
       snackBar({ open: true, message: "Baseline Images Uploaded!", severity: "success" });
       //alert("Upload successful!");
+      
     } catch (err) {
       snackBar({ open: true, message: "Baseline Images Upload failed!", severity: "error" });
       console.error(err);
     } finally {
       onClose();
+      setLoading(false);
+      if (baseImageExist) baseImageExist();
       if (onChange) onChange();
     }
 
@@ -192,8 +200,13 @@ function BaselineImage({
             <Button variant="text" onClick={onClose}>
               Cancel
             </Button>
-            <Button variant="contained" onClick={() => handleConfirm(slots.map((s) => s.file))} disabled={!anyFilled}>
-              Confirm
+            <Button
+              variant="contained"
+              onClick={() => handleConfirm(slots.map((s) => s.file))}
+              disabled={!anyFilled || loading}
+              startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
+            >
+              {loading ? "Uploading..." : "Confirm"}
             </Button>
           </Box>
         </Box>

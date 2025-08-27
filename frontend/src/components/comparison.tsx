@@ -4,13 +4,21 @@ import axios from "axios";
 import ThermalImageComparison from "../components/thermalimageComparison";
 import { Alert, Box, Snackbar, Typography } from "@mui/material";
 
+interface InspectionImages {
+  baseImageUrl: string ;
+  baseImageUploadedBy: string ;
+  baseImageUploadedTime: string ;
+  baseImageUploadedDate: string;
 
+  thermal: string;
+  thermalUploadedBy: string;
+  thermalUploadedTime: string;
+  thermalUploadedDate: string;
+}
 
 export default function Comparison({ inspectionNo, transformerNo, onRefresh }: { inspectionNo: string, transformerNo: string, onRefresh: () => void }) {
-  const [inspectionImages, setInspectionImages] = useState({
-    baseImageUrl: null as string | null,
-    thermal: null as string | null,
-  });
+  const [inspectionImages, setInspectionImages] = useState<InspectionImages>();
+
   const [error, setError] = useState(false);
 
   const fetchComparisnon = async () => {
@@ -41,7 +49,7 @@ export default function Comparison({ inspectionNo, transformerNo, onRefresh }: {
     );
   }
 
-  if (inspectionImages.baseImageUrl && !inspectionImages.thermal) {
+  if (inspectionImages?.baseImageUrl && !inspectionImages?.thermal) {
     return (
         <ThermalImageCard
           inspectionNo={inspectionNo}
@@ -53,7 +61,7 @@ export default function Comparison({ inspectionNo, transformerNo, onRefresh }: {
     );
   }
 
-  if (!inspectionImages.baseImageUrl && inspectionImages.thermal) {
+  if (!inspectionImages?.baseImageUrl && inspectionImages?.thermal) {
     return <ThermalImageCard
       inspectionNo={inspectionNo}
       transformerNo={transformerNo}
@@ -62,7 +70,7 @@ export default function Comparison({ inspectionNo, transformerNo, onRefresh }: {
     />;
   }
   // CASE 2: Backend ok but no images
-  if (!inspectionImages.baseImageUrl && !inspectionImages.thermal) {
+  if (!inspectionImages?.baseImageUrl && !inspectionImages?.thermal) {
     return <ThermalImageCard
       inspectionNo={inspectionNo}
       transformerNo={transformerNo}
@@ -74,8 +82,9 @@ export default function Comparison({ inspectionNo, transformerNo, onRefresh }: {
   if (inspectionImages.baseImageUrl && inspectionImages.thermal) {
     return (
       <ThermalImageComparison
-        leftImageUrl={inspectionImages.baseImageUrl ?? ""}
-        rightImageUrl={inspectionImages.thermal ?? ""}
+        // leftImageUrl={inspectionImages.baseImageUrl ?? ""}
+        // rightImageUrl={inspectionImages.thermal ?? ""}
+        {...inspectionImages}
       />
     );
   }
