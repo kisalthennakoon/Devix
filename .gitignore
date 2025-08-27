@@ -23,9 +23,5 @@
 hs_err_pid*
 replay_pid*
 
-# Ignore Google Drive credentials
-backend/src/main/resources/credentials.json
-backend/src/main/resources/StoredCredential
-backend/src/main/resources/client_secret_646335308823-sgifjhnfjrocs3lgv02ds7ji6ojjdqsf.apps.googleusercontent.com.json
-backend/src/main/resources/devix-469116-dcdf658fed4b.json
+
 
