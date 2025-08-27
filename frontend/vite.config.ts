@@ -1,16 +1,24 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import fs from 'fs';
 
 // https://vite.dev/config/
 export default defineConfig({
     plugins: [react()],
 
     server: {
+
+        https: {
+                cert: fs.readFileSync('cert.pem'),
+                key: fs.readFileSync('key.pem'),
+            },
+            
         proxy: {
             // when frontend calls `/api/...`, proxy it to your backend
+            
             '/api': {
-                target: 'https://automatic-pancake-wrrpg66ggvj535gq-8080.app.github.dev',
-                changeOrigin: true,                
+                target: 'http://localhost:8080',
+                changeOrigin: true,
             },
         },
     },
