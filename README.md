@@ -40,9 +40,9 @@ Set up the PostgreSQL database using Docker:
    npm i
    ```
 3. Start the development server:
-  ```bash
-  npm run dev
-  ```
+   ```bash
+   npm run dev
+   ```
 4. Open the browser and visit the URL displayed in the terminal (usually http://localhost:5173).
 
 ### Backend
