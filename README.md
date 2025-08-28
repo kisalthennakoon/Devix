@@ -8,13 +8,13 @@ This project is a **web-based platform** for managing transformer records and th
 - **Thermal image uploading**  
 - **Metadata tagging** for organization and retrieval
 
+## ⚙️ Setup Instructions
+
 ⚠️ **Important Note**:  
 The backend uploads images to **Google Drive**, generates shareable links, and stores them in **PostgreSQL**. The frontend then retrieves and displays these links.  
 
 - **Issue on localhost**: Google Drive does not allow embedding images when accessed from an **HTTP localhost** environment, causing broken image previews in the UI.  
 - **Workaround**: This issue does not occur when the system is deployed in a secure environment (e.g., GitHub Codespaces with HTTPS) or when hosted on any HTTPS-enabled server. (The issue didnt arise when developing since the project was developed in GitHub Codespace environment)
-
-## ⚙️ Setup Instructions
 
 ### 🗄️ Database
 Set up the PostgreSQL database using Docker:  
@@ -55,13 +55,13 @@ Set up the PostgreSQL database using Docker:
 2. If you are running your PostgreSQL server locally rather than running the given Docker container, change the application.properties configurations accordingly.
 3. Run the backend server after the database and authentication setup.
 
-NOTE: When running the UIs, there may be an issue when photo uploading tasks if the token file has expired(STORED_CREDENTIAL file in resources). This will be mentioned as an error in the backend terminal or appear in api response data when tryng to upload base images or maintenance images. If this happens,
+**NOTE:** When running the UIs, there may be an issue when photo uploading tasks if the token file has expired(STORED_CREDENTIAL file in resources). This will be mentioned as an error in the backend terminal or appear in api response data when tryng to upload base images or maintenance images. If this happens,
 
   1. Create a new Google OAuth2 account(with `http://localhost:8888/Callback` as redirect URI) and generate a new credential file.
   2. Replace the existing file in `resources` folder named `cient-secret-...` with this new credential file and change    `CREDENTIAL_FILE_PATH` in the GoogleDriveConfig file in the config folder in the backend to your new credential file.
   3. Run the RunAuthManual script located in the service folder(change `in` variable to your credential file path). This will open a browser window and ask to authenticate your Google account. The token file is automatically saved in the resources folder.
 
-### Implemented Features (Phase 1)
+## Implemented Features (Phase 1)
 
 * FR1.1 – Admin Interface for Transformer Management
   * Add new transformer records (ID, location, capacity)
@@ -79,18 +79,18 @@ NOTE: When running the UIs, there may be an issue when photo uploading tasks if 
   * Modular architecture for easy extension in future phases
   * Web-based admin interface
 
-### Known Limitations / Issues
+## Known Limitations / Issues
 
 * Manual Google Drive authentication may be required if token expires.
 * No automated anomaly detection yet (Phase 2 requirement).
 * Limited test data included (5 transformers with baseline images).
 * Some UI elements may need refinement for responsiveness on smaller screens.
 
-### Test Data
+## Test Data
 
 * Minimum of 5 transformer records with baseline images are included for testing.
 
-### Repository
+## Repository
 
 * Source code is hosted on GitHub.
 * Follow the setup instructions to run the system locally.
