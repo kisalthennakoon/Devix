@@ -12,7 +12,7 @@ This project is a **web-based platform** for managing transformer records and th
 The backend uploads images to **Google Drive**, generates shareable links, and stores them in **PostgreSQL**. The frontend then retrieves and displays these links.  
 
 - **Issue on localhost**: Google Drive does not allow embedding images when accessed from an **HTTP localhost** environment, causing broken image previews in the UI.  
-- **Workaround**: This issue does not occur when the system is deployed in a secure environment (e.g., GitHub Codespaces with HTTPS) or when hosted on any HTTPS-enabled server.  
+- **Workaround**: This issue does not occur when the system is deployed in a secure environment (e.g., GitHub Codespaces with HTTPS) or when hosted on any HTTPS-enabled server. (The issue didnt arise when developing since the project was developed in GitHub Codespace environment)
 
 ## ⚙️ Setup Instructions
 
@@ -51,12 +51,14 @@ Set up the PostgreSQL database using Docker:
 * Two files are required for authentication:
   * Credential file
   * Token file
-   * These two files are included in the `resources` folder of the Spring Boot backend as a ZIP file, since GitHub does not allow adding credential files directly. You need to unzip this file within the       `resources` folder. 
-* If the token file has expired it will showing a error message in the backend terminal while uploading images:
-  1. Create a new OAuth account and generate a new credential file.
-  2. Replace the existing file in `resources` named `ABCD`.
-  3. Run the manual authentication script located in the service folder. This will open a browser window and follow the instructions to generate a new token file.
-2. Start the backend server after the database and authentication setup.
+   * These two files are included in the `resources` folder of the Spring Boot backend as a ZIP file, since GitHub does not allow adding credential files directly. You need to unzip this file within the `resources` folder. 
+2. Run the backend server after the database and authentication setup.
+
+NOTE: When running the UIs, there may be an issue when photo uploading tasks if the token file has expired(STORED_CREDENTIAL file in resources). This will be mentioned as an error in the backend terminal or appear in api response data when tryng to upload base images or maintenance images. If this happens,
+
+  1. Create a new Google OAuth2 account(with `http://localhost:8888/Callback` as redirect URI) and generate a new credential file.
+  2. Replace the existing file in `resources` folder named `cient-secret-...` with this new credential file and change    `CREDENTIAL_FILE_PATH` in the GoogleDriveConfig file in the config folder in the backend to your new credential file.
+  3. Run the RunAuthManual script located in the service folder(change `in` variable to your credential file path). This will open a browser window and ask to authenticate your Google account. The token file is automatically saved in the resources folder.
 
 ### Implemented Features (Phase 1)
 
