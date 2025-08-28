@@ -51,8 +51,9 @@ Set up the PostgreSQL database using Docker:
 * Two files are required for authentication:
   * Credential file
   * Token file
-   * These two files are included in the `resources` folder of the Spring Boot backend as a ZIP file, since GitHub does not allow adding credential files directly. You need to unzip this file within the `resources` folder. 
-2. Run the backend server after the database and authentication setup.
+   * These two files are included in the `resources` folder of the Spring Boot backend as a ZIP file, since GitHub does not allow adding credential files directly. You need to unzip this file within the `resources` folder.
+2. If you are running your PostgreSQL server locally rather than running the given Docker container, change the application.properties configurations accordingly.
+3. Run the backend server after the database and authentication setup.
 
 NOTE: When running the UIs, there may be an issue when photo uploading tasks if the token file has expired(STORED_CREDENTIAL file in resources). This will be mentioned as an error in the backend terminal or appear in api response data when tryng to upload base images or maintenance images. If this happens,
 
