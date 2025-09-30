@@ -16,7 +16,7 @@ export default defineConfig({
             // when frontend calls `/api/...`, proxy it to your backend
             
             '/api': {
-                target: 'https://jubilant-umbrella-4jgxj65g9r5gf799g-8080.app.github.dev',
+                target: 'https://super-duper-robot-wrrpg66gg5vv369w-8080.app.github.dev',
                 changeOrigin: true,
             },
         },
