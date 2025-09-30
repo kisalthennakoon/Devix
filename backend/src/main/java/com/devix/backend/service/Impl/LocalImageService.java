@@ -51,9 +51,14 @@ public class LocalImageService {
         }
     }
 
-
     public String getImage(String path) {
         try {
+
+            if (path == null) {
+                log.error("Provided path is null");
+                return null;
+            }
+            
             File file = new File(path);
             if (!file.exists()) {
                 return null;
@@ -69,6 +74,4 @@ public class LocalImageService {
         }
     }
 
-
 }
-
