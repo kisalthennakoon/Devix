@@ -68,19 +68,19 @@ public class InspectionImageServiceImpl implements InspectionImageService {
                 switch (inspectionImage.getThermalImageCondition()) {
 
                     case "Sunny" -> {
-                        baseImageUrl = baselineImage.getSunnyImageUrl();
+                        baseImageUrl = localImageService.getImage(baselineImage.getSunnyImageUrl());
                         baseImageUploadedDate = baselineImage.getUploadedDate();
                         baseImageUploadedTime = baselineImage.getUploadedTime();
                         baseImageUploadedBy = baselineImage.getUploadedBy();
                     }
                     case "Cloudy" -> {
-                        baseImageUrl = baselineImage.getCloudyImageUrl();
+                        baseImageUrl = localImageService.getImage(baselineImage.getCloudyImageUrl());
                         baseImageUploadedDate = baselineImage.getUploadedDate();
                         baseImageUploadedTime = baselineImage.getUploadedTime();
                         baseImageUploadedBy = baselineImage.getUploadedBy();
                     }
                     case "Rainy" -> {
-                        baseImageUrl = baselineImage.getRainyImageUrl();
+                        baseImageUrl = localImageService.getImage(baselineImage.getRainyImageUrl());
                         baseImageUploadedDate = baselineImage.getUploadedDate();
                         baseImageUploadedTime = baselineImage.getUploadedTime();
                         baseImageUploadedBy = baselineImage.getUploadedBy();
@@ -88,7 +88,7 @@ public class InspectionImageServiceImpl implements InspectionImageService {
                 }
             }
 
-            images.put("baseImageUrl", localImageService.getImage(baseImageUrl));
+            images.put("baseImageUrl", baseImageUrl);
             images.put("baseImageUploadedDate", baseImageUploadedDate);
             images.put("baseImageUploadedTime", baseImageUploadedTime);
             images.put("baseImageUploadedBy", baseImageUploadedBy);
