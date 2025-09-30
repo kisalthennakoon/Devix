@@ -4,7 +4,6 @@ import com.devix.backend.model.BaselineImage;
 import com.devix.backend.model.Transformer;
 import com.devix.backend.repo.BaseImageRepo;
 import com.devix.backend.service.BaselineImageService;
-import com.devix.backend.service.GoogleDriveService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,11 +15,12 @@ import java.util.Map;
 public class BaselineImageServiceImpl implements BaselineImageService {
 
     private final BaseImageRepo baseImageRepo;
-    private final GoogleDriveService googleDriveService;
+//    private final GoogleDriveService googleDriveService;
+    private final LocalImageService localImageService;
 
-    public BaselineImageServiceImpl (BaseImageRepo baseImageRepo, GoogleDriveService googleDriveService) {
+    public BaselineImageServiceImpl (BaseImageRepo baseImageRepo, LocalImageService localImageService) {
         this.baseImageRepo = baseImageRepo;
-        this.googleDriveService = googleDriveService;
+        this.localImageService = localImageService;
     }
 
     @Override
@@ -35,9 +35,12 @@ public class BaselineImageServiceImpl implements BaselineImageService {
                 baselineImage.setTransformerNo(transformerNo);
             }
 
-            String sunnyImageUrl = googleDriveService.uploadFile(baseImageSunny);
-            String cloudyImageUrl = googleDriveService.uploadFile(baseImageCloudy);
-            String rainyImageUrl = googleDriveService.uploadFile(baseImageRainy);
+            String sunnyImageUrl = localImageService.uploadImage(baseImageSunny);
+            log.info("sunnyImageUrl: {}", sunnyImageUrl);
+            String cloudyImageUrl = localImageService.uploadImage(baseImageCloudy);
+            log.info("cloudyImageUrl: {}", cloudyImageUrl);
+            String rainyImageUrl = localImageService.uploadImage(baseImageRainy);
+            log.info("rainyImageUrl: {}", rainyImageUrl);
 
             baselineImage.setSunnyImageUrl(sunnyImageUrl);
             baselineImage.setCloudyImageUrl(cloudyImageUrl);
@@ -72,7 +75,7 @@ public class BaselineImageServiceImpl implements BaselineImageService {
     }
 
     @Override
-    public Map<String, String> getBaseImage(String transformerNo) throws Exception {
+    public Map<String, Object> getBaseImage(String transformerNo) throws Exception {
         try {
             log.info("Fetching base image for transformer: {}", transformerNo);
             BaselineImage baselineImage = baseImageRepo.findByTransformerNo(transformerNo);
@@ -80,9 +83,9 @@ public class BaselineImageServiceImpl implements BaselineImageService {
                 throw new Exception("Baseline image not found");
             }
             return Map.of(
-                    "sunny", baselineImage.getSunnyImageUrl(),
-                    "cloudy", baselineImage.getCloudyImageUrl(),
-                    "rainy", baselineImage.getRainyImageUrl()
+                    "sunny", localImageService.getImage(baselineImage.getSunnyImageUrl()),
+                    "cloudy", localImageService.getImage(baselineImage.getCloudyImageUrl()),
+                    "rainy", localImageService.getImage(baselineImage.getRainyImageUrl())
             );
         } catch (Exception e) {
             log.error("Error fetching base image: {}", e.getMessage());

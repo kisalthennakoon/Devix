@@ -6,7 +6,6 @@ import com.devix.backend.model.Inspection;
 import com.devix.backend.model.Transformer;
 import com.devix.backend.repo.InspectionRepo;
 import com.devix.backend.repo.TransformerRepo;
-import com.devix.backend.service.GoogleDriveService;
 import com.devix.backend.service.InspectionService;
 import com.devix.backend.service.MapperService;
 import lombok.extern.slf4j.Slf4j;

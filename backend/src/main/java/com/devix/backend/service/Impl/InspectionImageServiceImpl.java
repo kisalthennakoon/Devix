@@ -7,7 +7,6 @@ import com.devix.backend.model.Transformer;
 import com.devix.backend.repo.BaseImageRepo;
 import com.devix.backend.repo.InspectionImageRepo;
 import com.devix.backend.repo.InspectionRepo;
-import com.devix.backend.service.GoogleDriveService;
 import com.devix.backend.service.InspectionImageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,26 +21,27 @@ public class InspectionImageServiceImpl implements InspectionImageService {
 
     private final InspectionImageRepo inspectionImageRepo;
     private final BaseImageRepo baseImageRepo;
-    private final GoogleDriveService googleDriveService;
+//    private final GoogleDriveService googleDriveService;
+    private final LocalImageService localImageService;
     private final InspectionRepo inspectionRepo;
 
     public InspectionImageServiceImpl(InspectionImageRepo inspectionImageRepo, BaseImageRepo baseImageRepo,
-            GoogleDriveService googleDriveService, InspectionRepo inspectionRepo) {
+                                      LocalImageService localImageService, InspectionRepo inspectionRepo) {
         this.inspectionImageRepo = inspectionImageRepo;
         this.baseImageRepo = baseImageRepo;
-        this.googleDriveService = googleDriveService;
+        this.localImageService = localImageService;
         this.inspectionRepo = inspectionRepo;
     }
 
     @Override
-    public Map<String, String> getComparisonImage(String inspectionNo) throws Exception {
+    public Map<String, Object> getComparisonImage(String inspectionNo) throws Exception {
         try {
             log.info("Fetching comparison images for inspection: {}", inspectionNo);
 
             InspectionImage inspectionImage = inspectionImageRepo.findByInspectionNo(inspectionNo);
             Inspection inspection = inspectionRepo.findByInspectionNo(inspectionNo);
 
-            Map<String, String> images = new HashMap<>();
+            Map<String, Object> images = new HashMap<>();
             BaselineImage baselineImage = baseImageRepo.findByTransformerNo(inspection.getTransformerNo());
 
             String baseImageUrl = null;
@@ -88,12 +88,12 @@ public class InspectionImageServiceImpl implements InspectionImageService {
                 }
             }
 
-            images.put("baseImageUrl", baseImageUrl);
+            images.put("baseImageUrl", localImageService.getImage(baseImageUrl));
             images.put("baseImageUploadedDate", baseImageUploadedDate);
             images.put("baseImageUploadedTime", baseImageUploadedTime);
             images.put("baseImageUploadedBy", baseImageUploadedBy);
 
-            images.put("thermal", inspectionImageUrl);
+            images.put("thermal", localImageService.getImage(inspectionImageUrl));
             images.put("thermalUploadedDate", inspectionImageUploadedDate);
             images.put("thermalUploadedTime", inspectionImageUploadedTime);
             images.put("thermalUploadedBy", inspectionImageUploadedBy);
@@ -115,7 +115,7 @@ public class InspectionImageServiceImpl implements InspectionImageService {
 
             inspectionImage.setInspectionNo(inspectionNo);
             inspectionImage.setTransformerNo(transformerNo);
-            String imageUrl = googleDriveService.uploadFile(thermalImage);
+            String imageUrl = localImageService.uploadImage(thermalImage);
             inspectionImage.setThermalImageUrl(imageUrl);
             inspectionImage.setThermalImageCondition(imageCondition);
             inspectionImage.setUploadedBy(uploadedBy);

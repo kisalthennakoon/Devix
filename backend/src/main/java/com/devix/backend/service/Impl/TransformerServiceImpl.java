@@ -10,7 +10,6 @@ import com.devix.backend.repo.BaseImageRepo;
 import com.devix.backend.repo.InspectionImageRepo;
 import com.devix.backend.repo.InspectionRepo;
 import com.devix.backend.repo.TransformerRepo;
-import com.devix.backend.service.GoogleDriveService;
 import com.devix.backend.service.MapperService;
 import com.devix.backend.service.TransformerService;
 import jakarta.transaction.Transactional;
