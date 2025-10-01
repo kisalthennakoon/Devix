@@ -1,9 +1,7 @@
 package com.devix.backend.service.Impl;
 
-import com.devix.backend.model.BaselineImage;
-import com.devix.backend.model.Inspection;
-import com.devix.backend.model.InspectionImage;
-import com.devix.backend.model.Transformer;
+import com.devix.backend.model.*;
+import com.devix.backend.repo.AiResultsRepo;
 import com.devix.backend.repo.BaseImageRepo;
 import com.devix.backend.repo.InspectionImageRepo;
 import com.devix.backend.repo.InspectionRepo;
@@ -13,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -24,13 +23,15 @@ public class InspectionImageServiceImpl implements InspectionImageService {
 //    private final GoogleDriveService googleDriveService;
     private final LocalImageService localImageService;
     private final InspectionRepo inspectionRepo;
+    private final AiResultsRepo aiResultsRepo;
 
     public InspectionImageServiceImpl(InspectionImageRepo inspectionImageRepo, BaseImageRepo baseImageRepo,
-                                      LocalImageService localImageService, InspectionRepo inspectionRepo) {
+                                      LocalImageService localImageService, InspectionRepo inspectionRepo, AiResultsRepo aiResultsRepo) {
         this.inspectionImageRepo = inspectionImageRepo;
         this.baseImageRepo = baseImageRepo;
         this.localImageService = localImageService;
         this.inspectionRepo = inspectionRepo;
+        this.aiResultsRepo = aiResultsRepo;
     }
 
     @Override
@@ -98,6 +99,9 @@ public class InspectionImageServiceImpl implements InspectionImageService {
             images.put("thermalUploadedTime", inspectionImageUploadedTime);
             images.put("thermalUploadedBy", inspectionImageUploadedBy);
 
+            List<AiResults> aiResults = aiResultsRepo.findAllByInspectionNo(inspectionNo);
+            images.put("aiResults", aiResults);
+
             return images;
         } catch (Exception e) {
             log.error("Error fetching comparison images: {}", e.getMessage());
@@ -123,6 +127,11 @@ public class InspectionImageServiceImpl implements InspectionImageService {
             inspectionImage.setUploadedTime(uploadedTime);
 
             inspectionImageRepo.save(inspectionImage);
+
+            Inspection inspection = inspectionRepo.findByInspectionNo(inspectionNo);
+            inspection.setInspectionStatus("pending");
+            inspectionRepo.save(inspection);
+
             log.info("Thermal image added successfully");
         } catch (Exception e) {
             log.error("Error adding thermal image: {}", e.getMessage());

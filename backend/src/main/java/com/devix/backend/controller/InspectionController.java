@@ -66,4 +66,16 @@ public class InspectionController {
         }
     }
 
+    @GetMapping("/status/{inspectionNo}")
+    public ResponseEntity<?> getInspectionStatus(@PathVariable("inspectionNo") String inspectionNo) {
+        try {
+            log.info("Fetching status for inspection: {}", inspectionNo);
+            return ResponseEntity.ok(inspectionService.inspectionStatus(inspectionNo));
+        } catch (Exception e) {
+            log.error("Error fetching inspection status: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
+
 }

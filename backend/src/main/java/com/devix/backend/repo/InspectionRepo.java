@@ -14,6 +14,7 @@ public interface InspectionRepo extends JpaRepository<Inspection, Long> {
     Integer findMaxInspectionNo();
 
     Inspection findByInspectionNo(String inspectionNo);
+    List<Inspection> findAllByStatus(String status);
     List<Inspection> findByTransformerNo(String transformerNo);
     void deleteAllByTransformerNo(String transformerNo);
     Inspection findTopByTransformerNoOrderByInspectionDateDescInspectionTimeDesc(String transformerNo);
