@@ -21,11 +21,12 @@ type ThermalImageCardProps = {
   inspectionNo: string;
   transformerNo: string;
   baseImageExist: boolean;
+  aiProgress?: boolean;
   onUploadSuccess: () => void;
 
 };
 
-function ThermalImageCard({ inspectionNo, transformerNo, baseImageExist, onUploadSuccess }: ThermalImageCardProps) {
+function ThermalImageCard({ inspectionNo, transformerNo, baseImageExist, onUploadSuccess , aiProgress}: ThermalImageCardProps) {
   const [weather, setWeather] = useState("Sunny");
   const [fileName, setFileName] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
@@ -152,11 +153,16 @@ function ThermalImageCard({ inspectionNo, transformerNo, baseImageExist, onUploa
           }}
         />
 
-        {!baseImageExist ? (
+        {!baseImageExist? (
+            <Button variant="contained" size="large" disabled>
+              Please upload base images first
+            </Button>
+        ) : baseImageExist && aiProgress ? (
           <Button variant="contained" size="large" disabled>
-            Please upload base images first
-          </Button>
-        ) : (
+              Uploaded
+            </Button>
+        ):
+        (
           <Button variant="contained" size="large" onClick={() => setUploadOpen(true)}>
             {fileName ? `Selected: ${fileName}` : "Upload thermal Image"}
           </Button>
@@ -171,9 +177,9 @@ function ThermalImageCard({ inspectionNo, transformerNo, baseImageExist, onUploa
       </Typography>
 
       <Stack spacing={1.5}>
-        <ProgressItem label="Thermal Image Upload" status="Pending" />
-        <ProgressItem label="AI Analysis" status="Pending" />
-        <ProgressItem label="Thermal Image Review" status="Pending" />
+        <ProgressItem label="Thermal Image Upload" status={aiProgress ? "Completed" : "Pending"} />
+        <ProgressItem label="AI Analysis" status={aiProgress ? "In Progress" : "Pending"} />
+        <ProgressItem label="Thermal Image Review" status ="Pending"/>
       </Stack>
 
       <Dialog open={uploadOpen} onClose={() => setUploadOpen(false)} maxWidth="sm" fullWidth>
@@ -301,21 +307,22 @@ function ProgressItem({ label, status }: { label: string; status: string }) {
             top: 0,
             left: 0,
             height: 3,
-            width: 28,                // small initial progress
+            width: status === "Completed" ? "100%" : status === "In Progress" ? "30%" : "0%",
             bgcolor: colors.active,
             borderRadius: 9999,
           }}
         />
-        {/* small circular marker at the very start */}
+        {/* small circular marker at the start or end depending on status */}
         <Box
           sx={{
             position: "absolute",
             top: -3,
-            left: -1,                 // keeps the dot snug at the start
+            left: status === "Completed" ? 'calc(100% - 7px)' : status === "In Progress" ? 'calc(30% - 7px)' : -1,
             width: 8,
             height: 8,
             bgcolor: colors.active,
             borderRadius: "50%",
+            transition: "left 0.4s"
           }}
         />
       </Box>

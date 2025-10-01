@@ -1,17 +1,17 @@
 import { Chip } from '@mui/material';
 
-type StatusType = "completed" | "progress" | "pending";
+// type StatusType = "no_image" | "in_progress" | "pending";
 
 interface StatusBadgeProps {
-  status: StatusType;
+  status: string;
 }
 
-const statusConfig = {
-  completed: {
-    text: "Completed",
+const statusConfig: Record<string, { text: string; color: string }> = {
+  no_image: {
+    text: "No Image",
     color: "#9c27b0"
   },
-  progress: {
+  in_progress: {
     text: "In Progress", 
     color: "#4caf50"
   },

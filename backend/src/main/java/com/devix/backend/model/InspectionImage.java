@@ -7,6 +7,8 @@ import jakarta.persistence.Id;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Map;
+
 @Entity
 @Data
 @NoArgsConstructor
@@ -23,4 +25,6 @@ public class InspectionImage {
     private String uploadedBy;
     private String uploadedDate;
     private String uploadedTime;
+
+
 }

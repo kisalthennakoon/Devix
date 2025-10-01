@@ -2,11 +2,12 @@ package com.devix.backend.service.Impl;
 
 import com.devix.backend.dto.InspectionRequestDto;
 import com.devix.backend.dto.InspectionResponseDto;
+import com.devix.backend.model.BaselineImage;
 import com.devix.backend.model.Inspection;
 import com.devix.backend.model.Transformer;
+import com.devix.backend.repo.BaseImageRepo;
 import com.devix.backend.repo.InspectionRepo;
 import com.devix.backend.repo.TransformerRepo;
-import com.devix.backend.service.GoogleDriveService;
 import com.devix.backend.service.InspectionService;
 import com.devix.backend.service.MapperService;
 import lombok.extern.slf4j.Slf4j;
@@ -25,10 +26,12 @@ public class InspectionServiceImpl implements InspectionService {
     private final InspectionRepo inspectionRepo;
     private final TransformerRepo transformerRepo;
     private final MapperService mapperService;
+    private final BaseImageRepo baseImageRepo;
 
-    public InspectionServiceImpl(TransformerRepo transformerRepo, InspectionRepo inspectionRepo) {
+    public InspectionServiceImpl(TransformerRepo transformerRepo, InspectionRepo inspectionRepo, BaseImageRepo baseImageRepo) {
         this.transformerRepo = transformerRepo;
         this.inspectionRepo = inspectionRepo;
+        this.baseImageRepo = baseImageRepo;
         this.mapperService = MapperService.INSTANCE;
     }
 
@@ -142,6 +145,29 @@ public class InspectionServiceImpl implements InspectionService {
         } catch (Exception e) {
             log.error("Error fetching inspections by TransformerNo: {}", e.getMessage());
             throw new Exception("Error fetching inspections: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Map<String, String> inspectionStatus(String inspectionNo) throws Exception {
+        try {
+            log.info("Fetching inspection status for number: {}", inspectionNo);
+            Inspection inspection = inspectionRepo.findByInspectionNo(inspectionNo);
+            if (inspection == null) {
+                throw new Exception("Inspection not found");
+            }
+            BaselineImage baselineImage = baseImageRepo.findByTransformerNo(inspection.getTransformerNo());
+            Map<String, String> statusMap = new HashMap<>();
+            statusMap.put("inspectionStatus", inspection.getInspectionStatus());
+            String baselineImageStatus = "no_image";
+            if(baselineImage != null){
+                baselineImageStatus = "exist";
+            }
+            statusMap.put("baselineImageStatus", baselineImageStatus);
+            return statusMap;
+        } catch (Exception e) {
+            log.error("Error fetching inspection status: {}", e.getMessage());
+            throw new Exception("Error fetching inspection status: " + e.getMessage());
         }
     }
 }

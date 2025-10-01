@@ -16,4 +16,5 @@ public interface InspectionService {
     void updateInspection(String inspectionNo, InspectionRequestDto inspection) throws Exception;
     void deleteInspection(String inspectionNo) throws Exception;
     List<InspectionResponseDto> getInspectionsByTransformerNo(String transformerNo) throws Exception;
+    Map<String, String> inspectionStatus(String inspectionNo) throws Exception;
 }

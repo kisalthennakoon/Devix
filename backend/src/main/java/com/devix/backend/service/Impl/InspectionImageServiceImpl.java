@@ -1,19 +1,17 @@
 package com.devix.backend.service.Impl;
 
-import com.devix.backend.model.BaselineImage;
-import com.devix.backend.model.Inspection;
-import com.devix.backend.model.InspectionImage;
-import com.devix.backend.model.Transformer;
+import com.devix.backend.model.*;
+import com.devix.backend.repo.AiResultsRepo;
 import com.devix.backend.repo.BaseImageRepo;
 import com.devix.backend.repo.InspectionImageRepo;
 import com.devix.backend.repo.InspectionRepo;
-import com.devix.backend.service.GoogleDriveService;
 import com.devix.backend.service.InspectionImageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -22,26 +20,29 @@ public class InspectionImageServiceImpl implements InspectionImageService {
 
     private final InspectionImageRepo inspectionImageRepo;
     private final BaseImageRepo baseImageRepo;
-    private final GoogleDriveService googleDriveService;
+//    private final GoogleDriveService googleDriveService;
+    private final LocalImageService localImageService;
     private final InspectionRepo inspectionRepo;
+    private final AiResultsRepo aiResultsRepo;
 
     public InspectionImageServiceImpl(InspectionImageRepo inspectionImageRepo, BaseImageRepo baseImageRepo,
-            GoogleDriveService googleDriveService, InspectionRepo inspectionRepo) {
+                                      LocalImageService localImageService, InspectionRepo inspectionRepo, AiResultsRepo aiResultsRepo) {
         this.inspectionImageRepo = inspectionImageRepo;
         this.baseImageRepo = baseImageRepo;
-        this.googleDriveService = googleDriveService;
+        this.localImageService = localImageService;
         this.inspectionRepo = inspectionRepo;
+        this.aiResultsRepo = aiResultsRepo;
     }
 
     @Override
-    public Map<String, String> getComparisonImage(String inspectionNo) throws Exception {
+    public Map<String, Object> getComparisonImage(String inspectionNo) throws Exception {
         try {
             log.info("Fetching comparison images for inspection: {}", inspectionNo);
 
             InspectionImage inspectionImage = inspectionImageRepo.findByInspectionNo(inspectionNo);
             Inspection inspection = inspectionRepo.findByInspectionNo(inspectionNo);
 
-            Map<String, String> images = new HashMap<>();
+            Map<String, Object> images = new HashMap<>();
             BaselineImage baselineImage = baseImageRepo.findByTransformerNo(inspection.getTransformerNo());
 
             String baseImageUrl = null;
@@ -68,19 +69,19 @@ public class InspectionImageServiceImpl implements InspectionImageService {
                 switch (inspectionImage.getThermalImageCondition()) {
 
                     case "Sunny" -> {
-                        baseImageUrl = baselineImage.getSunnyImageUrl();
+                        baseImageUrl = localImageService.getImage(baselineImage.getSunnyImageUrl());
                         baseImageUploadedDate = baselineImage.getUploadedDate();
                         baseImageUploadedTime = baselineImage.getUploadedTime();
                         baseImageUploadedBy = baselineImage.getUploadedBy();
                     }
                     case "Cloudy" -> {
-                        baseImageUrl = baselineImage.getCloudyImageUrl();
+                        baseImageUrl = localImageService.getImage(baselineImage.getCloudyImageUrl());
                         baseImageUploadedDate = baselineImage.getUploadedDate();
                         baseImageUploadedTime = baselineImage.getUploadedTime();
                         baseImageUploadedBy = baselineImage.getUploadedBy();
                     }
                     case "Rainy" -> {
-                        baseImageUrl = baselineImage.getRainyImageUrl();
+                        baseImageUrl = localImageService.getImage(baselineImage.getRainyImageUrl());
                         baseImageUploadedDate = baselineImage.getUploadedDate();
                         baseImageUploadedTime = baselineImage.getUploadedTime();
                         baseImageUploadedBy = baselineImage.getUploadedBy();
@@ -93,11 +94,22 @@ public class InspectionImageServiceImpl implements InspectionImageService {
             images.put("baseImageUploadedTime", baseImageUploadedTime);
             images.put("baseImageUploadedBy", baseImageUploadedBy);
 
-            images.put("thermal", inspectionImageUrl);
+            images.put("thermal", localImageService.getImage(inspectionImageUrl));
             images.put("thermalUploadedDate", inspectionImageUploadedDate);
             images.put("thermalUploadedTime", inspectionImageUploadedTime);
             images.put("thermalUploadedBy", inspectionImageUploadedBy);
 
+            List<AiResults> aiResults = aiResultsRepo.findAllByInspectionNo(inspectionNo);
+            List<Map<String, String>> aiResultsList = aiResults.stream().map(result -> Map.of(
+                    "faultType", String.valueOf(result.getFaultType()),
+                    "faultSeverity", String.valueOf(result.getFaultSeverity()),
+                    "faultConfidence", String.valueOf(result.getFaultConfidence()),
+                    "XCoordinate", String.valueOf(result.getXCoordinate()),
+                    "YCoordinate", String.valueOf(result.getYCoordinate())
+            )).toList();
+            
+            images.put("aiResults", aiResultsList);
+            log.info("AI Results: {}", images.get("aiResults"));
             return images;
         } catch (Exception e) {
             log.error("Error fetching comparison images: {}", e.getMessage());
@@ -115,7 +127,7 @@ public class InspectionImageServiceImpl implements InspectionImageService {
 
             inspectionImage.setInspectionNo(inspectionNo);
             inspectionImage.setTransformerNo(transformerNo);
-            String imageUrl = googleDriveService.uploadFile(thermalImage);
+            String imageUrl = localImageService.uploadImage(thermalImage);
             inspectionImage.setThermalImageUrl(imageUrl);
             inspectionImage.setThermalImageCondition(imageCondition);
             inspectionImage.setUploadedBy(uploadedBy);
@@ -123,6 +135,11 @@ public class InspectionImageServiceImpl implements InspectionImageService {
             inspectionImage.setUploadedTime(uploadedTime);
 
             inspectionImageRepo.save(inspectionImage);
+
+            Inspection inspection = inspectionRepo.findByInspectionNo(inspectionNo);
+            inspection.setInspectionStatus("pending");
+            inspectionRepo.save(inspection);
+
             log.info("Thermal image added successfully");
         } catch (Exception e) {
             log.error("Error adding thermal image: {}", e.getMessage());

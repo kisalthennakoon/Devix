@@ -9,7 +9,7 @@ interface SideBySideImagesProps {
   leftTitle?: string;
   midTitle?: string;
   rightTitle?: string;
-  transformerNo? : string;
+  transformerNo?: string;
 }
 
 const BaselineImageShow: React.FC<SideBySideImagesProps> = ({
@@ -20,32 +20,46 @@ const BaselineImageShow: React.FC<SideBySideImagesProps> = ({
   midTitle = "Cloudy",
   rightTitle = "Rainy",
 }) => {
-  const getDirectLink = (url: string, size: number = 1000) => {
-    const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-    return match
-      ? `https://drive.google.com/thumbnail?id=${match[1]}&sz=w${size}`
-      : url;
-  };
+  // const getDirectLink = (url: string, size: number = 1000) => {
+  //   const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  //   return match
+  //     ? `https://drive.google.com/thumbnail?id=${match[1]}&sz=w${size}`
+  //     : url;
+  // };
+
+  function cleanBase64(base64Str: string | null | undefined): string | null {
+    if (!base64Str) return null;
+    // Remove quotes, spaces, newlines, non-base64 characters
+    const cleaned = base64Str
+      .replace(/^["']|["']$/g, "")
+      .replace(/[\r\n\s]/g, "")
+      .replace(/[^A-Za-z0-9+/=]/g, ""); // remove anything not valid Base64
+    return cleaned || null;
+  }
+
 
   const [baselineImages, setBaselineImages] = useState({
-      sunny: null as string | null,
-      cloudy: null as string | null,
-      rainy: null as string | null,
-    });
-    const [error, setError] = useState(false);
-  
-    useEffect(() => {
-      axios
-        .get(`/api/baseImage/get/${transformerNo}`)
-        .then((res) => {
-          setBaselineImages(res.data);
-          setError(false);
-        })
-        .catch((err) => {
-          console.error("Error fetching inspection:", err);
-          setError(true); // mark that request failed
-        });
-    }, []);
+    sunny: null as string | null,
+    cloudy: null as string | null,
+    rainy: null as string | null,
+  });
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    axios
+      .get(`/api/baseImage/get/${transformerNo}`)
+      .then((res) => {
+        setBaselineImages(res.data);
+
+        setError(false);
+      })
+      .catch((err) => {
+        console.error("Error fetching inspection:", err);
+        setError(true); // mark that request failed
+      });
+  }, []);
+
+
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
@@ -66,7 +80,7 @@ const BaselineImageShow: React.FC<SideBySideImagesProps> = ({
       </DialogTitle>
       <DialogContent dividers>
         {error ||
-        (!baselineImages.sunny && !baselineImages.cloudy && !baselineImages.rainy) ? (
+          (!baselineImages.sunny && !baselineImages.cloudy && !baselineImages.rainy) ? (
           <Box
             display="flex"
             flexDirection="column"
@@ -88,7 +102,7 @@ const BaselineImageShow: React.FC<SideBySideImagesProps> = ({
               <Card sx={{ borderRadius: 2, boxShadow: 4 }}>
                 <CardMedia
                   component="img"
-                  image={getDirectLink(baselineImages.sunny ?? "")}
+                  src={baselineImages.sunny ? `data:image/png;base64,${cleanBase64(baselineImages.sunny)}` : ""}
                   alt={leftTitle}
                   sx={{ objectFit: "contain", width: "100%", maxHeight: 400 }}
                 />
@@ -102,7 +116,7 @@ const BaselineImageShow: React.FC<SideBySideImagesProps> = ({
               <Card sx={{ borderRadius: 2, boxShadow: 4 }}>
                 <CardMedia
                   component="img"
-                  image={getDirectLink(baselineImages.cloudy ?? "")}
+                  src={baselineImages.cloudy ? `data:image/png;base64,${cleanBase64(baselineImages.cloudy)}` : ""}
                   alt={midTitle}
                   sx={{ objectFit: "contain", width: "100%", maxHeight: 400 }}
                 />
@@ -116,7 +130,7 @@ const BaselineImageShow: React.FC<SideBySideImagesProps> = ({
               <Card sx={{ borderRadius: 2, boxShadow: 4 }}>
                 <CardMedia
                   component="img"
-                  image={getDirectLink(baselineImages.rainy ?? "")}
+                  src={baselineImages.rainy ? `data:image/png;base64,${cleanBase64(baselineImages.rainy)}` : ""}
                   alt={rightTitle}
                   sx={{ objectFit: "contain", width: "100%", maxHeight: 400 }}
                 />
