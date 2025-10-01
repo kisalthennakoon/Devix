@@ -60,6 +60,7 @@ export const AddInspectionModal = ({ transformerNoInput, open, onOpenChange, set
         inspectionBranch: branch,
         transformerNo,
         inspectionDate: inspectionDate.toISOString().split('T')[0],
+        inspectionStatus: "no_image",
         inspectionTime: time,
         inspectedby: "Devix"
       };

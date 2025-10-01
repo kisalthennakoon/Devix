@@ -35,7 +35,8 @@ interface Inspection {
   inspectedDate: string;
   inspectionTime: string;
   maintenanceDate: string | null;
-  inspectionStatus: "in progress" | null;
+  inspectionStatus: string;
+  status: string; // Added to fix the error
   transformerNo: string;
   inspectionBranch: string;
   isFavorite: boolean;

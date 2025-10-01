@@ -159,10 +159,11 @@ public class InspectionServiceImpl implements InspectionService {
             BaselineImage baselineImage = baseImageRepo.findByTransformerNo(inspection.getTransformerNo());
             Map<String, String> statusMap = new HashMap<>();
             statusMap.put("inspectionStatus", inspection.getInspectionStatus());
-            String inspectionStatus = null;
+            String baselineImageStatus = "no_image";
             if(baselineImage != null){
-                statusMap.put("inspectionStatus", "exist");
+                baselineImageStatus = "exist";
             }
+            statusMap.put("baselineImageStatus", baselineImageStatus);
             return statusMap;
         } catch (Exception e) {
             log.error("Error fetching inspection status: {}", e.getMessage());

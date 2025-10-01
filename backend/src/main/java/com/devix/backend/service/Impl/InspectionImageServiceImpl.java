@@ -100,8 +100,16 @@ public class InspectionImageServiceImpl implements InspectionImageService {
             images.put("thermalUploadedBy", inspectionImageUploadedBy);
 
             List<AiResults> aiResults = aiResultsRepo.findAllByInspectionNo(inspectionNo);
-            images.put("aiResults", aiResults);
-
+            List<Map<String, String>> aiResultsList = aiResults.stream().map(result -> Map.of(
+                    "faultType", String.valueOf(result.getFaultType()),
+                    "faultSeverity", String.valueOf(result.getFaultSeverity()),
+                    "faultConfidence", String.valueOf(result.getFaultConfidence()),
+                    "XCoordinate", String.valueOf(result.getXCoordinate()),
+                    "YCoordinate", String.valueOf(result.getYCoordinate())
+            )).toList();
+            
+            images.put("aiResults", aiResultsList);
+            log.info("AI Results: {}", images.get("aiResults"));
             return images;
         } catch (Exception e) {
             log.error("Error fetching comparison images: {}", e.getMessage());

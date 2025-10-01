@@ -13,6 +13,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.List;
 import java.util.Map;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 @Slf4j
@@ -30,39 +32,46 @@ public class AiService {
         this.aiResultsRepo = aiResultsRepo;
     }
 
-    public Object getPrediction(String imageUrl) {
-        return webClient.post()
+    public List<Map<String, Object>> getPrediction(String imageUrl) {
+        String response = webClient.post()
                 .uri("/predict")
-                .bodyValue(Map.of("data", imageUrl))
+                .bodyValue(Map.of("imageUrl", imageUrl))
                 .retrieve()
                 .bodyToMono(String.class)
                 .block();
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(response, new TypeReference<List<Map<String, Object>>>() {});
+        } catch (Exception e) {
+            log.error("Failed to parse AI prediction response: {}", e.getMessage());
+            throw new RuntimeException("Failed to parse AI prediction response: " + e.getMessage());
+        }
     }
 
-    @Scheduled(fixedRate = 1000*60*15) // every 15 minutes
+    @Scheduled(fixedRate = 1000*60*5) // every 15 minutes
     public void analysis() {
         try{
-            List<Inspection> inspections = inspectionRepo.findAllByStatus("pending");
+            List<Inspection> inspections = inspectionRepo.findAllByInspectionStatus("pending");
             for (Inspection inspection : inspections) {
                 InspectionImage image = inspectionImageRepo.findByInspectionNo(inspection.getInspectionNo());
                 String imageUrl = image != null ? image.getThermalImageUrl() : null;
 
                 if (imageUrl != null) {
-                    Object prediction = getPrediction(imageUrl);
+                    List<Map<String, Object>> prediction = getPrediction(imageUrl);
 
                     if (prediction == null) {
                         continue;
                     }
 
                     // Save the AI results to the database (not implemented here)
-                    for (Map<String, String> result : (List<Map<String, String>>) prediction) {
+                    for (Map<String, Object> result : prediction) {
                         AiResults aiResults = new AiResults();
                         aiResults.setInspectionNo(inspection.getInspectionNo());
-                        aiResults.setFaultType(result.get("fault_type"));
-                        aiResults.setFaultSeverity(result.get("severity"));
-                        aiResults.setFaultConfidence(result.get("confidence"));
-                        aiResults.setXCoordinate(result.get("x_coordinate"));
-                        aiResults.setYCoordinate(result.get("y_coordinate"));
+                        aiResults.setFaultType((String) result.get("fault_type"));
+                        aiResults.setFaultSeverity((String) result.get("severity"));
+                        aiResults.setFaultConfidence(result.get("confidence") != null ? result.get("confidence").toString() : null);
+                        aiResults.setXCoordinate(result.get("x_coordinate") != null ? result.get("x_coordinate").toString() : null);
+                        aiResults.setYCoordinate(result.get("y_coordinate") != null ? result.get("y_coordinate").toString() : null);
                         aiResultsRepo.save(aiResults);
                     }
 

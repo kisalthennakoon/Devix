@@ -1,5 +1,6 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Grid, Card, CardMedia, Box, Typography } from "@mui/material";
+import axios from "axios";
 
 // interface SideBySideImagesProps {
 //   leftImageUrl: string;
@@ -16,22 +17,53 @@ interface InspectionImages {
   thermalUploadedBy: string;
   thermalUploadedTime: string;
   thermalUploadedDate: string;
+
+  aiResults: Array<Map<string, any>>;
 }
 
-type ThermalImageComparisonProps = InspectionImages;
 
-const ThermalImageComparison = (inspectionImages: ThermalImageComparisonProps) => {
-  const getDirectLink = (url: string, size: number = 1000) => {
-    const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-    return match
-      ? `https://drive.google.com/thumbnail?id=${match[1]}&sz=w${size}`
-      : url;
-  };
+const ThermalImageComparison = ({inspectionNo}: {inspectionNo: string}) => {
+  // const getDirectLink = (url: string, size: number = 1000) => {
+  //   const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  //   return match
+  //     ? `https://drive.google.com/thumbnail?id=${match[1]}&sz=w${size}`
+  //     : url;
+  // };
+
+  const [inspectionImages, setInspectionImages] = useState<InspectionImages>();
+  const fetchComparisnon = async () => {
+    axios
+      .get(`/api/inspectionImage/get/${inspectionNo}`)
+      .then((res) => {
+        setInspectionImages(res.data);
+        
+      })
+      .catch((err) => {
+        console.error("Error fetching inspection:", err);
+        
+      });
+
+      
+  }
 
   useEffect(() => {
-    console.log('left', getDirectLink(inspectionImages.baseImageUrl))
-    console.log('right', getDirectLink(inspectionImages.thermal))
-  }, [inspectionImages])
+    fetchComparisnon();
+  }, []);
+
+  function cleanBase64(base64Str: string | null | undefined): string | null {
+    if (!base64Str) return null;
+    // Remove quotes, spaces, newlines, non-base64 characters
+    const cleaned = base64Str
+      .replace(/^["']|["']$/g, "")
+      .replace(/[\r\n\s]/g, "")
+      .replace(/[^A-Za-z0-9+/=]/g, ""); // remove anything not valid Base64
+    return cleaned || null;
+  }
+
+  // useEffect(() => {
+  //   console.log('left', getDirectLink(inspectionImages.baseImageUrl))
+  //   console.log('right', getDirectLink(inspectionImages.thermal))
+  // }, [inspectionImages])
 
   return (
     <Box
@@ -60,7 +92,7 @@ const ThermalImageComparison = (inspectionImages: ThermalImageComparisonProps) =
           <Card sx={{ borderRadius: 2, boxShadow: 4, flex: 1 }}>
             <CardMedia
               component="img"
-              image={getDirectLink(inspectionImages.baseImageUrl)}
+              src={inspectionImages?.baseImageUrl ? `data:image/png;base64,${cleanBase64(inspectionImages.baseImageUrl)}` : ''}
               alt="Left Image"
               sx={{ objectFit: "contain", width: "100%", maxHeight: 600 }}
             />
@@ -73,7 +105,7 @@ const ThermalImageComparison = (inspectionImages: ThermalImageComparisonProps) =
               mt: 1,
             }}
           >
-            Uploaded Time: {inspectionImages.baseImageUploadedDate} {inspectionImages.baseImageUploadedTime}
+            Uploaded Time: {inspectionImages?.baseImageUploadedDate} {inspectionImages?.baseImageUploadedTime}
           </Typography>
           <Typography
             sx={{
@@ -83,7 +115,7 @@ const ThermalImageComparison = (inspectionImages: ThermalImageComparisonProps) =
               fontStyle: "italic",
             }}
           >
-            Uploaded By: {inspectionImages.baseImageUploadedBy}
+            Uploaded By: {inspectionImages?.baseImageUploadedBy}
           </Typography>
         </Box>
 
@@ -92,7 +124,7 @@ const ThermalImageComparison = (inspectionImages: ThermalImageComparisonProps) =
           <Card sx={{ borderRadius: 2, boxShadow: 4, flex: 1 }}>
             <CardMedia
               component="img"
-              image={getDirectLink(inspectionImages.thermal)}
+              src={inspectionImages?.thermal ? `data:image/png;base64,${cleanBase64(inspectionImages.thermal)}` : ''}
               alt="Right Image"
               sx={{ objectFit: "contain", width: "100%", maxHeight: 600 }}
             />
@@ -105,7 +137,7 @@ const ThermalImageComparison = (inspectionImages: ThermalImageComparisonProps) =
               fontStyle: "italic",
             }}
           >
-            Uploaded Time: {inspectionImages.thermalUploadedDate} {inspectionImages.thermalUploadedTime}
+            Uploaded Time: {inspectionImages?.thermalUploadedDate} {inspectionImages?.thermalUploadedTime}
           </Typography>
           <Typography
             sx={{
@@ -115,7 +147,7 @@ const ThermalImageComparison = (inspectionImages: ThermalImageComparisonProps) =
               fontStyle: "italic",
             }}
           >
-            Uploaded By: {inspectionImages.thermalUploadedBy}
+            Uploaded By: {inspectionImages?.thermalUploadedBy}
           </Typography>
         </Box>
       </Box>
