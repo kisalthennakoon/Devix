@@ -294,14 +294,14 @@ def detect_anomalies(image_path,
 # print("Saved:", f"{stem}_annotated.png")
 # print("Saved:", f"{stem}_heatmap.png")
 
-from pre import remove_right_bar
+from preprocess import remove_right_bar
 
 def interface(image_path):
     image = remove_right_bar(image_path)
     annotated_img, heatmap_img, meta = detect_anomalies(image)
 
     plt.figure(figsize=(12,7))
-    plt.imshow(cv2.cvtColor(annotated_img, cv2.COLOR_BGR2RGB)); plt.axis("off")
+    # plt.imshow(cv2.cvtColor(annotated_img, cv2.COLOR_BGR2RGB)); plt.axis("off")
     plt.title("Anomalies — vote-based wire vs joint, with overload subtypes + hotspot")
     plt.show()
 
