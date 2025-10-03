@@ -17,7 +17,9 @@ class FeaturesRequest(BaseModel):
 def predict(request: FeaturesRequest):
     # Access the features string from the request body
     imageUrl = request.imageUrl
-    path = os.path.join("..", "backend", imageUrl.lstrip("/"))
+    absolute_path = os.path.abspath(__file__)
+    dir_path = os.path.dirname(absolute_path)
+    path = os.path.join(dir_path, imageUrl)
 
     result = interface(path)
     

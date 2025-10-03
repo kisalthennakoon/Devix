@@ -23,4 +23,10 @@ public class AiResults {
     private String faultConfidence;
     private String XCoordinate;
     private String YCoordinate;
+
+    // New fields for bbox, area_px, hotspot_x, hotspot_y
+    private String bbox; // Store as JSON string
+    private String areaPx;
+    private String hotspotX;
+    private String hotspotY;
 }

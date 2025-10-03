@@ -99,14 +99,18 @@ public class InspectionImageServiceImpl implements InspectionImageService {
             images.put("thermalUploadedTime", inspectionImageUploadedTime);
             images.put("thermalUploadedBy", inspectionImageUploadedBy);
 
-            List<AiResults> aiResults = aiResultsRepo.findAllByInspectionNo(inspectionNo);
-            List<Map<String, String>> aiResultsList = aiResults.stream().map(result -> Map.of(
-                    "faultType", String.valueOf(result.getFaultType()),
-                    "faultSeverity", String.valueOf(result.getFaultSeverity()),
-                    "faultConfidence", String.valueOf(result.getFaultConfidence()),
-                    "XCoordinate", String.valueOf(result.getXCoordinate()),
-                    "YCoordinate", String.valueOf(result.getYCoordinate())
-            )).toList();
+        List<AiResults> aiResults = aiResultsRepo.findAllByInspectionNo(inspectionNo);
+        List<Map<String, String>> aiResultsList = aiResults.stream().map(result -> Map.of(
+            "faultType", String.valueOf(result.getFaultType()),
+            "faultSeverity", String.valueOf(result.getFaultSeverity()),
+            "faultConfidence", String.valueOf(result.getFaultConfidence()),
+            "XCoordinate", String.valueOf(result.getXCoordinate()),
+            "YCoordinate", String.valueOf(result.getYCoordinate()),
+            "bbox", String.valueOf(result.getBbox()),
+            "areaPx", String.valueOf(result.getAreaPx()),
+            "hotspotX", String.valueOf(result.getHotspotX()),
+            "hotspotY", String.valueOf(result.getHotspotY())
+        )).toList();
             
             images.put("aiResults", aiResultsList);
             log.info("AI Results: {}", images.get("aiResults"));
