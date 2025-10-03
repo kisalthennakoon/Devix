@@ -1,5 +1,5 @@
 #!/bin/sh
-'''exec' "/workspaces/Devix/AI Server/venv/bin/python" "$0" "$@"
+'''exec' "/workspaces/Devix/AI Server/venv/bin/python3" "$0" "$@"
 ' '''
 # -*- coding: utf-8 -*-
 import re
