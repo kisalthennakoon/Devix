@@ -56,6 +56,14 @@ function cleanBase64(base64Str: string | null | undefined): string | null {
   );
 }
 
+// NEW: helper to render confidence as percentage string
+const toPercent = (v: string | number | undefined | null, decimals = 0) => {
+  const n = Number(v);
+  if (!isFinite(n)) return null;
+  const pct = Math.max(0, Math.min(100, n * 100));
+  return pct.toFixed(decimals);
+};
+
 const ThermalImageComparison = ({ inspectionNo }: { inspectionNo: string }) => {
   const [inspectionImages, setInspectionImages] = useState<InspectionImages>();
   const [weather, setWeather] = useState<"Sunny" | "Cloudy" | "Rainy">("Sunny");
@@ -155,7 +163,7 @@ const ThermalImageComparison = ({ inspectionNo }: { inspectionNo: string }) => {
             Uploaded By: {inspectionImages?.baseImageUploadedBy}
           </Typography>
 
-          {/* Weather selector AFTER meta lines (per your order) */}
+          {/* Weather selector AFTER meta lines */}
           <Box sx={{ mt: 2, display: "inline-flex", alignItems: "center", gap: 1 }}>
             <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
               Weather Condition
@@ -176,8 +184,6 @@ const ThermalImageComparison = ({ inspectionNo }: { inspectionNo: string }) => {
         {/* RIGHT: THERMAL with overlays */}
         <Box sx={{ flex: 1, ml: 1, minWidth: 0 }}>
           <Box
-
-          
             sx={{
               position: "relative",
               borderRadius: 2,
@@ -206,25 +212,24 @@ const ThermalImageComparison = ({ inspectionNo }: { inspectionNo: string }) => {
               }}
             />
 
-          {aiResults.length > 0 && (
-            <Chip
-              size="small"
-              icon={<WarningAmberIcon sx={{ color: "#fff !important" }} />}
-              label="Anomaly Detected"
-              sx={{
-                position: "absolute",
-                top: 8,
-                right: 8,
-                zIndex: 5,
-                bgcolor: "#b71c1c",            // deep red pill
-                color: "#fff",
-                borderRadius: 9999,
-                pointerEvents: "none",
-                "& .MuiChip-icon": { color: "#fff" },
-              }}
-            />
-)}
-
+            {aiResults.length > 0 && (
+              <Chip
+                size="small"
+                icon={<WarningAmberIcon sx={{ color: "#fff !important" }} />}
+                label="Anomaly Detected"
+                sx={{
+                  position: "absolute",
+                  top: 8,
+                  right: 8,
+                  zIndex: 5,
+                  bgcolor: "#b71c1c",
+                  color: "#fff",
+                  borderRadius: 9999,
+                  pointerEvents: "none",
+                  "& .MuiChip-icon": { color: "#fff" },
+                }}
+              />
+            )}
 
             {/* transform layer */}
             <Box
@@ -253,7 +258,7 @@ const ThermalImageComparison = ({ inspectionNo }: { inspectionNo: string }) => {
                 }}
               />
 
-              {/* AI boxes */}
+              {/* AI boxes with confidence badge */}
               {aiResults.map((r, i) => {
                 const xPct = parseFloat(r.XCoordinate);
                 const yPct = parseFloat(r.YCoordinate);
@@ -261,6 +266,10 @@ const ThermalImageComparison = ({ inspectionNo }: { inspectionNo: string }) => {
                 const boxH = 12;
                 const leftPct = Math.max(0, Math.min(100 - boxW, xPct - boxW / 2));
                 const topPct = Math.max(0, Math.min(100 - boxH, yPct - boxH / 2));
+
+                const confStr = toPercent(r.faultConfidence, 0); // e.g., "87"
+                const pillBg = severityColor[r.faultSeverity];
+
                 return (
                   <Box
                     key={`${r.faultType}-${i}`}
@@ -270,30 +279,52 @@ const ThermalImageComparison = ({ inspectionNo }: { inspectionNo: string }) => {
                       top: `${topPct}%`,
                       width: `${boxW}%`,
                       height: `${boxH}%`,
-                      border: `2px solid ${severityColor[r.faultSeverity]}`,
+                      border: `2px solid ${pillBg}`,
                       borderRadius: 1,
                       boxShadow: "0 0 0 2px rgba(255,255,255,0.25)",
                       pointerEvents: "none",
                     }}
+                    aria-label={`Region ${i + 1}: ${r.faultType}, severity ${r.faultSeverity}, confidence ${confStr ?? "unknown"}%`}
                   >
-                    {/* simple number label only */}
-      <Typography
-        component="span"
-        sx={{
-          position: "absolute",
-          top: -18,
-          left: -6,
-          fontSize: 14,
-          fontWeight: 700,
-          color: "#000",                // plain number (no pill/background)
-          background: "transparent",
-          pointerEvents: "none",
-        }}
-      >
-        {i + 1}
-      </Typography>
+                    {/* index label (top-left) */}
+                    <Typography
+                      component="span"
+                      sx={{
+                        position: "absolute",
+                        top: -18,
+                        left: -6,
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: "#000",
+                        background: "transparent",
+                        pointerEvents: "none",
+                      }}
+                    >
+                      {i + 1}
+                    </Typography>
 
-                    
+                    {/* confidence pill (top-right) */}
+                    <Typography
+                      component="span"
+                      sx={{
+                        position: "absolute",
+                        top: -18,
+                        right: -6,
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: "#fff",
+                        bgcolor: pillBg,
+                        px: 0.75,
+                        py: 0.25,
+                        borderRadius: 1,
+                        lineHeight: 1.2,
+                        boxShadow: "0 1px 2px rgba(0,0,0,0.4)",
+                        textShadow: "0 1px 2px rgba(0,0,0,0.6)",
+                        pointerEvents: "none",
+                      }}
+                    >
+                      {confStr ? `${confStr}%` : "—"}
+                    </Typography>
                   </Box>
                 );
               })}
