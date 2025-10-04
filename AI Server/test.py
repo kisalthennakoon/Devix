@@ -29,7 +29,7 @@ def predict(request: FeaturesRequest):
 
     result = interface(imageUrl)
     
-    print(f"Received imageUrl: {imageUrl}")
+    
     print(f"AI Model Result: {result}")
     
     # Return the actual AI model results instead of hardcoded data

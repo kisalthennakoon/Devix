@@ -131,6 +131,9 @@ def detect_anomalies(image_path,
         merged.append({"bbox":(x,y,w,h), "centroid":(x+w//2,y+h//2),
                        "area_px":int(cv2.countNonZero(umask)), "severity":round(sev,4),
                        "mask":umask, "cnts":cnts})
+# === keep only the top 4 anomalies ===
+    merged.sort(key=lambda m: m["severity"], reverse=True)
+    merged = merged[:4]
 
     # features
     def pca_eccentricity(cnt):
@@ -297,13 +300,14 @@ def detect_anomalies(image_path,
 from preprocess import remove_right_bar
 
 def interface(image_path):
+    print(image_path)
     image = remove_right_bar(image_path)
     annotated_img, heatmap_img, meta = detect_anomalies(image)
 
-    plt.figure(figsize=(12,7))
-    plt.imshow(cv2.cvtColor(annotated_img, cv2.COLOR_BGR2RGB)); plt.axis("off")
-    plt.title("Anomalies — vote-based wire vs joint, with overload subtypes + hotspot")
-    plt.show()
+    # plt.figure(figsize=(12,7))
+    # plt.imshow(cv2.cvtColor(annotated_img, cv2.COLOR_BGR2RGB)); plt.axis("off")
+    # plt.title("Anomalies — vote-based wire vs joint, with overload subtypes + hotspot")
+    # plt.show()
 
     if len(meta)==0:
         print("No anomalies found.")
@@ -319,5 +323,5 @@ def interface(image_path):
         return meta
     
 if __name__ == "__main__":
-    image_path = r"Sample Thermal Images\T13\faulty\T13_faulty_001_.jpg"
+    image_path = r"..\image_store\uploads\f7fa3df8-39e0-4d25-afb5-c8170d4e3c93.jpg"
     interface(image_path)
