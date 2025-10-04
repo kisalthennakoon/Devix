@@ -10,19 +10,13 @@ This project is a **web-based platform** for managing transformer records and th
 
 ## ⚙️ Setup Instructions
 
-⚠️ **Important Note**:  
-The backend uploads images to **Google Drive**, generates shareable links, and stores them in **PostgreSQL**. The frontend then retrieves and displays these links.  
-
-- **Issue on localhost**: Google Drive does not allow embedding images when accessed from an **HTTP localhost** environment, causing broken image previews in the UI.  
-- **Workaround**: This issue does not occur when the system is deployed in a secure environment (e.g., GitHub Codespaces with HTTPS) or when hosted on any HTTPS-enabled server. (The issue didnt arise when developing since the project was developed in GitHub Codespace environment)
-
 ### 🗄️ Database
 Set up the PostgreSQL database using Docker:  
 
-1. Stop and remove any existing containers and volumes (clean reset):  
+   1. Stop and remove any existing containers and volumes (clean reset):  
    ```bash
    docker compose down -v
-      ```
+   ```
    2. Start the containerized PostgreSQL database:
    ```bash
    docker-compose up -d postgres
@@ -46,20 +40,10 @@ Set up the PostgreSQL database using Docker:
 4. Open the browser and visit the URL displayed in the terminal (usually http://localhost:5173).
 
 ### Backend
-1. Configure Google Drive API for image uploads (Only if the token file has expired):
-* The backend uploads images to Google Drive, generates links, and saves them in PostgreSQL.
-* Two files are required for authentication:
-  * Credential file
-  * Token file
-   * These two files are included in the `resources` folder of the Spring Boot backend as a ZIP file, since GitHub does not allow adding credential files directly. You need to unzip this file within the `resources` folder.
-2. If you are running your PostgreSQL server locally rather than running the given Docker container, change the application.properties configurations accordingly.
-3. Run the backend server after the database and authentication setup.
 
-**NOTE:** When running the UIs, there may be an issue when photo uploading tasks if the token file has expired(STORED_CREDENTIAL file in resources). This will be mentioned as an error in the backend terminal or appear in api response data when tryng to upload base images or maintenance images. If this happens,
-
-  1. Create a new Google OAuth2 account(with `http://localhost:8888/Callback` as redirect URI) and generate a new credential file.
-  2. Replace the existing file in `resources` folder named `cient-secret-...` with this new credential file and change    `CREDENTIAL_FILE_PATH` in the GoogleDriveConfig file in the config folder in the backend to your new credential file.
-  3. Run the RunAuthManual script located in the service folder(change `in` variable to your credential file path). This will open a browser window and ask to authenticate your Google account. The token file is automatically saved in the resources folder.
+1. If you are running your PostgreSQL server locally rather than running the given Docker container, change the application.properties configurations accordingly.
+2. Currently, we save images locally. Threrefore, specifying the local path to image storage is needed. In application.properties file in Springboot, give your path for the variable "image.upload.dir".
+3. Run the backend server after the database setup.
 
 ## Implemented Features (Phase 1)
 
