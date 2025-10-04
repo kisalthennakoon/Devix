@@ -16,3 +16,5 @@ uvicorn
 # Additional dependencies (automatically installed with above packages)
 Pillow
 scipy
+
+python-multipart

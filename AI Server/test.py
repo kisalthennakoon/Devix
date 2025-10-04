@@ -1,6 +1,6 @@
 # ml_service.py
 
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile
 from pydantic import BaseModel
 import uvicorn
 from model import interface
@@ -14,21 +14,15 @@ class FeaturesRequest(BaseModel):
     imageUrl: str
 
 @app.post("/predict")
-def predict(request: FeaturesRequest):
-    # Access the features string from the request body
-    imageUrl = request.imageUrl
-    # Make path relative to the Devix folder
-    # devix_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    # path = os.path.join(devix_root, imageUrl)
-    # absolute_path = os.path.abspath(__file__)
-    # dir_path = os.path.dirname(absolute_path)
-    
-    # path = os.path.join(path, imageUrl)
-    # path = f"../{imageUrl}"
-    # print("path: ", path)
+async def predict(file: UploadFile = File(...)):
+    # Save the uploaded file to a temp location
+    temp_path = f"/tmp/{file.filename}"
+    with open(temp_path, "wb") as f:
+        content = await file.read()
+        f.write(content)
 
-    result = interface(imageUrl)
-    
+    # Pass the temp_path to your model interface
+    result = interface(temp_path)    
     
     print(f"AI Model Result: {result}")
     
