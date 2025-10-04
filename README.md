@@ -115,6 +115,10 @@ Set up the PostgreSQL database using Docker:
 * No automated anomaly detection yet (Phase 2 requirement).
 * Limited test data included (5 transformers with baseline images).
 * Some UI elements may need refinement for responsiveness on smaller screens.
+* Uploading very large images can fail or stall on slower networks/browsers.
+* The model may detect an anomaly but assign the wrong fault category in some cases.
+* Motion blur/out-of-focus frames (e.g., T1 faulty images in the dataset) reduce detection accuracy.
+
 
 ## Test Data
 
