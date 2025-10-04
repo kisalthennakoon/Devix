@@ -1,7 +1,6 @@
 package com.devix.backend.service.Impl;
 
 import com.devix.backend.model.BaselineImage;
-import com.devix.backend.model.Transformer;
 import com.devix.backend.repo.BaseImageRepo;
 import com.devix.backend.service.BaselineImageService;
 import lombok.extern.slf4j.Slf4j;
