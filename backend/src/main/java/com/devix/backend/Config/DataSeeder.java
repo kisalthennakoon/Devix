@@ -46,19 +46,20 @@ public class DataSeeder implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         //empty database first
-        inspectionImageRepo.deleteAll();
-        inspectionRepo.deleteAll();
-        baseImageRepo.deleteAll();
-        transformerRepo.deleteAll();
-        aiResultsRepo.deleteAll();
+        
 
         if (transformerRepo.count() == 0) {
             // Create sample transformers
+            inspectionImageRepo.deleteAll();
+            inspectionRepo.deleteAll();
+            baseImageRepo.deleteAll();
+            transformerRepo.deleteAll();
+            aiResultsRepo.deleteAll();
             Transformer transformer1 = new Transformer("AZ-001", "Distribution", "001", "Colombo", "Location A", "100 kVA");
             Transformer transformer2 = new Transformer("AZ-002", "Distribution", "002", "Kandy", "Location B", "200 kVA");
-            Transformer transformer3 = new Transformer("AZ-003", "Transmission", "003", "Galle", "Location C", "500 kVA");
-            Transformer transformer4 = new Transformer("AZ-004", "Distribution", "004", "Jaffna", "Location D", "150 kVA");
-            Transformer transformer5 = new Transformer("AZ-005", "Transmission", "005", "Matara", "Location E", "300 kVA");
+            Transformer transformer3 = new Transformer("AZ-003", "Bulk", "003", "Galle", "Location C", "500 kVA");
+            Transformer transformer4 = new Transformer("AZ-004", "Bulk", "004", "Jaffna", "Location D", "150 kVA");
+            Transformer transformer5 = new Transformer("AZ-005", "Bulk", "005", "Matara", "Location E", "300 kVA");
 
             transformerRepo.saveAll(List.of(transformer1, transformer2, transformer3, transformer4, transformer5));
 
