@@ -25,5 +25,15 @@ public class InspectionImage {
     private String uploadedDate;
     private String uploadedTime;
 
+    public InspectionImage(String inspectionNo, String transformerNo, String thermalImageUrl, String thermalImageCondition, String uploadedBy, String uploadedDate, String uploadedTime) {
+        this.inspectionNo = inspectionNo;
+        this.transformerNo = transformerNo;
+        this.thermalImageUrl = thermalImageUrl;
+        this.thermalImageCondition = thermalImageCondition;
+        this.uploadedBy = uploadedBy;
+        this.uploadedDate = uploadedDate;
+        this.uploadedTime = uploadedTime;
+    }
+
 
 }

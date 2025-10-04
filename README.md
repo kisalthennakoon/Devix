@@ -8,6 +8,17 @@ This project is a **web-based platform** for managing transformer records and th
 - **Thermal image uploading**  
 - **Metadata tagging** for organization and retrieval
 
+**Phase 2** focuses on automated detection & review, including:
+
+- **AI-driven anomaly detection** on thermal images (model infers regions of interest)
+- **Side-by-side comparison UI** (Baseline vs. Current) with upload metadata
+- **Annotation tools**: Reset, Move/Pan, and Zoom for the current image
+- **Bounding boxes & labels** drawn from backend `bbox` data (index + confidence %)
+- **Error list** synced with boxes (severity & confidence; red=faulty, orange=potential)
+- **Weather selection** (Sunny / Cloudy / Rainy) for contextual review
+- **No-anomaly handling**: hides alert badge and shows “No anomalies detected”
+
+
 ## ⚙️ Setup Instructions
 
 ### 🗄️ Database
@@ -62,6 +73,41 @@ Set up the PostgreSQL database using Docker:
   * Transformer and image metadata stored in PostgreSQL
   * Modular architecture for easy extension in future phases
   * Web-based admin interface
+ 
+## Implemented Features (Phase 2)
+
+- **FR2.1 – AI-Driven Anomaly Detection & Overlay**
+  - Consume backend AI results and render **bounding boxes** on the *Current* image
+  - Parse `bbox: [x, y, w, h]` in original pixels and **scale to displayed size**
+  - Show **index badge (1, 2, …)** and **confidence %** on each box
+  - Box color reflects status: **red = Faulty**, **orange = Potential Faulty**
+
+- **FR2.2 – Side-by-Side Review UI**
+  - Baseline (left) vs Current (right) images with **upload metadata** (time, date, user)
+  - **Weather selector** (Sunny / Cloudy / Rainy) for contextual review
+  - Clean base64 handling for reliable image rendering
+
+- **FR2.3 – Annotation Tools**
+  - **Reset**: restore default zoom and position
+  - **Move/Pan**: click-and-drag the current image when zoomed
+  - **Zoom**: step zoom in; smooth transform with centered origin
+
+- **FR2.4 – Error List Synchronization**
+  - Mirror AI results beneath the images as an **Errors** panel
+  - Each item shows **Error N**, **fault type**, **confidence %**, and **severity %**
+  - Error chip color matches box color (red/orange); area values omitted per spec
+  - When no anomalies: show a clear **“No anomalies detected”** message
+
+- **FR2.5 – Notes & Actions**
+  - **Notes** textarea for reviewer comments
+
+- **Additional Technical Details**
+  - Robust parsing for AI payload fields: `bbox`, `faultConfidence`, `faultSeverity`, `faultType`
+  - Confidence/severity accepted as **0–1  and normalized to **percentages**
+  - Responsive layout with image **letterboxing awareness** to keep boxes aligned
+  - Accessibility: index badges include `aria-label` for screen readers
+  - Clean separation of UI state (zoom, pan, notes, weather) from fetched data
+
 
 ## Known Limitations / Issues
 
@@ -69,6 +115,10 @@ Set up the PostgreSQL database using Docker:
 * No automated anomaly detection yet (Phase 2 requirement).
 * Limited test data included (5 transformers with baseline images).
 * Some UI elements may need refinement for responsiveness on smaller screens.
+* Uploading very large images can fail or stall on slower networks/browsers.
+* The model may detect an anomaly but assign the wrong fault category in some cases.
+* Motion blur/out-of-focus frames (e.g., T1 faulty images in the dataset) reduce detection accuracy.
+
 
 ## Test Data
 

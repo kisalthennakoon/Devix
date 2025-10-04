@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -23,5 +24,14 @@ public class Transformer {
     private String transformerRegion;
     private String transformerLocation;
     private String transformerCapacity;
+
+    public Transformer(String transformerNo, String transformerType, String transformerPoleNo, String transformerRegion, String transformerLocation, String transformerCapacity) {
+    this.transformerNo = transformerNo;
+    this.transformerType = transformerType;
+    this.transformerPoleNo = transformerPoleNo;
+    this.transformerRegion = transformerRegion;
+    this.transformerLocation = transformerLocation;
+    this.transformerCapacity = transformerCapacity;
+}
 
 }
