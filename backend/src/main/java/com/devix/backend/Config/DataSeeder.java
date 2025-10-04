@@ -6,10 +6,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import com.devix.backend.model.AiResults;
 import com.devix.backend.model.BaselineImage;
 import com.devix.backend.model.Inspection;
 import com.devix.backend.model.InspectionImage;
 import com.devix.backend.model.Transformer;
+import com.devix.backend.repo.AiResultsRepo;
 import com.devix.backend.repo.BaseImageRepo;
 import com.devix.backend.repo.InspectionImageRepo;
 import com.devix.backend.repo.InspectionRepo;
@@ -28,13 +30,15 @@ public class DataSeeder implements CommandLineRunner {
     private final BaseImageRepo baseImageRepo;
     private final InspectionImageRepo inspectionImageRepo;
     private final AiService aiService;
+    private final AiResultsRepo aiResultsRepo;
 
-    public DataSeeder(TransformerRepo transformerRepo, InspectionRepo inspectionRepo, BaseImageRepo baseImageRepo, InspectionImageRepo inspectionImageRepo, AiService aiService) {
+    public DataSeeder(TransformerRepo transformerRepo, InspectionRepo inspectionRepo, BaseImageRepo baseImageRepo, InspectionImageRepo inspectionImageRepo, AiService aiService, AiResultsRepo aiResultsRepo) {
         this.transformerRepo = transformerRepo;
         this.inspectionRepo = inspectionRepo; 
         this.baseImageRepo = baseImageRepo;
         this.inspectionImageRepo = inspectionImageRepo;
         this.aiService = aiService;
+        this.aiResultsRepo = aiResultsRepo;
     }
 
     
@@ -46,6 +50,7 @@ public class DataSeeder implements CommandLineRunner {
         inspectionRepo.deleteAll();
         baseImageRepo.deleteAll();
         transformerRepo.deleteAll();
+        aiResultsRepo.deleteAll();
 
         if (transformerRepo.count() == 0) {
             // Create sample transformers

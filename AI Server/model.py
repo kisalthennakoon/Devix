@@ -131,6 +131,9 @@ def detect_anomalies(image_path,
         merged.append({"bbox":(x,y,w,h), "centroid":(x+w//2,y+h//2),
                        "area_px":int(cv2.countNonZero(umask)), "severity":round(sev,4),
                        "mask":umask, "cnts":cnts})
+# === keep only the top 4 anomalies ===
+    merged.sort(key=lambda m: m["severity"], reverse=True)
+    merged = merged[:4]
 
     # features
     def pca_eccentricity(cnt):
