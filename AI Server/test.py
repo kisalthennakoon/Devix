@@ -3,6 +3,8 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 import uvicorn
+from model import interface
+import os
 
 app = FastAPI()
 
@@ -15,12 +17,39 @@ class FeaturesRequest(BaseModel):
 def predict(request: FeaturesRequest):
     # Access the features string from the request body
     imageUrl = request.imageUrl
+    absolute_path = os.path.abspath(__file__)
+    dir_path = os.path.dirname(absolute_path)
+    path = os.path.join(dir_path, imageUrl)
+
+    result = interface(path)
+    
     print(f"Received imageUrl: {imageUrl}")
-    prediction = [
-        {"fault_type": "FaultA", "severity": "high", "confidence": 0.95, "x_coordinate": "22.5", "y_coordinate": "45.3"},
-        {"fault_type": "FaultB", "severity": "medium", "confidence": 0.85, "x_coordinate": "30.1", "y_coordinate": "50.2"}
-    ]
-    return prediction
+    print(f"AI Model Result: {result}")
+    
+    # Return the actual AI model results instead of hardcoded data
+    if result == "No anomalies found.":
+        return []
+    else:
+        # Convert the model result to the expected format
+        predictions = []
+        for anomaly in result:
+            prediction = {
+                "fault_type": anomaly.get("fault_type", "Unknown"),
+                "severity": str(anomaly.get("severity", 0.0)),
+                "confidence": str(min(1.0, anomaly.get("severity", 0.0) + 0.5)),  # Convert severity to confidence
+                "x_coordinate": str(anomaly.get("centroid", [0, 0])[0]),
+                "y_coordinate": str(anomaly.get("centroid", [0, 0])[1]),
+                "bbox": anomaly.get("bbox", [0, 0, 0, 0]),
+                "area_px": anomaly.get("area_px", 0)
+            }
+            # Add hotspot coordinates if available
+            if "hotspot_xy" in anomaly:
+                prediction["hotspot_x"] = str(anomaly["hotspot_xy"][0])
+                prediction["hotspot_y"] = str(anomaly["hotspot_xy"][1])
+            
+            predictions.append(prediction)
+        
+        return predictions
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=5001)

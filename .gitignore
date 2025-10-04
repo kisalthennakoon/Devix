@@ -1,3 +1,7 @@
+# Python virtual environments
+venv/
+.venv/
+
 # Compiled class file
 *.class
 
@@ -23,5 +27,7 @@
 hs_err_pid*
 replay_pid*
 
-
+# image files
+*.png
+*.jpg
 

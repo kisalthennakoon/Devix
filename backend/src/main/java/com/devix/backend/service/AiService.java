@@ -68,10 +68,28 @@ public class AiService {
                         AiResults aiResults = new AiResults();
                         aiResults.setInspectionNo(inspection.getInspectionNo());
                         aiResults.setFaultType((String) result.get("fault_type"));
-                        aiResults.setFaultSeverity((String) result.get("severity"));
+                        aiResults.setFaultSeverity(result.get("severity") != null ? result.get("severity").toString() : null);
                         aiResults.setFaultConfidence(result.get("confidence") != null ? result.get("confidence").toString() : null);
                         aiResults.setXCoordinate(result.get("x_coordinate") != null ? result.get("x_coordinate").toString() : null);
                         aiResults.setYCoordinate(result.get("y_coordinate") != null ? result.get("y_coordinate").toString() : null);
+
+                        // Store bbox as JSON string if present
+                        Object bboxObj = result.get("bbox");
+                        if (bboxObj != null) {
+                            try {
+                                ObjectMapper mapper = new ObjectMapper();
+                                aiResults.setBbox(mapper.writeValueAsString(bboxObj));
+                            } catch (Exception e) {
+                                aiResults.setBbox(null);
+                            }
+                        } else {
+                            aiResults.setBbox(null);
+                        }
+
+                        aiResults.setAreaPx(result.get("area_px") != null ? result.get("area_px").toString() : null);
+                        aiResults.setHotspotX(result.get("hotspot_x") != null ? result.get("hotspot_x").toString() : null);
+                        aiResults.setHotspotY(result.get("hotspot_y") != null ? result.get("hotspot_y").toString() : null);
+
                         aiResultsRepo.save(aiResults);
                     }
 
