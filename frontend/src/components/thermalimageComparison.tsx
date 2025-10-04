@@ -18,19 +18,20 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
 
 type AIResult = {
-  // (legacy center coords are kept for compatibility, not used for drawing)
+  // (legacy center coords—kept for compatibility, not used for drawing)
   XCoordinate?: string;
   YCoordinate?: string;
 
   // NEW (from backend)
-  bbox?: number[] | string;   // [x, y, w, h] in PX of the ORIGINAL image
-  areaPx?: string | number;   // area in px²
-  hotspotX?: string | number; // optional
-  hotspotY?: string | number; // optional
+  bbox?: number[] | string;   // [x, y, w, h] in pixels of the ORIGINAL image
+  areaPx?: string | number;   // area in px² (unused in UI)
+  hotspotX?: string | number;
+  hotspotY?: string | number;
 
   faultType: string;
   faultConfidence?: string | number; // 0..1 or 0..100
   faultSeverity?: string | number;   // 0..1 or 0..100
+  faultStatus?: string;              // e.g., "no_anomaly"
   createdAt?: string;
 };
 
@@ -48,8 +49,7 @@ interface InspectionImages {
   aiResults: AIResult[];
 }
 
-
-// helpers
+/* ----------------- helpers ----------------- */
 const cleanBase64 = (b?: string | null) =>
   b
     ? (b as string)
@@ -62,8 +62,7 @@ const toPct = (v: string | number | undefined, decimals = 0) => {
   if (v === undefined || v === null) return null;
   const n = Number(v);
   if (!isFinite(n)) return null;
-  // If already 0..100 keep it; if 0..1 -> convert
-  const pct = n <= 1 ? n * 100 : n;
+  const pct = n <= 1 ? n * 100 : n; // accept 0..1 or 0..100
   return Math.max(0, Math.min(100, pct)).toFixed(decimals);
 };
 
@@ -72,7 +71,6 @@ const parseBBox = (bbox: AIResult["bbox"]): number[] | null => {
   if (!bbox) return null;
   if (Array.isArray(bbox)) return bbox.map(Number);
   try {
-    // allow " [676,248,383,136] " or "676,248,383,136"
     const s = (bbox as string).trim();
     const arr = s.startsWith("[") ? JSON.parse(s) : s.split(",").map(Number);
     if (arr.length === 4 && arr.every((n: any) => isFinite(Number(n)))) {
@@ -84,6 +82,7 @@ const parseBBox = (bbox: AIResult["bbox"]): number[] | null => {
   return null;
 };
 
+/* --------------- component ----------------- */
 const ThermalImageComparison = ({ inspectionNo }: { inspectionNo: string }) => {
   const [inspectionImages, setInspectionImages] = useState<InspectionImages>();
   const [weather, setWeather] = useState<"Sunny" | "Cloudy" | "Rainy">("Sunny");
@@ -96,7 +95,7 @@ const ThermalImageComparison = ({ inspectionNo }: { inspectionNo: string }) => {
   const [dragging, setDragging] = useState(false);
   const dragStart = useRef<{ x: number; y: number } | null>(null);
 
-  // image sizing (to scale bbox from original pixels -> displayed pixels)
+  // image sizing (scale bbox from original -> displayed)
   const imgRef = useRef<HTMLImageElement | null>(null);
   const [displaySize, setDisplaySize] = useState({ w: 0, h: 0 });
   const [naturalSize, setNaturalSize] = useState({ w: 0, h: 0 });
@@ -142,9 +141,24 @@ const ThermalImageComparison = ({ inspectionNo }: { inspectionNo: string }) => {
   };
   const onMouseUp = () => setDragging(false);
 
-  const aiResults: AIResult[] = inspectionImages?.aiResults ?? [];
+  /* ---------- anomaly filtering & flags ---------- */
+  const rawResults: AIResult[] = inspectionImages?.aiResults ?? [];
 
+  // Filter out backend “no_anomaly” placeholders and entries without bbox/faultType
+  const results = rawResults.filter((r) => {
+    const status = String(r.faultStatus ?? "").toLowerCase();
+    if (status === "no_anomaly") return false;
 
+    const bb = parseBBox(r.bbox);
+    if (!bb) return false;
+
+    const ft = String(r.faultType ?? "").toLowerCase();
+    if (ft === "" || ft === "null") return false;
+
+    return true;
+  });
+
+  const hasAnomaly = results.length > 0;
 
   return (
     <Box sx={{ p: 3, borderRadius: 3, boxShadow: 6, backgroundColor: "#f9f9f9" }}>
@@ -195,8 +209,7 @@ const ThermalImageComparison = ({ inspectionNo }: { inspectionNo: string }) => {
 
           {/* meta */}
           <Typography sx={{ fontSize: 13, color: "#888", fontStyle: "italic", mt: 1 }}>
-            Uploaded Time: {inspectionImages?.baseImageUploadedDate}{" "}
-            {inspectionImages?.baseImageUploadedTime}
+            Uploaded Time: {inspectionImages?.baseImageUploadedDate} {inspectionImages?.baseImageUploadedTime}
           </Typography>
           <Typography sx={{ fontSize: 13, color: "#888", fontStyle: "italic" }}>
             Uploaded By: {inspectionImages?.baseImageUploadedBy}
@@ -204,9 +217,7 @@ const ThermalImageComparison = ({ inspectionNo }: { inspectionNo: string }) => {
 
           {/* Weather */}
           <Box sx={{ mt: 2, display: "inline-flex", alignItems: "center", gap: 1 }}>
-            <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
-              Weather Condition
-            </Typography>
+            <Typography sx={{ fontSize: 13, color: "text.secondary" }}>Weather Condition</Typography>
             <Select
               size="small"
               value={weather}
@@ -228,8 +239,7 @@ const ThermalImageComparison = ({ inspectionNo }: { inspectionNo: string }) => {
               borderRadius: 2,
               boxShadow: 4,
               overflow: "hidden",
-              cursor:
-                tool === "move" && scale > 1 ? (dragging ? "grabbing" : "grab") : "default",
+              cursor: tool === "move" && scale > 1 ? (dragging ? "grabbing" : "grab") : "default",
             }}
             onMouseDown={onMouseDown}
             onMouseMove={onMouseMove}
@@ -250,7 +260,7 @@ const ThermalImageComparison = ({ inspectionNo }: { inspectionNo: string }) => {
                 pointerEvents: "none",
               }}
             />
-            {aiResults.length > 0 && (
+            {hasAnomaly && (
               <Chip
                 size="small"
                 icon={<WarningAmberIcon sx={{ color: "#fff !important" }} />}
@@ -304,12 +314,11 @@ const ThermalImageComparison = ({ inspectionNo }: { inspectionNo: string }) => {
 
               {/* Boxes from backend bbox (pixels) */}
               {naturalSize.w > 0 &&
-                aiResults.map((r, i) => {
-                  const bb = parseBBox(r.bbox);
-                  if (!bb) return null;
+                results.map((r, i) => {
+                  const bb = parseBBox(r.bbox)!; // results already filtered
+                  const [x, y, w, h] = bb;
 
-                  const [x, y, w, h] = bb; // original px
-                  // scale to displayed px (image may be letterboxed by height)
+                  // scale to displayed px
                   const sx = displaySize.w / naturalSize.w || 1;
                   const sy = displaySize.h / naturalSize.h || 1;
 
@@ -320,10 +329,10 @@ const ThermalImageComparison = ({ inspectionNo }: { inspectionNo: string }) => {
                     height: Math.max(2, h * sy),
                   };
 
-                  const conf = toPct(r.faultConfidence, 0);  // "56"
-                  const sevPct = toPct(r.faultSeverity, 0);  // "6"
+                  // color by “Potential” or not (orange vs red)
                   const isPotential = /\bpotential\b/i.test(String(r.faultType));
-                  const stroke = isPotential ? "#FB8C00" /* orange */ : "#E53935" /* red */;
+                  const stroke = isPotential ? "#FB8C00" : "#E53935";
+                  const conf = toPct(r.faultConfidence, 0);
 
                   return (
                     <Box
@@ -337,7 +346,7 @@ const ThermalImageComparison = ({ inspectionNo }: { inspectionNo: string }) => {
                         pointerEvents: "none",
                       }}
                     >
-                      {/* number index (TL) */}
+                      {/* index (TL) */}
                       <Typography
                         component="span"
                         sx={{
@@ -382,8 +391,7 @@ const ThermalImageComparison = ({ inspectionNo }: { inspectionNo: string }) => {
 
           {/* meta */}
           <Typography sx={{ mt: 1, fontSize: 13, color: "#888", fontStyle: "italic" }}>
-            Uploaded Time: {inspectionImages?.thermalUploadedDate}{" "}
-            {inspectionImages?.thermalUploadedTime}
+            Uploaded Time: {inspectionImages?.thermalUploadedDate} {inspectionImages?.thermalUploadedTime}
           </Typography>
           <Typography sx={{ fontSize: 13, color: "#888", fontStyle: "italic" }}>
             Uploaded By: {inspectionImages?.thermalUploadedBy}
@@ -421,18 +429,16 @@ const ThermalImageComparison = ({ inspectionNo }: { inspectionNo: string }) => {
           Errors
         </Typography>
 
-        {aiResults.length === 0 ? (
+        {!hasAnomaly ? (
           <Typography variant="body2" color="text.secondary">
-            No AI-detected anomalies.
+            No anomalies detected.
           </Typography>
         ) : (
-          aiResults.map((r, idx) => {
+          results.map((r, idx) => {
             const conf = toPct(r.faultConfidence, 0);
             const sev = toPct(r.faultSeverity, 0);
-
-            // classify: "Faulty" vs "Potential Faulty" from faultType text
             const isPotential = /\bpotential\b/i.test(String(r.faultType));
-            const chipBg = isPotential ? "#FB8C00" /* orange */ : "#E53935" /* red */;
+            const chipBg = isPotential ? "#FB8C00" : "#E53935";
 
             return (
               <Box
@@ -448,16 +454,11 @@ const ThermalImageComparison = ({ inspectionNo }: { inspectionNo: string }) => {
                   bgcolor: "#fff",
                 }}
               >
-                <Chip
-                  size="small"
-                  label={`Error ${idx + 1}`}
-                  sx={{ bgcolor: chipBg, color: "#fff", fontWeight: 700 }}
-                />
+                <Chip size="small" label={`Error ${idx + 1}`} sx={{ bgcolor: chipBg, color: "#fff", fontWeight: 700 }} />
                 <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
                   <strong>{r.faultType}</strong>
                   {conf ? ` — Confidence: ${conf}%` : ""}
                   {sev ? ` — Severity: ${sev}%` : ""}
-                  {/* area removed by request */}
                 </Typography>
               </Box>
             );
@@ -482,10 +483,21 @@ const ThermalImageComparison = ({ inspectionNo }: { inspectionNo: string }) => {
 
       {/* Confirm / Cancel */}
       <Box sx={{ mt: 2, display: "flex", gap: 2 }}>
-        <Button variant="contained" color="primary" onClick={() => console.log("Confirm", { notes, weather })}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => console.log("Confirm", { notes, weather })}
+        >
           Confirm
         </Button>
-        <Button variant="text" color="inherit" onClick={() => { setNotes(""); doReset(); }}>
+        <Button
+          variant="text"
+          color="inherit"
+          onClick={() => {
+            setNotes("");
+            doReset();
+          }}
+        >
           Cancel
         </Button>
       </Box>
