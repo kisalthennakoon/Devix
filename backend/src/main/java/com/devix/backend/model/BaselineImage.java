@@ -23,4 +23,14 @@ public class BaselineImage {
     private String uploadedBy;
     private String uploadedDate;
     private String uploadedTime;
+
+    public BaselineImage(String transformerNo, String sunnyImageUrl, String rainyImageUrl, String cloudyImageUrl, String uploadedBy, String uploadedDate, String uploadedTime) {
+        this.transformerNo = transformerNo;
+        this.sunnyImageUrl = sunnyImageUrl;
+        this.rainyImageUrl = rainyImageUrl;
+        this.cloudyImageUrl = cloudyImageUrl;
+        this.uploadedBy = uploadedBy;
+        this.uploadedDate = uploadedDate;
+        this.uploadedTime = uploadedTime;
+    }
 }
