@@ -101,6 +101,7 @@ public class InspectionImageServiceImpl implements InspectionImageService {
 
         List<AiResults> aiResults = aiResultsRepo.findAllByInspectionNo(inspectionNo);
         List<Map<String, String>> aiResultsList = aiResults.stream().map(result -> Map.of(
+            "faultStatus", String.valueOf(result.getAnomalyStatus()),
             "faultType", String.valueOf(result.getFaultType()),
             "faultSeverity", String.valueOf(result.getFaultSeverity()),
             "faultConfidence", String.valueOf(result.getFaultConfidence()),

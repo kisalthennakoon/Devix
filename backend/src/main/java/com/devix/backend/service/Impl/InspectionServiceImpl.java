@@ -4,7 +4,6 @@ import com.devix.backend.dto.InspectionRequestDto;
 import com.devix.backend.dto.InspectionResponseDto;
 import com.devix.backend.model.BaselineImage;
 import com.devix.backend.model.Inspection;
-import com.devix.backend.model.Transformer;
 import com.devix.backend.repo.BaseImageRepo;
 import com.devix.backend.repo.InspectionRepo;
 import com.devix.backend.repo.TransformerRepo;
@@ -12,7 +11,7 @@ import com.devix.backend.service.InspectionService;
 import com.devix.backend.service.MapperService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
+
 
 import java.util.HashMap;
 import java.util.List;

@@ -2,9 +2,7 @@ package com.devix.backend.service.Impl;
 
 import com.devix.backend.dto.TransformerRequestDto;
 import com.devix.backend.dto.TransformerResponseDto;
-import com.devix.backend.model.BaselineImage;
 import com.devix.backend.model.Inspection;
-import com.devix.backend.model.InspectionImage;
 import com.devix.backend.model.Transformer;
 import com.devix.backend.repo.BaseImageRepo;
 import com.devix.backend.repo.InspectionImageRepo;
@@ -15,7 +13,6 @@ import com.devix.backend.service.TransformerService;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.List;
