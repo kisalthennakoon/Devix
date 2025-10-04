@@ -14,6 +14,7 @@ import com.devix.backend.repo.BaseImageRepo;
 import com.devix.backend.repo.InspectionImageRepo;
 import com.devix.backend.repo.InspectionRepo;
 import com.devix.backend.repo.TransformerRepo;
+import com.devix.backend.service.AiService;
 
 
 @Component
@@ -26,17 +27,26 @@ public class DataSeeder implements CommandLineRunner {
     private final InspectionRepo inspectionRepo;
     private final BaseImageRepo baseImageRepo;
     private final InspectionImageRepo inspectionImageRepo;
+    private final AiService aiService;
 
-    public DataSeeder(TransformerRepo transformerRepo, InspectionRepo inspectionRepo, BaseImageRepo baseImageRepo, InspectionImageRepo inspectionImageRepo) {
+    public DataSeeder(TransformerRepo transformerRepo, InspectionRepo inspectionRepo, BaseImageRepo baseImageRepo, InspectionImageRepo inspectionImageRepo, AiService aiService) {
         this.transformerRepo = transformerRepo;
-        this.inspectionRepo = inspectionRepo;
+        this.inspectionRepo = inspectionRepo; 
         this.baseImageRepo = baseImageRepo;
         this.inspectionImageRepo = inspectionImageRepo;
+        this.aiService = aiService;
     }
+
+    
 
     @Override
     public void run(String... args) throws Exception {
-        // Check if transformers already exist to avoid duplicate seeding
+        //empty database first
+        inspectionImageRepo.deleteAll();
+        inspectionRepo.deleteAll();
+        baseImageRepo.deleteAll();
+        transformerRepo.deleteAll();
+
         if (transformerRepo.count() == 0) {
             // Create sample transformers
             Transformer transformer1 = new Transformer("AZ-001", "Distribution", "001", "Colombo", "Location A", "100 kVA");
@@ -47,12 +57,12 @@ public class DataSeeder implements CommandLineRunner {
 
             transformerRepo.saveAll(List.of(transformer1, transformer2, transformer3, transformer4, transformer5));
 
-            Inspection inspection1 = new Inspection("00001", "2023-10-01", "10:00", "Colombo", "in_progress", "AZ-001", "Devix");
-            Inspection inspection2 = new Inspection("00002", "2023-10-02", "11:00", "Kandy", "in_progress", "AZ-002", "Devix");
-            Inspection inspection3 = new Inspection("00003", "2023-10-03", "12:00", "Galle", "in_progress", "AZ-003", "Devix");
-            Inspection inspection4 = new Inspection("00004", "2023-10-04", "13:00", "Jaffna", "in_progress", "AZ-004", "Devix");
-            Inspection inspection5 = new Inspection("00005", "2023-10-05", "14:00", "Matara", "in_progress", "AZ-005", "Devix");
-            Inspection inspection6 = new Inspection("00006", "2023-10-06", "15:00", "Colombo", "in_progress", "AZ-002", "Devix");
+            Inspection inspection1 = new Inspection("00001", "2023-10-01", "10:00", "Colombo", "pending", "AZ-001", "Devix");
+            Inspection inspection2 = new Inspection("00002", "2023-10-02", "11:00", "Kandy", "pending", "AZ-002", "Devix");
+            Inspection inspection3 = new Inspection("00003", "2023-10-03", "12:00", "Galle", "pending", "AZ-003", "Devix");
+            Inspection inspection4 = new Inspection("00004", "2023-10-04", "13:00", "Jaffna", "pending", "AZ-004", "Devix");
+            Inspection inspection5 = new Inspection("00005", "2023-10-05", "14:00", "Matara", "pending", "AZ-005", "Devix");
+            Inspection inspection6 = new Inspection("00006", "2023-10-06", "15:00", "Colombo", "pending", "AZ-002", "Devix");
 
             inspectionRepo.saveAll(List.of(inspection1, inspection2, inspection3, inspection4, inspection5, inspection6));
 
@@ -75,7 +85,9 @@ public class DataSeeder implements CommandLineRunner {
             InspectionImage inspImage6 = new InspectionImage("00006", "AZ-002", seedImagePath + "T10_faulty_002.jpg", "Rainy", "Devix", "2023-10-06", "15:00");
 
             inspectionImageRepo.saveAll(List.of(inspImage1, inspImage2, inspImage3, inspImage4, inspImage5, inspImage6));
+
+            aiService.analysis(); // Trigger AI analysis on seed data
         }
-    }
+    } 
 
 }   
