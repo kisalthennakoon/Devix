@@ -17,11 +17,17 @@ class FeaturesRequest(BaseModel):
 def predict(request: FeaturesRequest):
     # Access the features string from the request body
     imageUrl = request.imageUrl
-    absolute_path = os.path.abspath(__file__)
-    dir_path = os.path.dirname(absolute_path)
-    path = os.path.join(dir_path, imageUrl)
+    # Make path relative to the Devix folder
+    # devix_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    # path = os.path.join(devix_root, imageUrl)
+    # absolute_path = os.path.abspath(__file__)
+    # dir_path = os.path.dirname(absolute_path)
+    
+    # path = os.path.join(path, imageUrl)
+    # path = f"../{imageUrl}"
+    # print("path: ", path)
 
-    result = interface(path)
+    result = interface(imageUrl)
     
     print(f"Received imageUrl: {imageUrl}")
     print(f"AI Model Result: {result}")

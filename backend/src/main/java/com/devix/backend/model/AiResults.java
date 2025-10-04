@@ -17,7 +17,7 @@ public class AiResults {
     private Long id;
 
     private String inspectionNo;
-
+    private String anomalyStatus;
     private String faultType;
     private String faultSeverity;
     private String faultConfidence;
