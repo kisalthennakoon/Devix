@@ -27,7 +27,7 @@ venv/
 hs_err_pid*
 replay_pid*
 
-# image files
-*.png
-*.jpg
+# # image files
+# *.png
+# *.jpg
 
