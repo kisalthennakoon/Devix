@@ -17,13 +17,24 @@ class FeaturesRequest(BaseModel):
 def predict(request: FeaturesRequest):
     # Access the features string from the request body
     imageUrl = request.imageUrl
-    absolute_path = os.path.abspath(__file__)
-    dir_path = os.path.dirname(absolute_path)
-    path = os.path.join(dir_path, imageUrl)
-
+    
+    # Fix faulty path format: convert backslashes to forward slashes to avoid JSON escape issues
+    corrected_imageUrl = imageUrl.replace('\\', '/')
+    print(f"Original imageUrl: {imageUrl}")
+    if imageUrl != corrected_imageUrl:
+        print(f"Corrected imageUrl: {corrected_imageUrl}")
+    
+    # Create path relative to githubdev folder
+    githubdev_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    # Normalize the imageUrl path separators for the OS
+    normalized_imageUrl = corrected_imageUrl.replace('/', os.sep)
+    path = os.path.join(githubdev_path, normalized_imageUrl)
+    print(f"Received imageUrl: {imageUrl}")
+    print(f"Absolute path: {path}")
+    print(f"File exists: {os.path.exists(path)}")
     result = interface(path)
     
-    print(f"Received imageUrl: {imageUrl}")
+    
     print(f"AI Model Result: {result}")
     
     # Return the actual AI model results instead of hardcoded data

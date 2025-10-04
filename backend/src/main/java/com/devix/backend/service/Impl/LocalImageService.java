@@ -42,7 +42,7 @@ public class LocalImageService {
             // Save file locally
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-            return filePath.toString();
+            return filePath.toString().replace("\\", "/");
 
         } catch (IOException e) {
             log.error("Error uploading image: {}", e.getMessage(), e);
