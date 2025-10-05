@@ -18,6 +18,43 @@ This project is a **web-based platform** for managing transformer records and th
 - **Weather selection** (Sunny / Cloudy / Rainy) for contextual review
 - **No-anomaly handling**: hides alert badge and shows “No anomalies detected”
 
+## 🔍 Anomaly Detection Method (Thermal Fault Analysis)
+
+The anomaly detection method in this system is designed for **thermal images** to automatically identify and classify **electrical faults**, specifically distinguishing between **wire overloads** and **loose joints**.
+
+### **1. Preprocessing**
+- **Color Masking:** Converts the image to HSV and applies masks for “hot” colors (red/yellow) to highlight potential anomalies.  
+- **Noise Removal:** Uses morphological operations (open, close, dilate) to clean the mask.  
+- **Right Bar Removal:** Optionally removes the temperature scale on the image’s right side.  
+
+### **2. Blob Detection & Merging**
+- **Contour Extraction:** Detects hot regions as contours.  
+- **Filtering:** Removes small blobs below the `min_area` threshold.  
+- **Merging:** Combines overlapping or nearby blobs based on IoU (intersection over union) and pixel gap thresholds.  
+
+### **3. Feature Extraction**
+For each merged region:
+- **Shape Features:** Aspect ratio, extent, circularity, eccentricity (via PCA), estimated thickness, skeleton length, etc.  
+- **Color Features:** Ratio of red pixels (indicating temperature severity).  
+- **Severity Score:** Computed from brightness contrast and area.  
+
+### **4. Classification (Voting System)**
+Each detected region is classified using a **rule-based voting system**:
+- **Wire Votes:** High aspect ratio, high eccentricity, thin or elongated shape.  
+- **Joint Votes:** High extent, roundness, thickness, or compactness.  
+- **Decision:** The majority vote determines whether it’s a **Wire Overload** or **Loose Joint** (with fallback heuristics if tied).  
+
+#### **Subtype Classification**
+- **Wire Overload:**  
+  - *Full Wire Overload* or *Point Overload (Potential/Faulty)* depending on coverage and color ratio.  
+- **Loose Joint:**  
+  - *Faulty* or *Potential* based on red pixel ratio.  
+
+### **5. Annotation & Output**
+- **Annotated Image:** Displays labeled bounding boxes with detected region type and severity.  
+- **Heatmap Overlay:** Highlights thermal intensity visually.  
+- **Metadata Output:** Includes bounding box, centroid, area, severity score, type, and hotspot details.
+
 
 ## ⚙️ Setup Instructions
 
@@ -32,11 +69,34 @@ Set up the PostgreSQL database using Docker:
    ```bash
    docker-compose up -d postgres
    ```
-   3. Load the dummy dataset (five transformers with baseline images) into the database:
-   ```bash
-   docker exec -i dev-postgres psql -U postgres -d Test < dump.sql
-   ``` 
-   This initializes the PostgreSQL database inside a container. The project `docker-compose.yml` file is configured to include both the frontend and backend services.
+   3. For the database seeding at the start, check whether 21 images exist in the `backend/main/src/resources/seed_images` path after cloning the repository. If not, extract the photos from this link (https://dms.uom.lk/s/HbFnsk3oPsH9GjH) into the path mentioned.
+
+### Anomaly Detection Server
+
+1. Navigate to the AI Server Folder.
+2. Create a Python environment using `python -m venv venv` and activate it using `venv\scripts\bin` from windows or `source venv\bin\activate` from Linux.
+3. Install Python Dependencies using `pip install -r requirements.txt`.
+4. Run the Anomaly Detection Server using `python test.py`
+
+   The Anomaly Server will run at: http://localhost:5001
+
+### Backend
+
+1. Navigate to the backend project directory.
+2. **Database Configuration**  
+   If you are running your **PostgreSQL server locally** (instead of using the provided Docker container), update the database connection details in your `application.properties` file accordingly.
+
+3. **Image Storage Configuration**  
+   The system currently saves uploaded thermal images **locally**.  
+   - Specify the local directory(absolute path) for image storage using the property:  
+     ```properties
+     image.upload.dir=<your absolute path to image_store/uploads> (D:/Devix/image_store/uploads)
+     ```
+   - Specify the absolute path of your **backend project folder**:  
+     ```properties
+     backend.absolute.path=<your absolute path to backend> (D:/Devix/backend)
+     ```
+   ⚠️ **Note:** Use **forwardslashes (`/`)** in path definitions when configuring on Windows as above examples.  
 
 ### Frontend
 1. Navigate to the frontend project directory.
@@ -50,11 +110,6 @@ Set up the PostgreSQL database using Docker:
    ```
 4. Open the browser and visit the URL displayed in the terminal (usually http://localhost:5173).
 
-### Backend
-
-1. If you are running your PostgreSQL server locally rather than running the given Docker container, change the application.properties configurations accordingly.
-2. Currently, we save images locally. Threrefore, specifying the local path to image storage is needed. In application.properties file in Springboot, give your path for the variable "image.upload.dir".
-3. Run the backend server after the database setup.
 
 ## Implemented Features (Phase 1)
 
