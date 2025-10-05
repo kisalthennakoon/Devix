@@ -71,7 +71,7 @@ Set up the PostgreSQL database using Docker:
    ```bash
    docker-compose up -d postgres
    ```
-   3. For the database seeding at the start, check whether 21 images exist in the `backend/main/src/resources/seed_images` path after cloning the repository. If not, extract the photos from this link (https://dms.uom.lk/s/HbFnsk3oPsH9GjH) into the path mentioned.
+   3. For the database seeding at the start, check whether 21 images exist in the `backend/src/main/resources/seed_images` path after cloning the repository. If not, extract the photos from this link (https://dms.uom.lk/s/HbFnsk3oPsH9GjH) into the path mentioned.
 
 ### Anomaly Detection Server
 
@@ -86,7 +86,7 @@ Set up the PostgreSQL database using Docker:
 
 1. Navigate to the backend project directory.
 2. **Database Configuration**  
-   If you are running your **PostgreSQL server locally** (instead of using the provided Docker container), update the database connection details in your `application.properties` file  in `backend/main/src/resources` accordingly.
+   If you are running your **PostgreSQL server locally** (instead of using the provided Docker container), update the database connection details in your `application.properties` file  in `backend/src/main/resources` accordingly.
 
 3. **Image Storage Configuration**  
    The system currently saves uploaded thermal images **locally**.  
