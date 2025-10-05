@@ -90,7 +90,7 @@ Set up the PostgreSQL database using Docker:
 
 3. **Image Storage Configuration**  
    The system currently saves uploaded thermal images **locally**.  
-   - Specify the local directory(absolute path) for image storage using the `application.properties` file as follows:  
+   - Specify the local directory(absolute path) for image storage in the `application.properties` file as follows:  
      ```properties
      image.upload.dir=<your absolute path to image_store/uploads> (D:/Devix/image_store/uploads)
      ```
