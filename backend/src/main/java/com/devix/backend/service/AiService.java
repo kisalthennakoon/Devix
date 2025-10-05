@@ -8,6 +8,7 @@ import com.devix.backend.repo.InspectionImageRepo;
 import com.devix.backend.repo.InspectionRepo;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -16,26 +17,36 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.File;
+import java.net.http.HttpHeaders;
 import java.util.List;
 import java.util.Map;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jakarta.annotation.PostConstruct;
+
 @Service
 @Slf4j
 public class AiService {
 
-    private final WebClient webClient = WebClient.create("http://localhost:5001");
+    @Value("${huggingface.api.url}")
+    private String huggingFaceApiUrl;
+
+    private WebClient webClient;
 
     private final InspectionImageRepo inspectionImageRepo;
     private final InspectionRepo inspectionRepo;
     private final AiResultsRepo aiResultsRepo;
 
-    public AiService(InspectionRepo inspectionRepo, InspectionImageRepo inspectionImageRepo,
-            AiResultsRepo aiResultsRepo) {
+    public AiService(InspectionRepo inspectionRepo, InspectionImageRepo inspectionImageRepo, AiResultsRepo aiResultsRepo) {
         this.inspectionImageRepo = inspectionImageRepo;
         this.inspectionRepo = inspectionRepo;
         this.aiResultsRepo = aiResultsRepo;
+    }
+
+    @PostConstruct
+    public void initWebClient() {
+        this.webClient = WebClient.create(huggingFaceApiUrl);
     }
 
     public List<Map<String, Object>> getPrediction(String imagePath) {
@@ -46,7 +57,7 @@ public class AiService {
             }
 
             String response = webClient.post()
-                    .uri("/predict")
+                    .uri("api/predict")
                     .contentType(MediaType.MULTIPART_FORM_DATA)
                     .body(BodyInserters.fromMultipartData("file", new FileSystemResource(file)))
                     .retrieve()
