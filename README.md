@@ -60,7 +60,7 @@ Each detected region is classified using a **rule-based voting system**:
 
 First, clone the main branch on your local machine.
 
-### Database
+### Database (Optional, if you have PostgreSQL installed on your local machine)
 Set up the PostgreSQL database using Docker:  
 
    1. Stop and remove any existing containers and volumes (clean reset):  
