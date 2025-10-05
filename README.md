@@ -58,6 +58,8 @@ Each detected region is classified using a **rule-based voting system**:
 
 ## ⚙️ Setup Instructions
 
+First, clone the main branch on your local machine.
+
 ### Database
 Set up the PostgreSQL database using Docker:  
 
