@@ -50,7 +50,7 @@ public class AiService {
         }
     }
 
-    @Scheduled(fixedRate = 1000 * 60 * 5) // every 15 minutes
+    @Scheduled(fixedRate = 1000 * 60 * 2) // every 2 minutes
     public void analysis() {
         try {
             List<Inspection> inspections = inspectionRepo.findAllByInspectionStatus("pending");
