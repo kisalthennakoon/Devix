@@ -58,7 +58,7 @@ Each detected region is classified using a **rule-based voting system**:
 
 ## ⚙️ Setup Instructions
 
-### 🗄️ Database
+### Database
 Set up the PostgreSQL database using Docker:  
 
    1. Stop and remove any existing containers and volumes (clean reset):  
