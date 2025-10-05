@@ -86,11 +86,11 @@ Set up the PostgreSQL database using Docker:
 
 1. Navigate to the backend project directory.
 2. **Database Configuration**  
-   If you are running your **PostgreSQL server locally** (instead of using the provided Docker container), update the database connection details in your `application.properties` file accordingly.
+   If you are running your **PostgreSQL server locally** (instead of using the provided Docker container), update the database connection details in your `application.properties` file  in `backend/main/src/resources` accordingly.
 
 3. **Image Storage Configuration**  
    The system currently saves uploaded thermal images **locally**.  
-   - Specify the local directory(absolute path) for image storage using the property:  
+   - Specify the local directory(absolute path) for image storage using the `application.properties` file as follows:  
      ```properties
      image.upload.dir=<your absolute path to image_store/uploads> (D:/Devix/image_store/uploads)
      ```
