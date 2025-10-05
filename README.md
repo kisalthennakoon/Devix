@@ -102,7 +102,12 @@ Set up the PostgreSQL database using Docker:
      ```
      (Ex: D:/Devix/backend)
      
-   ⚠️ **Note:** Use **forwardslashes (`/`)** in path definitions when configuring on Windows as above examples.  
+   ⚠️ **Note:** Use **forwardslashes (`/`)** in path definitions when configuring on Windows as above examples.
+
+4. **Run the Backend Server**
+   Once configuration is complete, start the Spring Boot backend with:
+   ```bash
+   ./mvnw spring-boot:run
 
 ### Frontend
 1. Navigate to the frontend project directory.
