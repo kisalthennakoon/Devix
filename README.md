@@ -74,7 +74,7 @@ Set up the PostgreSQL database using Docker:
 ### Anomaly Detection Server
 
 1. Navigate to the AI Server Folder.
-2. Create a Python environment using `python -m venv venv` and activate it using `venv\scripts\bin` from windows or `source venv\bin\activate` from Linux.
+2. Create a Python environment using `python -m venv venv` and activate it using `venv\scripts\activate` from windows or `source venv\bin\activate` from Linux.
 3. Install Python Dependencies using `pip install -r requirements.txt`.
 4. Run the Anomaly Detection Server using `python test.py`
 
