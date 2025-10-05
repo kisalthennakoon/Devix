@@ -92,12 +92,16 @@ Set up the PostgreSQL database using Docker:
    The system currently saves uploaded thermal images **locally**.  
    - Specify the local directory(absolute path) for image storage in the `application.properties` file as follows:  
      ```properties
-     image.upload.dir=<your absolute path to image_store/uploads> (D:/Devix/image_store/uploads)
+     image.upload.dir=<your absolute path to image_store/uploads> 
      ```
+     (Ex: D:/Devix/image_store/uploads)
+     
    - Specify the absolute path of your **backend project folder**:  
      ```properties
-     backend.absolute.path=<your absolute path to backend> (D:/Devix/backend)
+     backend.absolute.path=<your absolute path to backend>
      ```
+     (Ex: D:/Devix/backend)
+     
    ⚠️ **Note:** Use **forwardslashes (`/`)** in path definitions when configuring on Windows as above examples.  
 
 ### Frontend
