@@ -3,6 +3,7 @@ package com.devix.backend.service.Impl;
 import com.devix.backend.model.*;
 import com.devix.backend.repo.AiResultsRepo;
 import com.devix.backend.repo.BaseImageRepo;
+import com.devix.backend.repo.EvalResultsRepo;
 import com.devix.backend.repo.InspectionImageRepo;
 import com.devix.backend.repo.InspectionRepo;
 import com.devix.backend.service.InspectionImageService;
@@ -20,18 +21,21 @@ public class InspectionImageServiceImpl implements InspectionImageService {
 
     private final InspectionImageRepo inspectionImageRepo;
     private final BaseImageRepo baseImageRepo;
-//    private final GoogleDriveService googleDriveService;
+    // private final GoogleDriveService googleDriveService;
     private final LocalImageService localImageService;
     private final InspectionRepo inspectionRepo;
     private final AiResultsRepo aiResultsRepo;
+    private final EvalResultsRepo evalResultsRepo;
 
     public InspectionImageServiceImpl(InspectionImageRepo inspectionImageRepo, BaseImageRepo baseImageRepo,
-                                      LocalImageService localImageService, InspectionRepo inspectionRepo, AiResultsRepo aiResultsRepo) {
+            LocalImageService localImageService, InspectionRepo inspectionRepo, AiResultsRepo aiResultsRepo,
+            EvalResultsRepo evalResultsRepo) {
         this.inspectionImageRepo = inspectionImageRepo;
         this.baseImageRepo = baseImageRepo;
         this.localImageService = localImageService;
         this.inspectionRepo = inspectionRepo;
         this.aiResultsRepo = aiResultsRepo;
+        this.evalResultsRepo = evalResultsRepo;
     }
 
     @Override
@@ -99,21 +103,47 @@ public class InspectionImageServiceImpl implements InspectionImageService {
             images.put("thermalUploadedTime", inspectionImageUploadedTime);
             images.put("thermalUploadedBy", inspectionImageUploadedBy);
 
-        List<AiResults> aiResults = aiResultsRepo.findAllByInspectionNo(inspectionNo);
-        List<Map<String, String>> aiResultsList = aiResults.stream().map(result -> Map.of(
-            "faultStatus", String.valueOf(result.getAnomalyStatus()),
-            "faultType", String.valueOf(result.getFaultType()),
-            "faultSeverity", String.valueOf(result.getFaultSeverity()),
-            "faultConfidence", String.valueOf(result.getFaultConfidence()),
-            "XCoordinate", String.valueOf(result.getXCoordinate()),
-            "YCoordinate", String.valueOf(result.getYCoordinate()),
-            "bbox", String.valueOf(result.getBbox()),
-            "areaPx", String.valueOf(result.getAreaPx()),
-            "hotspotX", String.valueOf(result.getHotspotX()),
-            "hotspotY", String.valueOf(result.getHotspotY())
-        )).toList();
-            
-            images.put("aiResults", aiResultsList);
+            List<EvalResults> evalResults = evalResultsRepo.findAllByInspectionNo(inspectionNo);
+            List<Map<String, String>> resultsList;
+            if (evalResults.isEmpty()) {
+                List<AiResults> aiResults = aiResultsRepo.findAllByInspectionNo(inspectionNo);
+                resultsList = aiResults.stream()
+                        .map(result -> {
+                            Map<String, String> map = new HashMap<>();
+                            map.put("faultStatus", String.valueOf(result.getAnomalyStatus()));
+                            map.put("faultType", String.valueOf(result.getFaultType()));
+                            map.put("faultSeverity", String.valueOf(result.getFaultSeverity()));
+                            map.put("faultConfidence", String.valueOf(result.getFaultConfidence()));
+                            map.put("XCoordinate", String.valueOf(result.getXCoordinate()));
+                            map.put("YCoordinate", String.valueOf(result.getYCoordinate()));
+                            map.put("bbox", String.valueOf(result.getBbox()));
+                            map.put("areaPx", String.valueOf(result.getAreaPx()));
+                            map.put("hotspotX", String.valueOf(result.getHotspotX()));
+                            map.put("hotspotY", String.valueOf(result.getHotspotY()));
+                            return map;
+                        })
+                        .toList();
+            } else {
+                resultsList = evalResults.stream()
+                        .map(result -> {
+                            Map<String, String> map = new HashMap<>();
+                            map.put("faultStatus", String.valueOf(result.getAnomalyStatus()));
+                            map.put("faultType", String.valueOf(result.getFaultType()));
+                            map.put("faultSeverity", String.valueOf(result.getFaultSeverity()));
+                            map.put("faultConfidence", String.valueOf(result.getFaultConfidence()));
+                            map.put("XCoordinate", String.valueOf(result.getXCoordinate()));
+                            map.put("YCoordinate", String.valueOf(result.getYCoordinate()));
+                            map.put("bbox", String.valueOf(result.getBbox()));
+                            map.put("areaPx", String.valueOf(result.getAreaPx()));
+                            map.put("hotspotX", String.valueOf(result.getHotspotX()));
+                            map.put("hotspotY", String.valueOf(result.getHotspotY()));
+                            map.put("notes", String.valueOf(result.getNotes()));
+                            return map;
+                        })
+                        .toList();
+            }
+
+            images.put("aiResults", resultsList);
             log.info("AI Results: {}", images.get("aiResults"));
             return images;
         } catch (Exception e) {
@@ -123,7 +153,8 @@ public class InspectionImageServiceImpl implements InspectionImageService {
     }
 
     @Override
-    public void addThermalImage(String inspectionNo, String transformerNo, String imageCondition, MultipartFile thermalImage, String uploadedBy, String uploadedDate, String uploadedTime)
+    public void addThermalImage(String inspectionNo, String transformerNo, String imageCondition,
+            MultipartFile thermalImage, String uploadedBy, String uploadedDate, String uploadedTime)
             throws Exception {
         try {
             log.info("Adding thermal image for inspection: {}", inspectionNo);
@@ -171,6 +202,38 @@ public class InspectionImageServiceImpl implements InspectionImageService {
         } catch (Exception e) {
             log.error("Error fetching last updated date: {}", e.getMessage());
             throw new Exception("Error fetching last updated date: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void createEvalResults(List<Map<String, String>> evalResultsList) throws Exception {
+        try {
+            log.info("Creating evaluation results");
+
+            for (Map<String, String> evalResultMap : evalResultsList) {
+                EvalResults evalResults = new EvalResults();
+
+                evalResults.setInspectionNo(evalResultMap.get("inspectionNo"));
+                evalResults.setTransformerNo(evalResultMap.get("transformerNo"));
+                evalResults.setAnomalyStatus(evalResultMap.get("anomalyStatus"));
+                evalResults.setFaultType(evalResultMap.get("faultType"));
+                evalResults.setFaultSeverity(evalResultMap.get("faultSeverity"));
+                evalResults.setFaultConfidence(evalResultMap.get("faultConfidence"));
+                evalResults.setXCoordinate(evalResultMap.get("XCoordinate"));
+                evalResults.setYCoordinate(evalResultMap.get("YCoordinate"));
+                evalResults.setBbox(evalResultMap.get("bbox"));
+                evalResults.setAreaPx(evalResultMap.get("areaPx"));
+                evalResults.setHotspotX(evalResultMap.get("hotspotX"));
+                evalResults.setHotspotY(evalResultMap.get("hotspotY"));
+                evalResults.setNotes(evalResultMap.get("notes"));
+
+                evalResultsRepo.save(evalResults);
+            }
+
+            log.info("Evaluation results created successfully");
+        } catch (Exception e) {
+            log.error("Error creating evaluation results: {}", e.getMessage());
+            throw new Exception("Error creating evaluation results: " + e.getMessage());
         }
     }
 }

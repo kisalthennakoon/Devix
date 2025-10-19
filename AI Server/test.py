@@ -26,7 +26,7 @@ def predict(request: FeaturesRequest):
     # path = os.path.join(path, imageUrl)
     # path = f"../{imageUrl}"
     # print("path: ", path)
-
+    print("imageUrl: ", imageUrl)
     result = interface(imageUrl)
     
     

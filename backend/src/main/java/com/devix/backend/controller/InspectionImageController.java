@@ -2,6 +2,10 @@ package com.devix.backend.controller;
 
 import com.devix.backend.service.InspectionImageService;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -58,4 +62,17 @@ public class InspectionImageController {
             return ResponseEntity.status(500).body(e.getMessage());
         }
     }
+
+    @PostMapping("/createEvalResults")
+    public ResponseEntity<?> createEvalResults(@RequestBody List<Map<String, String>> evalResultsList) {
+        try {
+            log.info("Creating evaluation results");
+            inspectionImageService.createEvalResults(evalResultsList);
+            return ResponseEntity.ok("Evaluation results created successfully");
+        } catch (Exception e) {
+            log.error("Error creating evaluation results: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
 }

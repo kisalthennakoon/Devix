@@ -9,4 +9,5 @@ public interface AiResultsRepo extends JpaRepository<AiResults, Long> {
 
     AiResults findByInspectionNo(String inspectionNo);
     List<AiResults> findAllByInspectionNo(String inspectionNo);
+    void deleteAllByTransformerNo(String transformerNo);
 }

@@ -67,6 +67,7 @@ public class AiService {
                     if (prediction.isEmpty()) {
                         AiResults aiResults = new AiResults();
                         aiResults.setInspectionNo(inspection.getInspectionNo());
+                        aiResults.setTransformerNo(inspection.getTransformerNo());
                         aiResults.setAnomalyStatus("no_anomaly");
                         aiResultsRepo.save(aiResults);
                     } else {
@@ -74,6 +75,7 @@ public class AiService {
                             AiResults aiResults = new AiResults();
 
                             aiResults.setInspectionNo(inspection.getInspectionNo());
+                            aiResults.setTransformerNo(inspection.getTransformerNo());
                             aiResults.setFaultType((String) result.get("fault_type"));
                             aiResults.setFaultSeverity(
                                     result.get("severity") != null ? result.get("severity").toString() : null);
