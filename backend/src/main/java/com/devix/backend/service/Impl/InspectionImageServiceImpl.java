@@ -236,4 +236,46 @@ public class InspectionImageServiceImpl implements InspectionImageService {
             throw new Exception("Error creating evaluation results: " + e.getMessage());
         }
     }
+
+    @Override
+    public Map<String, Object> getReport(String inspectionNo) throws Exception {
+            log.info("Generating report for inspection: {}", inspectionNo);
+        try {
+            
+            Map<String, Object> reportData = new HashMap<>();
+            List<AiResults> aiResults = aiResultsRepo.findAllByInspectionNo(inspectionNo);
+            List<EvalResults> evalResults = evalResultsRepo.findAllByInspectionNo(inspectionNo);
+
+            String inspectionNoReport = inspectionNo;
+            String transformerNoReport = inspectionRepo.findByInspectionNo(inspectionNo).getTransformerNo();
+
+            reportData.put("Inspection No", inspectionNoReport);
+            reportData.put("Transformer No", transformerNoReport);
+
+            Long baselineImageId = baseImageRepo.findByTransformerNo(transformerNoReport).getId();
+            reportData.put("Baseline Image ID", baselineImageId);
+
+            Long inspectionImageId = inspectionImageRepo.findByInspectionNo(inspectionNo).getId();
+            reportData.put("Inspection Image ID", inspectionImageId);
+
+            if (!evalResults.isEmpty()) {
+                reportData.put("Final Accepted Anomalies", evalResults);
+            } else {
+                reportData.put("Final Accepted Anomalies", "No evaluation results available");
+            }
+
+            if (!aiResults.isEmpty()) {
+                reportData.put("Model Predicted Anomalies", aiResults);
+            } else {
+                reportData.put("Model Predicted Anomalies", "No AI results available");
+            }
+
+
+            return reportData;
+
+        } catch (Exception e) {
+            log.error("Error generating report: {}", e.getMessage());
+            throw new Exception("Error generating report: " + e.getMessage());
+        }
+    }
 }

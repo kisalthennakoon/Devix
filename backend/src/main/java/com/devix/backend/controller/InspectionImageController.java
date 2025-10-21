@@ -75,4 +75,15 @@ public class InspectionImageController {
         }
     }
 
+    @GetMapping("/getReport/{inspectionNo}")
+    public ResponseEntity<?> getReport(@PathVariable("inspectionNo") String inspectionNo) {
+        try {
+            log.info("Fetching report for inspection: {}", inspectionNo);
+            return ResponseEntity.ok(inspectionImageService.getReport(inspectionNo));
+        } catch (Exception e) {
+            log.error("Error fetching report: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+
+    }
 }

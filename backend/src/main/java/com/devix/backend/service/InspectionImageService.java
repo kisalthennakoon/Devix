@@ -10,4 +10,5 @@ public interface InspectionImageService {
     Map<String, Object> getComparisonImage(String inspectionNo) throws Exception;
     Map<String , String> getLastUpdatedDate(String inspectionNo) throws Exception;
     void createEvalResults(List<Map<String, String>> evalResultsList) throws Exception;
+    Map<String, Object> getReport(String inspectionNo) throws Exception;
 }
