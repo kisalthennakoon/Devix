@@ -1,0 +1,23 @@
+{
+  "min_area": 60,
+  "ignore_right_ratio": 0.10,
+  "overlay_alpha": 0.35,
+  "iou_thr": 0.15,
+  "gap_px_factor": 0.004,
+  "wire_ar_min": 6.0,
+  "wire_len_frac": 0.12,
+  "wire_extent_max": 0.50,
+  "wire_sk_norm_min": 0.80,
+  "full_wire_cov": 0.60,
+  "point_max_frac": 0.25,
+  "red_ratio_faulty": 0.40,
+  "ecc_thr": 3.0,
+  "circularity_thr": 0.30,
+  "max_wire_thickness_frac": 0.035,
+  "joint_extent_min": 0.55,
+  "joint_thick_len_min": 0.18,
+  "joint_sk_norm_max": 0.65,
+  "joint_area_frac_max": 0.015,
+  "joint_circularity_min": 0.55,
+  "vote_margin": 1
+}
