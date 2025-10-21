@@ -106,6 +106,7 @@ public class InspectionImageServiceImpl implements InspectionImageService {
             List<EvalResults> evalResults = evalResultsRepo.findAllByInspectionNo(inspectionNo);
             List<Map<String, String>> resultsList;
             if (evalResults.isEmpty()) {
+                log.info("No evaluation results found for inspection: {}", inspectionNo);
                 List<AiResults> aiResults = aiResultsRepo.findAllByInspectionNo(inspectionNo);
                 resultsList = aiResults.stream()
                         .map(result -> {
@@ -124,6 +125,7 @@ public class InspectionImageServiceImpl implements InspectionImageService {
                         })
                         .toList();
             } else {
+                log.info("Evaluation results found for inspection: {}", inspectionNo);
                 resultsList = evalResults.stream()
                         .map(result -> {
                             Map<String, String> map = new HashMap<>();
@@ -138,6 +140,7 @@ public class InspectionImageServiceImpl implements InspectionImageService {
                             map.put("hotspotX", String.valueOf(result.getHotspotX()));
                             map.put("hotspotY", String.valueOf(result.getHotspotY()));
                             map.put("notes", String.valueOf(result.getNotes()));
+                            map.put("evaluatedBy", String.valueOf(result.getEvaluatedBy()));
                             return map;
                         })
                         .toList();
@@ -189,13 +192,13 @@ public class InspectionImageServiceImpl implements InspectionImageService {
             log.info("Fetching last updated date for inspection: {}", inspectionNo);
             InspectionImage inspectionImage = inspectionImageRepo.findByInspectionNo(inspectionNo);
             Inspection inspection = inspectionRepo.findByInspectionNo(inspectionNo);
-            EvalResults evalResults = evalResultsRepo.findByInspectionNo(inspectionNo);
+            List<EvalResults> evalResults = evalResultsRepo.findAllByInspectionNo(inspectionNo);
 
             Map<String, String> lastUpdatedInfo = new HashMap<>();
 
-            if (evalResults != null) {
-                String evaluatedDateTime = evalResults.getEvaluatedDate();
-                
+            if (evalResults != null && !evalResults.isEmpty()) {
+                String evaluatedDateTime = evalResults.get(0).getEvaluatedDate();
+
                 // Split datetime into date and time components
                 String evaluatedDate = "";
                 String evaluatedTime = "";
@@ -237,6 +240,11 @@ public class InspectionImageServiceImpl implements InspectionImageService {
     public void createEvalResults(List<Map<String, String>> evalResultsList) throws Exception {
         try {
             log.info("Creating evaluation results");
+
+            List<EvalResults> evalResultsInit = evalResultsRepo.findAllByInspectionNo(evalResultsList.get(0).get("inspectionNo"));
+            if(!evalResultsInit.isEmpty()){
+                evalResultsRepo.deleteAll(evalResultsInit);
+            }
 
             for (Map<String, String> evalResultMap : evalResultsList) {
                 EvalResults evalResults = new EvalResults();
