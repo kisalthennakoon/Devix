@@ -28,7 +28,5 @@ hs_err_pid*
 replay_pid*
 
 # # image files
-# *.png
-# *.jpg
-
+*.png
 *.jpg
