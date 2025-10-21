@@ -31,6 +31,9 @@ public class EvalResults {
     private String hotspotX;
     private String hotspotY;
 
+    private String evaluatedBy;
+    private String evaluatedDate;
+
     private String notes;
 }
 

@@ -189,9 +189,37 @@ public class InspectionImageServiceImpl implements InspectionImageService {
             log.info("Fetching last updated date for inspection: {}", inspectionNo);
             InspectionImage inspectionImage = inspectionImageRepo.findByInspectionNo(inspectionNo);
             Inspection inspection = inspectionRepo.findByInspectionNo(inspectionNo);
+            EvalResults evalResults = evalResultsRepo.findByInspectionNo(inspectionNo);
+
             Map<String, String> lastUpdatedInfo = new HashMap<>();
 
-            if (inspectionImage != null) {
+            if (evalResults != null) {
+                String evaluatedDateTime = evalResults.getEvaluatedDate();
+                
+                // Split datetime into date and time components
+                String evaluatedDate = "";
+                String evaluatedTime = "";
+                
+                if (evaluatedDateTime != null && !evaluatedDateTime.isEmpty()) {
+                    // Assuming format like "2025-10-21 16:31:54" or "2025-10-21T16:31:54"
+                    if (evaluatedDateTime.contains(" ")) {
+                        String[] parts = evaluatedDateTime.split(" ", 2);
+                        evaluatedDate = parts[0];
+                        evaluatedTime = parts.length > 1 ? parts[1] : "";
+                    } else if (evaluatedDateTime.contains("T")) {
+                        String[] parts = evaluatedDateTime.split("T", 2);
+                        evaluatedDate = parts[0];
+                        evaluatedTime = parts.length > 1 ? parts[1] : "";
+                    } else {
+                        // If no time component found, treat entire string as date
+                        evaluatedDate = evaluatedDateTime;
+                    }
+                }
+                
+                lastUpdatedInfo.put("lastUpdatedDate", evaluatedDate);
+                lastUpdatedInfo.put("lastUpdatedTime", evaluatedTime);
+                
+            } else if (inspectionImage != null) {
                 lastUpdatedInfo.put("lastUpdatedDate", inspectionImage.getUploadedDate());
                 lastUpdatedInfo.put("lastUpdatedTime", inspectionImage.getUploadedTime());
             } else if (inspection != null) {
@@ -226,6 +254,8 @@ public class InspectionImageServiceImpl implements InspectionImageService {
                 evalResults.setHotspotX(evalResultMap.get("hotspotX"));
                 evalResults.setHotspotY(evalResultMap.get("hotspotY"));
                 evalResults.setNotes(evalResultMap.get("notes"));
+                evalResults.setEvaluatedBy(evalResultMap.get("evaluatedBy"));
+                evalResults.setEvaluatedDate(evalResultMap.get("evaluatedDate"));
 
                 evalResultsRepo.save(evalResults);
             }
@@ -258,8 +288,12 @@ public class InspectionImageServiceImpl implements InspectionImageService {
             Long inspectionImageId = inspectionImageRepo.findByInspectionNo(inspectionNo).getId();
             reportData.put("Inspection Image ID", inspectionImageId);
 
+            
+
             if (!evalResults.isEmpty()) {
                 reportData.put("Final Accepted Anomalies", evalResults);
+                reportData.put("Evaluated By", evalResults.get(0).getEvaluatedBy());
+                reportData.put("Evaluated Date", evalResults.get(0).getEvaluatedDate());
             } else {
                 reportData.put("Final Accepted Anomalies", "No evaluation results available");
             }
