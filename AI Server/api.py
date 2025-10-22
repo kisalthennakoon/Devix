@@ -4,14 +4,26 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import uvicorn
 from model import interface
-import os
+import cv2
+from retraining_pipeline import apply_feedback_and_recalibrate, update_thresholds
+from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI()
-
+app = FastAPI(title="AI Model Server", version="1.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], allow_credentials=True,
+    allow_methods=["*"], allow_headers=["*"],
+)
 
 # Define a Pydantic model for the request body
 class FeaturesRequest(BaseModel):
     imageUrl: str
+    
+class CurrentDetectionsRequest(BaseModel):
+    current_detections: list[dict]
+    
+class EditsRequest(BaseModel):
+    edits: list[dict]
 
 @app.post("/predict")
 def predict(request: FeaturesRequest):
@@ -56,6 +68,23 @@ def predict(request: FeaturesRequest):
             predictions.append(prediction)
         
         return predictions
+    
+@app.post("/update_thresholds")
+def update_thresholds_endpoint(request: FeaturesRequest, 
+                               AI_detections: CurrentDetectionsRequest, 
+                               admin: EditsRequest):
+    imageUrl = request.imageUrl
+    imgArray = cv2.imread(imageUrl)
+    current_detections = AI_detections.current_detections
+    edits = admin.edits
+
+    updated_TH = apply_feedback_and_recalibrate(
+        img_bgr=imgArray,
+        current_detections=current_detections,
+        edits=edits
+    )
+    update_thresholds(updated_TH)
+    return {"status": "Thresholds updated successfully."}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=5001)
