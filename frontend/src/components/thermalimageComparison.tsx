@@ -94,6 +94,25 @@ const normalizeBackendField = (v: any): string | null => {
   return s;
 };
 
+// Format annotation status with proper capitalization
+const formatAnnotationStatus = (status: string): string => {
+  if (!status) return 'Unknown';
+  const lowStatus = status.toLowerCase();
+  switch (lowStatus) {
+    case 'ai':
+      return 'AI';
+    case 'added':
+      return 'Added';
+    case 'edited':
+      return 'Edited';
+    case 'deleted':
+      return 'Deleted';
+    default:
+      // Capitalize first letter for any other status
+      return status.charAt(0).toUpperCase() + status.slice(1);
+  }
+};
+
 // parse bbox that may arrive as "[x,y,w,h]" or as array
 const parseBBox = (bbox: AIResult["bbox"]): number[] | null => {
   if (!bbox) return null;
@@ -226,7 +245,9 @@ const ThermalImageComparison = ({ inspectionNo, transformerNo }: { inspectionNo:
 
         if (backendStatus && backendStatus !== 'ai') {
           // backend is explicitly marking as added/edited/deleted
-          status = backendStatus as Annotation['status'];
+          // Convert to lowercase for internal use
+          const normalizedStatus = backendStatus.toLowerCase();
+          status = normalizedStatus as Annotation['status'];
           userId = evaluatedBy ?? 'Devix';
         } else if (evaluatedBy && String(evaluatedBy).toLowerCase() !== 'ai') {
           // evaluatedBy is set to a user (not AI) — treat as edited by that user
@@ -972,7 +993,7 @@ const ThermalImageComparison = ({ inspectionNo, transformerNo }: { inspectionNo:
                     <Collapse in={expandedIndex === displayIdx} timeout="auto" unmountOnExit>
                       <Box sx={{ p: 1, border: "1px solid #f0f0f0", borderTop: "none", bgcolor: "#fafafa" }}>
                         <Typography sx={{ fontSize: 13, color: "text.secondary", mb: 0.5 }}>
-                          <strong>Fault Type:</strong> {matching ? (matching.status === 'added' ? `${r.faultType} (user-added)` : matching.status === 'deleted' ? `${r.faultType} (deleted)` : r.faultType) : r.faultType}
+                          <strong>Fault Type:</strong> {matching ? (matching.status === 'added' ? `${r.faultType} (user-added)` : matching.status === 'deleted' ? `${r.faultType} (${formatAnnotationStatus(matching.status).toLowerCase()})` : r.faultType) : r.faultType}
                         </Typography>
                         <Typography sx={{ fontSize: 13, color: "text.secondary", mb: 0.5 }}>
                           <strong>Confidence:</strong> {conf ? `${conf}%` : "—"}
@@ -991,7 +1012,7 @@ const ThermalImageComparison = ({ inspectionNo, transformerNo }: { inspectionNo:
                         {matching && (
                           <Box sx={{ mt: 1 }}>
                             <Typography sx={{ fontSize: 13, color: "text.secondary", mb: 0.5 }}>
-                              <strong>Annotation:</strong> {matching.status}
+                              <strong>Annotation:</strong> {formatAnnotationStatus(matching.status)}
                             </Typography>
                             <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-end' }}>
                               <TextField
@@ -1080,7 +1101,7 @@ const ThermalImageComparison = ({ inspectionNo, transformerNo }: { inspectionNo:
                   <Collapse in={expandedIndex === displayIdx} timeout="auto" unmountOnExit>
                     <Box sx={{ p: 1, border: "1px solid #f0f0f0", borderTop: "none", bgcolor: "#fafafa" }}>
                       <Typography sx={{ fontSize: 13, color: "text.secondary", mb: 0.5 }}>
-                        <strong>Fault Type:</strong> {(a.original?.faultType ?? 'New Anomaly')}{a.status === 'deleted' ? ' (deleted)' : ''}
+                        <strong>Fault Type:</strong> {(a.original?.faultType ?? 'New Anomaly')}{a.status === 'deleted' ? ` (${formatAnnotationStatus(a.status).toLowerCase()})` : ''}
                       </Typography>
                       <Typography sx={{ fontSize: 13, color: "text.secondary", mb: 0.5 }}>
                         <strong>Confidence:</strong> 100%
@@ -1090,7 +1111,7 @@ const ThermalImageComparison = ({ inspectionNo, transformerNo }: { inspectionNo:
                       </Typography>
                       <Box sx={{ mt: 1 }}>
                         <Typography sx={{ fontSize: 13, color: "text.secondary", mb: 0.5 }}>
-                          <strong>Annotation:</strong> {a.status}
+                          <strong>Annotation:</strong> {formatAnnotationStatus(a.status)}
                         </Typography>
                         <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-end' }}>
                           <TextField
@@ -1180,7 +1201,7 @@ const ThermalImageComparison = ({ inspectionNo, transformerNo }: { inspectionNo:
                 areaPx: (a.original as any)?.areaPx ?? null,
                 faultType: (a.original as any)?.faultType ?? 'New Anomaly',
                 faultConfidence: a.status !== 'ai' ? 1 : (a.original as any)?.faultConfidence ?? null,
-                anomalyStatus: a.status === 'ai' ? 'ai' : a.status, // ai/added/edited/deleted
+                anomalyStatus: formatAnnotationStatus(a.status), // AI/Added/Edited/Deleted
                 notes: a.notes ?? '',
                 timestamp: a.timestamp,
                 userId: a.userId ?? 'Devix',
