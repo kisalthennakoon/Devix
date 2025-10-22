@@ -19,10 +19,9 @@ app.add_middleware(
 class FeaturesRequest(BaseModel):
     imageUrl: str
     
-class CurrentDetectionsRequest(BaseModel):
+class EditReq(BaseModel):
+    imageUrl: str
     current_detections: list[dict]
-    
-class EditsRequest(BaseModel):
     edits: list[dict]
 
 @app.post("/predict")
@@ -70,21 +69,50 @@ def predict(request: FeaturesRequest):
         return predictions
     
 @app.post("/update_thresholds")
-def update_thresholds_endpoint(request: FeaturesRequest, 
-                               AI_detections: CurrentDetectionsRequest, 
-                               admin: EditsRequest):
-    imageUrl = request.imageUrl
-    imgArray = cv2.imread(imageUrl)
-    current_detections = AI_detections.current_detections
-    edits = admin.edits
+def update_thresholds_endpoint(request: EditReq):
+    try:
+        imageUrl = request.imageUrl
+        imgArray = cv2.imread(imageUrl)
 
-    updated_TH = apply_feedback_and_recalibrate(
-        img_bgr=imgArray,
-        current_detections=current_detections,
-        edits=edits
-    )
-    update_thresholds(updated_TH)
-    return {"status": "Thresholds updated successfully."}
+        def parse_bbox(bbox_str):
+            # Converts '[676,248,383,136]' to (676, 248, 383, 136)
+            if isinstance(bbox_str, str):
+                return tuple(map(int, bbox_str.strip("[]").split(",")))
+            elif isinstance(bbox_str, (list, tuple)):
+                return tuple(bbox_str)
+            return (0, 0, 0, 0)
+
+        def transform_detection(d):
+            return {
+                "bbox": parse_bbox(d.get("bbox")),
+                "label": d.get("faultType", "Unknown"),
+                "severity": float(d.get("faultSeverity", 0.0)) if d.get("faultSeverity") not in [None, "None", ""] else 0.0,
+                "status": d.get("anomalyStatus", "AI")
+            }
+
+        def transform_edit(e):
+            edit = {
+                "bbox": parse_bbox(e.get("bbox")),
+                "label": e.get("faultType", "Unknown"),
+                "status": e.get("anomalyStatus", "added")
+            }
+            # If edit is "edited", you may need to provide "old_bbox"
+            if edit["status"] == "edited" and "old_bbox" in e:
+                edit["old_bbox"] = parse_bbox(e["old_bbox"])
+            return edit
+
+        current_detections = [transform_detection(d) for d in request.current_detections]
+        edits = [transform_edit(e) for e in request.edits]
+
+        updated_TH = apply_feedback_and_recalibrate(
+            img_bgr=imgArray,
+            current_detections=current_detections,
+            edits=edits
+        )
+        update_thresholds(updated_TH)
+        return {"status": "Thresholds updated successfully."}
+    except Exception as e:
+        return {"error": str(e)}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=5001)

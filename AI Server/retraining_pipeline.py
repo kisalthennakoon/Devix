@@ -288,7 +288,7 @@ def apply_feedback_and_recalibrate(
                 "bbox": bbox,
                 "label": e["label"],
                 "severity": recompute_severity(img_bgr, bbox),
-                "status": "kept"
+                "status": "added" 
             }
             work.append(new_d)
 
@@ -347,7 +347,7 @@ def reclassify_detections(img_bgr: np.ndarray, detections: list[dict], suggest_l
     """
     updated = []
     for d in detections:
-        if d.get("status", "kept") == "deleted":
+        if d.get("status", "AI") == "deleted":
             continue
         lbl, hotspot, _ = suggest_label_func(img_bgr, d["bbox"])
         d["suggested_label"] = lbl
