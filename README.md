@@ -18,6 +18,15 @@ This project is a **web-based platform** for managing transformer records and th
 - **Weather selection** (Sunny / Cloudy / Rainy) for contextual review
 - **No-anomaly handling**: hides alert badge and shows “No anomalies detected”
 
+**Phase 3** focuses on interactive annotation and feedback integration, including:  
+- **Human-in-the-loop tools** for adding, editing, and deleting anomaly markers  
+- **Automatic backend saving** of user actions with timestamps, user IDs, and transformer metadata
+- **Separate human evaluation table storage** to persist user annotations independently of model predictions  
+- **Feedback logs** that combine detections and user-modified annotations for model retraining  
+- **Annotation export** in JSON format for further analysis and validation  
+- **Threshold recalibration** based on validated user feedback to fine-tune model accuracy  
+
+
 ## 🔍 Anomaly Detection Method (Thermal Fault Analysis)
 
 The anomaly detection method in this system is designed for **thermal images** to automatically identify and classify **electrical faults**, specifically distinguishing between **wire overloads** and **loose joints**.
@@ -54,6 +63,11 @@ Each detected region is classified using a **rule-based voting system**:
 - **Annotated Image:** Displays labeled bounding boxes with detected region type and severity.  
 - **Heatmap Overlay:** Highlights thermal intensity visually.  
 - **Metadata Output:** Includes bounding box, centroid, area, severity score, type, and hotspot details.
+
+### **6. Interactive Annotation & Feedback**
+- **Edit Fault Type:** Allows manual correction of the detected fault category and fault size.  
+- **Adjust Bounding Boxes:** Users can resize or reposition bounding boxes on the output image.  
+- **Threshold Recalibration:** Model parameters are updated based on validated feedback, enhancing system accuracy.
 
 
 ## ⚙️ Setup Instructions
@@ -174,6 +188,46 @@ Set up the PostgreSQL database using Docker:
   - Accessibility: index badges include `aria-label` for screen readers
   - Clean separation of UI state (zoom, pan, notes, weather) from fetched data
 
+## Implemented Features (Phase 3)
+
+- **FR3.1 – Human-in-the-Loop Annotation & Verification**
+  - Reviewer can **add, edit, delete, or relabel** anomalies on the current image
+  - Annotation actions automatically update the **Errors panel** in real time
+  - Manual edits are **logged with timestamp and user** for audit
+
+- **FR3.2 – Threshold Recalibration**
+  - Adjust AI detection **confidence/severity thresholds** based on human annotations
+  - Automatically compute **Old → New differences** in errors
+  - Supports batch recalibration for multiple transformers
+
+- **FR3.3 – Metadata and Annotation Persistence**
+  - When a user interacts with the anomaly detection view, all changes are:
+    - **Captured and saved** in the backend
+    - Stored along with **metadata** (user ID, timestamp, image ID, transformer ID, action taken)
+    - **Displayed in the UI** with automatic reload when revisiting the same image
+
+- **FR3.4 – Feedback Export**
+  - The feedback log can be exported in **JSON** format containing:
+    - Image ID  
+    - Model-predicted anomalies  
+    - Final accepted annotations  
+    - Annotator metadata  
+
+- **Additional Technical Details (Feedback Mechanism)**
+
+  **Feedback Mechanism**
+  - Every user action (**add / edit / delete / relabel**) is recorded in a structured `feedback_log` with user ID, timestamp, and image details.  
+  - When annotations are modified, the system **recomputes severity** and optionally provides an **auto-suggested label** for consistency.  
+  - Features from validated annotations (aspect ratio, circularity, red ratio, etc.) are extracted for **threshold recalibration**.  
+  - **Thresholds are updated dynamically** using robust statistical methods to fine-tune model accuracy.  
+  - Feedback exports (JSON) include **image ID, model predictions, final annotations, annotator metadata, and updated thresholds** for retraining or analysis.
+
+  **Backend Structure and Workings for Persisting Annotations**
+  - **Annotation storage:** User annotations from the frontend are saved in a separate table.  
+  - **Annotation retrieval:** When revisiting an inspection, human annotations are sent to the frontend if available; otherwise, model predictions are used.  
+  - **Model feedback:** New human annotations are sent to the CV model to recalibrate thresholds and improve accuracy.
+  
+
 
 ## Known Limitations / Issues
 
@@ -184,6 +238,8 @@ Set up the PostgreSQL database using Docker:
 * Uploading very large images can fail or stall on slower networks/browsers.
 * The model may detect an anomaly but assign the wrong fault category in some cases.
 * Motion blur/out-of-focus frames (e.g., T1 faulty images in the dataset) reduce detection accuracy.
+* Difficult to adjust dimensions in UI when dragging bounding boxes.
+* After feedback, updated threshold accuracy cannot be reliably tested due to lack of sufficient test images.
 
 
 ## Test Data
