@@ -4,6 +4,7 @@ import com.devix.backend.dto.TransformerRequestDto;
 import com.devix.backend.dto.TransformerResponseDto;
 import com.devix.backend.model.Inspection;
 import com.devix.backend.model.Transformer;
+import com.devix.backend.repo.AiResultsRepo;
 import com.devix.backend.repo.BaseImageRepo;
 import com.devix.backend.repo.InspectionImageRepo;
 import com.devix.backend.repo.InspectionRepo;
@@ -27,14 +28,16 @@ public class TransformerServiceImpl implements TransformerService {
     private final InspectionRepo inspectionRepo;
     private final BaseImageRepo baselineImageRepo;
     private final InspectionImageRepo inspectionImageRepo;
+    private final AiResultsRepo aiResultsRepo;
 
 
-    public TransformerServiceImpl(TransformerRepo transformerRepo, InspectionRepo inspectionRepo, BaseImageRepo baselineImageRepo, InspectionImageRepo inspectionImageRepo) {
+    public TransformerServiceImpl(TransformerRepo transformerRepo, InspectionRepo inspectionRepo, BaseImageRepo baselineImageRepo, InspectionImageRepo inspectionImageRepo, AiResultsRepo aiResultsRepo) {
         this.transformerRepo = transformerRepo;
         this.mapperService = MapperService.INSTANCE;
         this.inspectionRepo = inspectionRepo;
         this.inspectionImageRepo = inspectionImageRepo;
         this.baselineImageRepo = baselineImageRepo;
+        this.aiResultsRepo = aiResultsRepo;
     }
 
     @Override
@@ -123,6 +126,7 @@ public class TransformerServiceImpl implements TransformerService {
             baselineImageRepo.deleteByTransformerNo(transformerNo);
             inspectionRepo.deleteAllByTransformerNo(transformerNo);
             inspectionImageRepo.deleteAllByTransformerNo(transformerNo);
+            aiResultsRepo.deleteAllByTransformerNo(transformerNo);
 
             log.info("Transformer deleted");
         } catch (Exception e) {

@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Data
 @NoArgsConstructor
-public class AiResults {
+public class EvalResults {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,4 +30,10 @@ public class AiResults {
     private String areaPx;
     private String hotspotX;
     private String hotspotY;
+
+    private String evaluatedBy;
+    private String evaluatedDate;
+
+    private String notes;
 }
+

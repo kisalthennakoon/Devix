@@ -1,9 +1,9 @@
 
-import React, { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import ThermalImageCard from "../components/thermalimagecard";
 import axios from "axios";
 import ThermalImageComparison from "../components/thermalimageComparison";
-import { Alert, Box, Snackbar, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 
 // interface InspectionImages {
 //   baseImageUrl: string;
@@ -107,12 +107,13 @@ export default function Comparison({ inspectionNo, transformerNo, onRefresh }: {
   if (statusData?.baselineImageStatus == "exist" && statusData?.inspectionStatus == "in_progress") {
 
       return(
-      <ThermalImageComparison
-        // leftImageUrl={inspectionImages.baseImageUrl ?? ""}
-        // rightImageUrl={inspectionImages.thermal ?? ""}
-        inspectionNo={inspectionNo}
-      />
-    )
+        <ThermalImageComparison
+          // leftImageUrl={inspectionImages.baseImageUrl ?? ""}
+          // rightImageUrl={inspectionImages.thermal ?? ""}
+          inspectionNo={inspectionNo}
+          transformerNo={transformerNo}
+        />
+      )
     
   }
 
