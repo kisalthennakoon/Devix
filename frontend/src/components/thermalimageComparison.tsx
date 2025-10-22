@@ -11,6 +11,8 @@ import {
   TextField,
   Chip,
   Collapse,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import axios from "axios";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
@@ -72,6 +74,16 @@ const toPct = (v: string | number | undefined, decimals = 0) => {
   return Math.max(0, Math.min(100, pct)).toFixed(decimals);
 };
 
+// normalize backend string fields: treat null/undefined/'null'/'undefined'/empty as missing
+const normalizeBackendField = (v: any): string | null => {
+  if (v === null || v === undefined) return null;
+  const s = String(v).trim();
+  if (!s) return null;
+  const low = s.toLowerCase();
+  if (low === 'null' || low === 'undefined') return null;
+  return s;
+};
+
 // parse bbox that may arrive as "[x,y,w,h]" or as array
 const parseBBox = (bbox: AIResult["bbox"]): number[] | null => {
   if (!bbox) return null;
@@ -131,6 +143,11 @@ const ThermalImageComparison = ({ inspectionNo, transformerNo }: { inspectionNo:
   // when restoring from history, avoid pushing another snapshot
   const isRestoringRef = useRef(false);
 
+  // Snackbar for save feedback
+  const [snackOpen, setSnackOpen] = useState(false);
+  const [snackMsg, setSnackMsg] = useState("");
+  const [snackSeverity, setSnackSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
+
   const pushHistorySnapshot = () => {
     if (isRestoringRef.current) return;
     try {
@@ -176,9 +193,13 @@ const ThermalImageComparison = ({ inspectionNo, transformerNo }: { inspectionNo:
         const bb = parseBBox(r.bbox);
         if (!bb) return null;
 
-        // backend can return annotations with faultStatus/evaluatedBy set by user after confirm
-        const backendStatus = String(r.faultStatus ?? "").toLowerCase();
-        const evaluatedBy = (r as any).evaluatedBy ?? (r as any).userId ?? null;
+  // backend can return annotations with faultStatus/evaluatedBy set by user after confirm
+  // normalizeBackendField will treat literal 'null'/'undefined' and empty strings as missing
+  const backendStatusRaw = (r as any).faultStatus ?? null;
+  const backendStatusNorm = normalizeBackendField(backendStatusRaw);
+  const backendStatus = backendStatusNorm ? String(backendStatusNorm).toLowerCase() : '';
+  const evaluatedByRaw = (r as any).evaluatedBy ?? (r as any).userId ?? null;
+  const evaluatedBy = normalizeBackendField(evaluatedByRaw);
 
         // Determine initial status and userId based on backend fields.
         // If backend marked this as 'ai' or evaluatedBy is 'AI', treat as AI result.
@@ -195,7 +216,7 @@ const ThermalImageComparison = ({ inspectionNo, transformerNo }: { inspectionNo:
           status = 'edited';
           userId = evaluatedBy;
         } else {
-          // AI-originated result
+          // AI-originated result (no meaningful backend status/evaluatedBy provided)
           status = 'ai';
           userId = 'AI';
           originalIndex = i;
@@ -1025,11 +1046,16 @@ const ThermalImageComparison = ({ inspectionNo, transformerNo }: { inspectionNo:
               }));
 
               await axios.post("/api/inspectionImage/createEvalResults", payload);
-              // optionally show saved state
+              // show success snackbar
+              setSnackMsg('Annotations saved');
+              setSnackSeverity('success');
+              setSnackOpen(true);
               console.log('Annotations saved to server');
             } catch (err) {
               console.error('Failed to save annotations to server', err);
-              alert('Failed to save annotations to server.');
+              setSnackMsg('Failed to save annotations');
+              setSnackSeverity('error');
+              setSnackOpen(true);
             }
           }}
         >
@@ -1062,7 +1088,30 @@ const ThermalImageComparison = ({ inspectionNo, transformerNo }: { inspectionNo:
                 }
               }
 
-              const url = window.URL.createObjectURL(blob);
+              // If this looks like JSON, read text, pretty-print, then construct a new blob
+              const contentType = (headers['content-type'] || headers['Content-Type'] || blob.type || '').toString();
+              let downloadBlob = blob;
+              if (/json/i.test(contentType) || filename.toLowerCase().endsWith('.json')) {
+                try {
+                  const text = await blob.text();
+                  // parse then pretty-print; fall back to original text if parse fails
+                  try {
+                    const parsed = JSON.parse(text);
+                    const pretty = JSON.stringify(parsed, null, 2);
+                    downloadBlob = new Blob([pretty], { type: 'application/json' });
+                  } catch (parseErr) {
+                    // If parsing fails, but the text looks minified, attempt to at least add newlines
+                    // (best-effort) by formatting JSON-like structures — but here we'll just keep original text.
+                    console.warn('Export: JSON parse failed, downloading raw text');
+                    downloadBlob = new Blob([text], { type: 'application/json' });
+                  }
+                } catch (readErr) {
+                  console.warn('Export: failed to read blob text, falling back to binary download', readErr);
+                  downloadBlob = blob;
+                }
+              }
+
+              const url = window.URL.createObjectURL(downloadBlob);
               const a = document.createElement('a');
               a.href = url;
               a.download = filename;
@@ -1077,7 +1126,7 @@ const ThermalImageComparison = ({ inspectionNo, transformerNo }: { inspectionNo:
             }
           }}
         >
-          Export JSON (server)
+          Export 
         </Button>
         <Button
           variant="text"
@@ -1090,6 +1139,11 @@ const ThermalImageComparison = ({ inspectionNo, transformerNo }: { inspectionNo:
           Cancel
         </Button>
       </Box>
+      <Snackbar open={snackOpen} autoHideDuration={4000} onClose={() => setSnackOpen(false)} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+        <Alert onClose={() => setSnackOpen(false)} severity={snackSeverity} sx={{ width: '100%' }}>
+          {snackMsg}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
