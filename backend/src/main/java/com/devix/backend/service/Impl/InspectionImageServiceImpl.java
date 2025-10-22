@@ -6,6 +6,7 @@ import com.devix.backend.repo.BaseImageRepo;
 import com.devix.backend.repo.EvalResultsRepo;
 import com.devix.backend.repo.InspectionImageRepo;
 import com.devix.backend.repo.InspectionRepo;
+import com.devix.backend.service.AiService;
 import com.devix.backend.service.InspectionImageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,16 +27,18 @@ public class InspectionImageServiceImpl implements InspectionImageService {
     private final InspectionRepo inspectionRepo;
     private final AiResultsRepo aiResultsRepo;
     private final EvalResultsRepo evalResultsRepo;
+    private final AiService aiService;
 
     public InspectionImageServiceImpl(InspectionImageRepo inspectionImageRepo, BaseImageRepo baseImageRepo,
             LocalImageService localImageService, InspectionRepo inspectionRepo, AiResultsRepo aiResultsRepo,
-            EvalResultsRepo evalResultsRepo) {
+            EvalResultsRepo evalResultsRepo, AiService aiService) {
         this.inspectionImageRepo = inspectionImageRepo;
         this.baseImageRepo = baseImageRepo;
         this.localImageService = localImageService;
         this.inspectionRepo = inspectionRepo;
         this.aiResultsRepo = aiResultsRepo;
         this.evalResultsRepo = evalResultsRepo;
+        this.aiService = aiService;
     }
 
     @Override
@@ -267,6 +270,16 @@ public class InspectionImageServiceImpl implements InspectionImageService {
 
                 evalResultsRepo.save(evalResults);
             }
+            List<AiResults> aiResults = aiResultsRepo.findAllByInspectionNo(evalResultsList.get(0).get("inspectionNo"));
+            List<EvalResults> finalEvalResults = evalResultsRepo.findAllByInspectionNo(evalResultsList.get(0).get("inspectionNo"));
+            String inspectionImagePath = inspectionImageRepo.findByInspectionNo(evalResultsList.get(0).get("inspectionNo")).getThermalImageUrl();
+            
+            Map<String, Object> requestData = new HashMap<>();
+            requestData.put("current_detections", aiResults);
+            requestData.put("edits", finalEvalResults);
+            requestData.put("imageUrl", inspectionImagePath);
+
+            aiService.updateThresholds(requestData);
 
             log.info("Evaluation results created successfully");
         } catch (Exception e) {

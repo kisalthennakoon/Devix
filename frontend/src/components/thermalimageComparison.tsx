@@ -13,6 +13,15 @@ import {
   Collapse,
   Snackbar,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  FormControl,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  FormLabel,
 } from "@mui/material";
 import axios from "axios";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
@@ -24,6 +33,7 @@ import CropSquareIcon from '@mui/icons-material/CropSquare';
 import UndoIcon from '@mui/icons-material/Undo';
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import CloseIcon from '@mui/icons-material/Close';
+import EditIcon from '@mui/icons-material/Edit';
 
 type AIResult = {
   // (legacy center coords—kept for compatibility, not used for drawing)
@@ -147,6 +157,13 @@ const ThermalImageComparison = ({ inspectionNo, transformerNo }: { inspectionNo:
   const [snackOpen, setSnackOpen] = useState(false);
   const [snackMsg, setSnackMsg] = useState("");
   const [snackSeverity, setSnackSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
+
+  // Error definition dialog
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+  const [pendingBbox, setPendingBbox] = useState<number[] | null>(null);
+  const [customErrorType, setCustomErrorType] = useState("");
+  const [errorSeverity, setErrorSeverity] = useState<"faulty" | "potential">("faulty");
+  const [editingAnnotation, setEditingAnnotation] = useState<string | null>(null);
 
   const pushHistorySnapshot = () => {
     if (isRestoringRef.current) return;
@@ -363,21 +380,84 @@ const ThermalImageComparison = ({ inspectionNo, transformerNo }: { inspectionNo:
     const o1 = displayToOriginal(t.x, t.y);
     const o2 = displayToOriginal(t.x + t.w, t.y + t.h);
     const bb = [o1.x, o1.y, Math.max(1, o2.x - o1.x), Math.max(1, o2.y - o1.y)];
+    
+    // Store the bbox and open dialog for user input
+    setPendingBbox(bb);
+    setCustomErrorType("");
+    setErrorSeverity("faulty");
+    setErrorDialogOpen(true);
+    
+    // Clear drawing state
+    drawingTemp.current = null;
+    drawStart.current = null;
+    setDragging(false);
+    setActiveTool('none');
+  };
+
+  // Create annotation after user confirms error details
+  const confirmErrorDetails = () => {
+    if (!pendingBbox) return;
+    
+    const finalErrorType = customErrorType.trim() || "New Anomaly";
+    const finalFaultType = `${finalErrorType} (${errorSeverity === "potential" ? "Potential" : "Faulty"})`;
+    
     const ann: Annotation = {
       id: `user-${Date.now()}`,
-      bbox: bb,
+      bbox: pendingBbox,
       status: 'added',
       notes: '',
       timestamp: new Date().toISOString(),
       userId: 'Devix',
     };
-    // mark as a new anomaly
-    ann.original = { faultType: 'New Anomaly', transformerNo: transformerNo ?? undefined } as any as AIResult;
+    
+    // Set the fault type based on user input
+    ann.original = { 
+      faultType: finalFaultType, 
+      transformerNo: transformerNo ?? undefined,
+      faultSeverity: errorSeverity === "faulty" ? "1.0" : "0.5",
+      faultConfidence: "1.0"
+    } as any as AIResult;
+    
     setAnnotations((s) => [...s, ann]);
-    drawingTemp.current = null;
-    drawStart.current = null;
-    setDragging(false);
-    setActiveTool('none');
+    
+    // Close dialog and clear state
+    setErrorDialogOpen(false);
+    setPendingBbox(null);
+    setCustomErrorType("");
+    setErrorSeverity("faulty");
+  };
+
+  // Update existing annotation
+  const updateExistingAnnotation = () => {
+    if (!editingAnnotation) return;
+    
+    const finalErrorType = customErrorType.trim() || "New Anomaly";
+    const finalFaultType = `${finalErrorType} (${errorSeverity === "potential" ? "Potential" : "Faulty"})`;
+    
+    pushHistorySnapshot();
+    setAnnotations((s) => s.map((a) => {
+      if (a.id === editingAnnotation) {
+        return {
+          ...a,
+          status: a.status === 'ai' ? 'edited' : a.status,
+          timestamp: new Date().toISOString(),
+          userId: 'Devix',
+          original: {
+            ...a.original,
+            faultType: finalFaultType,
+            faultSeverity: errorSeverity === "faulty" ? "1.0" : "0.5",
+            faultConfidence: "1.0"
+          } as any as AIResult
+        };
+      }
+      return a;
+    }));
+    
+    // Close dialog and clear state
+    setErrorDialogOpen(false);
+    setEditingAnnotation(null);
+    setCustomErrorType("");
+    setErrorSeverity("faulty");
   };
 
   /* ---------- anomaly filtering & flags ---------- */
@@ -582,7 +662,8 @@ const ThermalImageComparison = ({ inspectionNo, transformerNo }: { inspectionNo:
                   };
 
                   // color by “Potential” or not (orange vs red)
-                  const isPotential = /\bpotential\b/i.test(String(r.faultType));
+                  // Check for both "Potential" prefix and "(Potential)" bracket formats
+                  const isPotential = /\bpotential\b/i.test(String(r.faultType)) || /\(Potential\)/i.test(String(r.faultType));
                   const stroke = isPotential ? "#FB8C00" : "#E53935";
                   const conf = toPct(r.faultConfidence, 0);
 
@@ -846,7 +927,8 @@ const ThermalImageComparison = ({ inspectionNo, transformerNo }: { inspectionNo:
                 const { r, idx: _idx, matching } = item;
                 const conf = toPct(r.faultConfidence, 0);
                 const sev = toPct(r.faultSeverity, 0);
-                const isPotential = /\bpotential\b/i.test(String(r.faultType));
+                // Check for both "Potential" prefix and "(Potential)" bracket formats
+                const isPotential = /\bpotential\b/i.test(String(r.faultType)) || /\(Potential\)/i.test(String(r.faultType));
                 const chipBg = isPotential ? "#FB8C00" : "#E53935";
 
                 const headerDate = matching
@@ -911,17 +993,49 @@ const ThermalImageComparison = ({ inspectionNo, transformerNo }: { inspectionNo:
                             <Typography sx={{ fontSize: 13, color: "text.secondary", mb: 0.5 }}>
                               <strong>Annotation:</strong> {matching.status}
                             </Typography>
-                            <TextField
-                              size="small"
-                              fullWidth
-                              placeholder="Add note..."
-                              value={matching.notes}
-                              onChange={(e) => {
-                                const v = e.target.value;
-                                pushHistorySnapshot();
-                                setAnnotations((s) => s.map((a) => (a.id === matching.id ? { ...a, notes: v, timestamp: new Date().toISOString(), userId: 'Devix', status: a.status === 'ai' ? 'edited' : a.status } : a)));
-                              }}
-                            />
+                            <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-end' }}>
+                              <TextField
+                                size="small"
+                                fullWidth
+                                placeholder="Add note..."
+                                value={matching.notes}
+                                onChange={(e) => {
+                                  const v = e.target.value;
+                                  pushHistorySnapshot();
+                                  setAnnotations((s) => s.map((a) => (a.id === matching.id ? { ...a, notes: v, timestamp: new Date().toISOString(), userId: 'Devix', status: a.status === 'ai' ? 'edited' : a.status } : a)));
+                                }}
+                              />
+                              <IconButton
+                                size="small"
+                                onClick={() => {
+                                  const currentFaultType = matching.original?.faultType || 'New Anomaly';
+                                  // Parse fault type with brackets format: "Error Type (Severity)"
+                                  const bracketMatch = currentFaultType.match(/^(.+?)\s*\((Potential|Faulty)\)$/i);
+                                  let errorType = currentFaultType;
+                                  let severity: "faulty" | "potential" = "faulty";
+                                  
+                                  if (bracketMatch) {
+                                    errorType = bracketMatch[1].trim();
+                                    severity = bracketMatch[2].toLowerCase() === "potential" ? "potential" : "faulty";
+                                  } else {
+                                    // Fallback: check for "Potential" prefix
+                                    const isPotential = /\bpotential\b/i.test(currentFaultType);
+                                    if (isPotential) {
+                                      errorType = currentFaultType.replace(/\bpotential\s+/i, '');
+                                      severity = "potential";
+                                    }
+                                  }
+                                  
+                                  setEditingAnnotation(matching.id);
+                                  setCustomErrorType(errorType);
+                                  setErrorSeverity(severity);
+                                  setErrorDialogOpen(true);
+                                }}
+                                sx={{ mb: 0.25 }}
+                              >
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                            </Box>
                           </Box>
                         )}
                       </Box>
@@ -972,26 +1086,55 @@ const ThermalImageComparison = ({ inspectionNo, transformerNo }: { inspectionNo:
                         <strong>Confidence:</strong> 100%
                       </Typography>
                       <Typography sx={{ fontSize: 13, color: "text.secondary", mb: 0.5 }}>
-                        <strong>Severity:</strong> —
-                      </Typography>
-                      <Typography sx={{ fontSize: 13, color: "text.secondary", mb: 0.5 }}>
                         <strong>Coordinates:</strong> centroid ({centroid[0]}, {centroid[1]})
                       </Typography>
                       <Box sx={{ mt: 1 }}>
                         <Typography sx={{ fontSize: 13, color: "text.secondary", mb: 0.5 }}>
                           <strong>Annotation:</strong> {a.status}
                         </Typography>
-                        <TextField
-                          size="small"
-                          fullWidth
-                          placeholder="Add note..."
-                          value={a.notes}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            pushHistorySnapshot();
-                            setAnnotations((s) => s.map((xx) => (xx.id === a.id ? { ...xx, notes: v, timestamp: new Date().toISOString(), userId: 'Devix' } : xx)));
-                          }}
-                        />
+                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-end' }}>
+                          <TextField
+                            size="small"
+                            fullWidth
+                            placeholder="Add note..."
+                            value={a.notes}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              pushHistorySnapshot();
+                              setAnnotations((s) => s.map((xx) => (xx.id === a.id ? { ...xx, notes: v, timestamp: new Date().toISOString(), userId: 'Devix' } : xx)));
+                            }}
+                          />
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              const currentFaultType = a.original?.faultType || 'New Anomaly';
+                              // Parse fault type with brackets format: "Error Type (Severity)"
+                              const bracketMatch = currentFaultType.match(/^(.+?)\s*\((Potential|Faulty)\)$/i);
+                              let errorType = currentFaultType;
+                              let severity: "faulty" | "potential" = "faulty";
+                              
+                              if (bracketMatch) {
+                                errorType = bracketMatch[1].trim();
+                                severity = bracketMatch[2].toLowerCase() === "potential" ? "potential" : "faulty";
+                              } else {
+                                // Fallback: check for "Potential" prefix
+                                const isPotential = /\bpotential\b/i.test(currentFaultType);
+                                if (isPotential) {
+                                  errorType = currentFaultType.replace(/\bpotential\s+/i, '');
+                                  severity = "potential";
+                                }
+                              }
+                              
+                              setEditingAnnotation(a.id);
+                              setCustomErrorType(errorType);
+                              setErrorSeverity(severity);
+                              setErrorDialogOpen(true);
+                            }}
+                            sx={{ mb: 0.25 }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
                       </Box>
                     </Box>
                   </Collapse>
@@ -1144,6 +1287,62 @@ const ThermalImageComparison = ({ inspectionNo, transformerNo }: { inspectionNo:
           {snackMsg}
         </Alert>
       </Snackbar>
+
+      {/* Error Definition Dialog */}
+      <Dialog open={errorDialogOpen} onClose={() => setErrorDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          {editingAnnotation ? 'Edit Error Details' : 'Define Error Details'}
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+            <TextField
+              label="Error Type"
+              value={customErrorType}
+              onChange={(e) => setCustomErrorType(e.target.value)}
+              placeholder="e.g., Overheating, Electrical Fault, Corrosion"
+              fullWidth
+              helperText="Enter a custom error type or use the default 'New Anomaly'"
+            />
+            
+            <FormControl component="fieldset">
+              <FormLabel component="legend">Error Severity</FormLabel>
+              <RadioGroup
+                value={errorSeverity}
+                onChange={(e) => setErrorSeverity(e.target.value as "faulty" | "potential")}
+                row
+              >
+                <FormControlLabel
+                  value="faulty"
+                  control={<Radio />}
+                  label="Faulty"
+                />
+                <FormControlLabel
+                  value="potential"
+                  control={<Radio />}
+                  label="Potential"
+                />
+              </RadioGroup>
+            </FormControl>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setErrorDialogOpen(false)}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={() => {
+              if (editingAnnotation) {
+                updateExistingAnnotation();
+              } else {
+                confirmErrorDetails();
+              }
+            }}
+            variant="contained"
+          >
+            {editingAnnotation ? 'Update' : 'Add Error'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

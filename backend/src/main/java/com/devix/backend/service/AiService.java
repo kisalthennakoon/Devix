@@ -1,5 +1,7 @@
 package com.devix.backend.service;
 
+import com.devix.backend.dto.UpdateThresholdsRequestDto;
+import com.devix.backend.dto.UpdateThresholdsResponseDto;
 import com.devix.backend.model.AiResults;
 import com.devix.backend.model.Inspection;
 import com.devix.backend.model.InspectionImage;
@@ -49,6 +51,39 @@ public class AiService {
             throw new RuntimeException("Failed to parse AI prediction response: " + e.getMessage());
         }
     }
+    
+    public Map<String, Object> updateThresholds(Map<String, Object> request) {
+        try {
+            // Create the request body for the AI server
+            Map<String, Object> requestBody = Map.of(
+                "imageUrl", request.get("imageUrl"),
+                "current_detections", request.get("current_detections"),
+                "edits", request.get("edits")
+            );
+
+            String response = webClient.post()
+                    .uri("/update_thresholds")
+                    .bodyValue(requestBody)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                Map<String, Object> result = objectMapper.readValue(response, new TypeReference<Map<String, Object>>() {});
+                log.info("Thresholds updated successfully: {}", result);
+                return result;
+            } catch (Exception e) {
+                log.error("Failed to parse update thresholds response: {}", e.getMessage());
+                throw new RuntimeException("Failed to parse update thresholds response: " + e.getMessage());
+            }
+        } catch (Exception e) {
+            log.error("Failed to update thresholds: {}", e.getMessage());
+            throw new RuntimeException("Failed to update thresholds: " + e.getMessage());
+        }
+    }
+
+    
 
     @Scheduled(fixedRate = 1000 * 60 * 2) // every 2 minutes
     public void analysis() {
