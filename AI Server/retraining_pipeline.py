@@ -7,28 +7,17 @@ from typing import List, Dict, Tuple
 # ==========================================================
 # GLOBAL THRESHOLDS (shared with Phase 2 detection)
 # ==========================================================
-TH = {
-    "wire_ar_min": 3.5,
-    "ecc_thr": 2.5,
-    "circularity_thr": 0.6,
-    "joint_extent_min": 0.3,
-    "joint_circularity_min": 0.55,
-    "wire_sk_norm_min": 0.25,
-    "joint_sk_norm_max": 0.35,
-    "max_wire_thickness_frac": 0.015,
-    "wire_len_frac": 0.18,
-    "full_wire_cov": 0.75,
-    "point_max_frac": 0.25,
-    "red_ratio_faulty": 0.45,
-    "joint_area_frac_max": 0.025,
-    "vote_margin": 1,
-    "ignore_right_ratio": 0.05,
-}
+def load_thresholds(path="AI Server/thresholds.json"):
+    with open(path, "r") as f:
+        return json.load(f)
+    
 
-def update_thresholds(new_values, path="thresholds.json"):
+def update_thresholds(new_values, path="AI Server/thresholds.json"):
     with open(path, "w") as f:
         json.dump(new_values, f, indent=2)
 
+
+TH = load_thresholds()
 # ==========================================================
 # Basic helpers (same as in Phase 3 Colab)
 # ==========================================================
@@ -56,7 +45,7 @@ def recompute_severity(img_bgr: np.ndarray, bbox: Tuple[int, int, int, int]) -> 
 # ==========================================================
 # AUTO-LABEL SUGGESTION (Phase 3 logic, threshold-based)
 # ==========================================================
-def suggest_label_for_bbox(img_bgr: np.ndarray, bbox: Tuple[int, int, int, int]):
+def suggest_label_for_bbox(img_bgr: np.ndarray, bbox: tuple[int, int, int, int]) -> tuple[str, tuple[int, int] | None, dict]:
     H, W = img_bgr.shape[:2]
     D = math.hypot(H, W)
     hsv = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2HSV)
@@ -151,7 +140,7 @@ def suggest_label_for_bbox(img_bgr: np.ndarray, bbox: Tuple[int, int, int, int])
     return "Loose Joint (Potential)", None, dict(red_ratio=red_ratio)
 
 
-def safe_quantile(arr, q, default):
+def safe_quantile(arr, q, default) -> float:
     arr = [v for v in arr if v is not None and not np.isnan(v)]
     if len(arr) < 3:
         return default
@@ -161,7 +150,7 @@ def safe_quantile(arr, q, default):
 # ==========================================================
 # Feature Extraction
 # ==========================================================
-def skeletonize_binary(mask):
+def skeletonize_binary(mask) -> np.ndarray:
     skel = np.zeros_like(mask)
     elem = cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
     while True:
@@ -174,7 +163,7 @@ def skeletonize_binary(mask):
     return skel
 
 
-def features_for_bbox(img_bgr: np.ndarray, bbox: Tuple[int, int, int, int]) -> Dict:
+def features_for_bbox(img_bgr: np.ndarray, bbox: Tuple[int, int, int, int]) -> dict:
     x, y, w, h = bbox
     H, W = img_bgr.shape[:2]
     D = math.hypot(H, W)
@@ -256,21 +245,24 @@ def features_for_bbox(img_bgr: np.ndarray, bbox: Tuple[int, int, int, int]) -> D
 # ==========================================================
 def apply_feedback_and_recalibrate(
     img_bgr: np.ndarray,
-    current_detections: List[Dict],
-    edits: List[Dict]
-) -> Dict:
+    current_detections: list[dict],
+    edits: list[dict]
+) -> dict:
     """
-    img_bgr: original image (BGR)
-    current_detections: list of detections with keys ["bbox", "label", "status"]
-    edits: list of admin actions, each:
-        {
-          "bbox": [x,y,w,h],
-          "label": "Loose Joint (Faulty)",
-          "status": "added" | "edited" | "deleted"
-        }
+    Apply admin feedbacks to current detections and recalibrate thresholds.
+    Args:
+        img_bgr: original image (BGR)
+        current_detections: list of detections with keys ["bbox", "label", "status"]
+        edits: list of admin actions, each:
+            {
+            "bbox": [x,y,w,h],
+            "label": "Loose Joint (Faulty)",
+            "status": "added" | "edited" | "deleted"
+            }
     Returns: Updated thresholds dictionary (TH)
     """
     global TH
+    updated_TH = TH.copy()
 
     # --- 1. Apply edits to current detections ---
     work = [d.copy() for d in current_detections]
@@ -302,8 +294,8 @@ def apply_feedback_and_recalibrate(
 
     # --- 2. Perform recalibration ---
     wires_feats, joints_feats, faulty_red, potential_red = [], [], [], []
-    kept = [d for d in work if d.get("status", "kept") != "deleted"]
-    for d in kept:
+    AI_detections = [d for d in work if d.get("status", "AI") != "deleted"]
+    for d in AI_detections:
         feats = features_for_bbox(img_bgr, d["bbox"])
         if feats["ar_rect"] is None:
             continue
@@ -317,37 +309,38 @@ def apply_feedback_and_recalibrate(
             potential_red.append(feats["red_ratio"])
 
     if len(wires_feats) >= 3:
-        TH["wire_ar_min"] = safe_quantile([f["ar_rect"] for f in wires_feats], 0.25, TH["wire_ar_min"])
-        TH["ecc_thr"] = safe_quantile([f["ecc"] for f in wires_feats], 0.25, TH["ecc_thr"])
-        TH["circularity_thr"] = safe_quantile([f["circ"] for f in wires_feats], 0.75, TH["circularity_thr"])
-        TH["wire_sk_norm_min"] = safe_quantile([f["sk_norm"] for f in wires_feats], 0.25, TH["wire_sk_norm_min"])
+        updated_TH["wire_ar_min"] = safe_quantile([f["ar_rect"] for f in wires_feats], 0.25, TH["wire_ar_min"])
+        updated_TH["ecc_thr"] = safe_quantile([f["ecc"] for f in wires_feats], 0.25, TH["ecc_thr"])
+        updated_TH["circularity_thr"] = safe_quantile([f["circ"] for f in wires_feats], 0.75, TH["circularity_thr"])
+        updated_TH["wire_sk_norm_min"] = safe_quantile([f["sk_norm"] for f in wires_feats], 0.25, TH["wire_sk_norm_min"])
         t_over_hw = [f["thickness_est"]/max(1,min(f["H"],f["W"])) for f in wires_feats if f["thickness_est"] is not None]
-        TH["max_wire_thickness_frac"] = safe_quantile(t_over_hw, 0.50, TH["max_wire_thickness_frac"])
-        TH["wire_len_frac"] = safe_quantile([f["length"]/f["D"] for f in wires_feats if f["length"] is not None], 0.25, TH["wire_len_frac"])
-        TH["full_wire_cov"] = safe_quantile([f["cov"] for f in wires_feats if f["cov"] is not None], 0.60, TH["full_wire_cov"])
-        TH["point_max_frac"] = safe_quantile([f["patch_frac"] for f in wires_feats if f["patch_frac"] is not None], 0.35, TH["point_max_frac"])
+        updated_TH["max_wire_thickness_frac"] = safe_quantile(t_over_hw, 0.50, TH["max_wire_thickness_frac"])
+        updated_TH["wire_len_frac"] = safe_quantile([f["length"]/f["D"] for f in wires_feats if f["length"] is not None], 0.25, TH["wire_len_frac"])
+        updated_TH["full_wire_cov"] = safe_quantile([f["cov"] for f in wires_feats if f["cov"] is not None], 0.60, TH["full_wire_cov"])
+        updated_TH["point_max_frac"] = safe_quantile([f["patch_frac"] for f in wires_feats if f["patch_frac"] is not None], 0.35, TH["point_max_frac"])
 
     if len(joints_feats) >= 3:
-        TH["joint_extent_min"] = safe_quantile([f["extent"] for f in joints_feats], 0.50, TH["joint_extent_min"])
-        TH["joint_circularity_min"] = safe_quantile([f["circ"] for f in joints_feats], 0.50, TH["joint_circularity_min"])
-        TH["joint_sk_norm_max"] = safe_quantile([f["sk_norm"] for f in joints_feats], 0.75, TH["joint_sk_norm_max"])
-        TH["joint_area_frac_max"] = safe_quantile(
-            [(d["bbox"][2]*d["bbox"][3]) / float(f["H"]*f["W"]) for d,f in zip([w for w in kept if "Loose Joint" in w["label"]], joints_feats)],
+        updated_TH["joint_extent_min"] = safe_quantile([f["extent"] for f in joints_feats], 0.50, TH["joint_extent_min"])
+        updated_TH["joint_circularity_min"] = safe_quantile([f["circ"] for f in joints_feats], 0.50, TH["joint_circularity_min"])
+        updated_TH["joint_sk_norm_max"] = safe_quantile([f["sk_norm"] for f in joints_feats], 0.75, TH["joint_sk_norm_max"])
+        updated_TH["joint_area_frac_max"] = safe_quantile(
+            [(d["bbox"][2]*d["bbox"][3]) / float(f["H"]*f["W"]) for d,f in zip([w for w in AI_detections if "Loose Joint" in w["label"]], joints_feats)],
             0.75, TH["joint_area_frac_max"]
         )
 
     if faulty_red and potential_red:
         rr_faulty = float(np.median(faulty_red))
         rr_potential = float(np.median(potential_red))
-        TH["red_ratio_faulty"] = max(0.20, min(0.80, 0.5 * (rr_faulty + rr_potential)))
+        updated_TH["red_ratio_faulty"] = max(0.20, min(0.80, 0.5 * (rr_faulty + rr_potential)))
 
+    TH = updated_TH
     return TH
 
 
 # ==========================================================
 # OPTIONAL: Reclassification using updated thresholds
 # ==========================================================
-def reclassify_detections(img_bgr: np.ndarray, detections: List[Dict], suggest_label_func):
+def reclassify_detections(img_bgr: np.ndarray, detections: list[dict], suggest_label_func) -> list[dict]:
     """
     Re-run label suggestions for detections using updated thresholds.
     You can pass your existing `suggest_label_for_bbox` here.
@@ -362,4 +355,21 @@ def reclassify_detections(img_bgr: np.ndarray, detections: List[Dict], suggest_l
             d["hotspot_xy"] = hotspot
         updated.append(d)
     return updated
+
+if __name__ == "__main__":
+    # Example usage
+    img = cv2.imread("Sample Thermal Images/T1/faulty/T1_faulty_010.jpg")
+    current_detections = [
+        {"bbox": (50, 50, 100, 100), "label": "Loose Joint (Potential)", "severity": 0.4},
+        {"bbox": (200, 200, 80, 80), "label": "Point Overload (Faulty)", "severity": 0.7},
+        {"bbox": (300, 300, 90, 90), "label": "Point Overload (Potential)", "severity": 0.5},
+        {"bbox": (398, 78, 153, 105), "label": "Full Wire Overload (Potential)", "severity": 0.6}
+    ]
+    edits = [
+        {"bbox": (50, 50, 100, 100), "label": "Loose Joint (Faulty)", "status": "edited", "old_bbox": (50, 50, 100, 100)},
+        {"bbox": (300, 300, 90, 90), "label": "Point Overload (Potential)", "status": "added"},
+        {"bbox": (400, 200, 40, 30), "status": "deleted"}
+    ]
+    new_thresholds = apply_feedback_and_recalibrate(img, current_detections, edits)
+    print("Updated Thresholds:", new_thresholds)
     

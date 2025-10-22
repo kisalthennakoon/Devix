@@ -1,10 +1,10 @@
 # === Phase 2 · Automatic Anomaly Marking — vote-based wire vs joint (fixes mislabels) ===
-# filesfrom google.colab import 
 import cv2
 import math
 import numpy as np
 import json
 from preprocess import remove_right_bar
+from retraining_pipeline import load_thresholds
 
 # Skeletonize helper (skimage -> OpenCV thinning -> morph fallback)
 def skeletonize_binary(bin_img):
@@ -30,11 +30,6 @@ def skeletonize_binary(bin_img):
             return (skel>0).astype(np.uint8)*255
 
 print("Upload a FAULTY thermal image (jpg/png):")
-
-
-def load_thresholds(path="thresholds.json"):
-    with open(path, "r") as f:
-        return json.load(f)
 
 
 def detect_anomalies(image_path,
