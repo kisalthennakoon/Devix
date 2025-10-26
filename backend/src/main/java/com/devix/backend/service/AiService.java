@@ -1,7 +1,5 @@
 package com.devix.backend.service;
 
-import com.devix.backend.dto.UpdateThresholdsRequestDto;
-import com.devix.backend.dto.UpdateThresholdsResponseDto;
 import com.devix.backend.model.AiResults;
 import com.devix.backend.model.Inspection;
 import com.devix.backend.model.InspectionImage;
