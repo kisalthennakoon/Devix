@@ -79,15 +79,6 @@ public class TransformerController {
         }
     }
 
-    @GetMapping("getRecord/{transformerNo}")
-    public ResponseEntity<?> getRecordSheetByTransformerNo(@PathVariable("transformerNo") String transformerNo) {
-        log.info("Fetching record sheet for transformerNo: {}", transformerNo);
-        try {
-            return ResponseEntity.ok(transformerService.getRecordSheetByTransformerNo(transformerNo));
-        } catch (Exception e) {
-            log.error("Error fetching record sheet: {}", e.getMessage(), e);
-            return ResponseEntity.status(500).body(e.getMessage());
-        }
-    }
+
 
 }

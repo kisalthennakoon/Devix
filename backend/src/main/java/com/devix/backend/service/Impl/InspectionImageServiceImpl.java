@@ -290,7 +290,6 @@ public class InspectionImageServiceImpl implements InspectionImageService {
 
             recordSheet.setInspection(inspectionRepo.findByInspectionNo(evalResultsList.get(0).get("inspectionNo")));
             recordSheet.setTransformer(transformerRepo.findByTransformerNo(evalResultsList.get(0).get("transformerNo")));
-            
             recordSheetRepo.save(recordSheet);
 
             aiService.updateThresholds(requestData);

@@ -1,0 +1,52 @@
+package com.devix.backend.dto;
+
+import lombok.Data;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
+
+@Data
+public class RecordSheetReqDto {
+
+    // --- (9.6.0) Top Section ---
+    private String lastMonthKva;
+    private String currentMonthKva;
+    
+    // Standard ISO format expected (YYYY-MM-DD)
+    private LocalDate inspectionDate; 
+    // Standard ISO format expected (HH:mm)
+    private LocalTime inspectionTime; 
+    
+    private String baseLineCondition;
+    private String transformerType;
+
+    // --- Meter Details ---
+    private String meterSerial;
+    private String meterCtRatio;
+    private String meterMake;
+
+    // --- First Inspection Readings ---
+    private Double firstVoltR;
+    private Double firstVoltY;
+    private Double firstVoltB;
+    
+    private Double firstAmpsR;
+    private Double firstAmpsY;
+    private Double firstAmpsB;
+
+    // --- Second Inspection Readings ---
+    private Double secondVoltR;
+    private Double secondVoltY;
+    private Double secondVoltB;
+    
+    private Double secondAmpsR;
+    private Double secondAmpsY;
+    private Double secondAmpsB;
+
+    // --- After Inspection Footer ---
+    private LocalDate afterThermalDate;
+    private LocalTime afterThermalTime;
+
+    // --- Work Content Grid (The List of Rows) ---
+    private List<WorkContentRowDto> workContentRows;
+}

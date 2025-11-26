@@ -1,8 +1,14 @@
 package com.devix.backend.controller;
 
 import com.devix.backend.dto.InspectionRequestDto;
+import com.devix.backend.dto.RecordSheetReqDto;
+import com.devix.backend.model.RecordSheet;
+import com.devix.backend.service.InspectionImageService;
 import com.devix.backend.service.InspectionService;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,9 +19,11 @@ import org.springframework.web.bind.annotation.*;
 public class InspectionController {
 
     private final InspectionService inspectionService;
+    private final InspectionImageService inspectionImageService;
 
-    public InspectionController(InspectionService inspectionService) {
+    public InspectionController(InspectionService inspectionService, InspectionImageService inspectionImageService) {
         this.inspectionService = inspectionService;
+        this.inspectionImageService = inspectionImageService;
     }
 
     @PostMapping("/create")
@@ -75,5 +83,36 @@ public class InspectionController {
         }
     }
 
+    @GetMapping("getRecord/{inspectionNo}")
+    public ResponseEntity<?> getRecordSheetByTransformerNo(@PathVariable("inspectionNo") String inspectionNo) {
+        log.info("Fetching record sheet for inspectionNo: {}", inspectionNo);
+        try {
+            RecordSheet recordSheet = inspectionService.getRecordSheetByInspectionNo(inspectionNo);
+            Map<String,Object> comparison = inspectionImageService.getComparisonImage(inspectionNo);
+
+            Map<String, Object> response = Map.of(
+                "recordSheet", recordSheet,
+                "anomalies", comparison
+            );
+        
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error fetching record sheet: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/updateRecord/{inspectionNo}")
+    public ResponseEntity<?> updateRecordSheet(@PathVariable("inspectionNo") String inspectionNo,
+                                               @RequestBody RecordSheetReqDto recordSheetReqDto) {
+        log.info("Updating record sheet for inspectionNo: {}", inspectionNo);
+        try {
+            inspectionService.updateRecordSheet(inspectionNo, recordSheetReqDto);
+            return ResponseEntity.ok("Record sheet updated successfully");
+        } catch (Exception e) {
+            log.error("Error updating record sheet: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
 
 }

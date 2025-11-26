@@ -31,17 +31,16 @@ public class TransformerServiceImpl implements TransformerService {
     private final BaseImageRepo baselineImageRepo;
     private final InspectionImageRepo inspectionImageRepo;
     private final AiResultsRepo aiResultsRepo;
-    private final RecordSheetRepo recordSheetRepo;
 
 
-    public TransformerServiceImpl(TransformerRepo transformerRepo, InspectionRepo inspectionRepo, BaseImageRepo baselineImageRepo, InspectionImageRepo inspectionImageRepo, AiResultsRepo aiResultsRepo, RecordSheetRepo recordSheetRepo) {
+    public TransformerServiceImpl(TransformerRepo transformerRepo, InspectionRepo inspectionRepo, BaseImageRepo baselineImageRepo, InspectionImageRepo inspectionImageRepo, AiResultsRepo aiResultsRepo) {
         this.transformerRepo = transformerRepo;
         this.mapperService = MapperService.INSTANCE;
         this.inspectionRepo = inspectionRepo;
         this.inspectionImageRepo = inspectionImageRepo;
         this.baselineImageRepo = baselineImageRepo;
         this.aiResultsRepo = aiResultsRepo;
-        this.recordSheetRepo = recordSheetRepo;
+        
     }
 
     @Override
@@ -159,23 +158,6 @@ public class TransformerServiceImpl implements TransformerService {
         }
     }
 
-    @Override
-    public RecordSheet getRecordSheetByTransformerNo(String transformerNo) throws Exception {
-        try {
-            log.info("Fetching record sheet for transformer: {}", transformerNo);
-            Transformer transformer = transformerRepo.findByTransformerNo(transformerNo);
-            if (transformer == null) {
-                throw new Exception("Transformer not found");
-            }
-            RecordSheet recordSheet = recordSheetRepo.findByTransformer(transformer);
-            if (recordSheet == null) {
-                throw new Exception("Record sheet not found for transformer");
-            }
-            return recordSheet;
-        } catch (Exception e) {
-            log.error("Error fetching record sheet: {}", e.getMessage());
-            throw new Exception("Error fetching record sheet: " + e.getMessage());
-        }
-    }
+    
 
 }
