@@ -3,9 +3,13 @@ package com.devix.backend.service;
 import com.devix.backend.model.AiResults;
 import com.devix.backend.model.Inspection;
 import com.devix.backend.model.InspectionImage;
+import com.devix.backend.model.RecordSheet;
 import com.devix.backend.repo.AiResultsRepo;
 import com.devix.backend.repo.InspectionImageRepo;
 import com.devix.backend.repo.InspectionRepo;
+import com.devix.backend.repo.RecordSheetRepo;
+import com.devix.backend.repo.TransformerRepo;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -25,12 +29,16 @@ public class AiService {
     private final InspectionImageRepo inspectionImageRepo;
     private final InspectionRepo inspectionRepo;
     private final AiResultsRepo aiResultsRepo;
+    private final TransformerRepo transformerRepo;
+    private final RecordSheetRepo recordSheetRepo;
 
     public AiService(InspectionRepo inspectionRepo, InspectionImageRepo inspectionImageRepo,
-            AiResultsRepo aiResultsRepo) {
+            AiResultsRepo aiResultsRepo, TransformerRepo transformerRepo, RecordSheetRepo recordSheetRepo) {
         this.inspectionImageRepo = inspectionImageRepo;
         this.inspectionRepo = inspectionRepo;
         this.aiResultsRepo = aiResultsRepo;
+        this.transformerRepo = transformerRepo;
+        this.recordSheetRepo = recordSheetRepo;
     }
 
     public List<Map<String, Object>> getPrediction(String imageUrl) {
@@ -49,15 +57,14 @@ public class AiService {
             throw new RuntimeException("Failed to parse AI prediction response: " + e.getMessage());
         }
     }
-    
+
     public Map<String, Object> updateThresholds(Map<String, Object> request) {
         try {
             // Create the request body for the AI server
             Map<String, Object> requestBody = Map.of(
-                "imageUrl", request.get("imageUrl"),
-                "current_detections", request.get("current_detections"),
-                "edits", request.get("edits")
-            );
+                    "imageUrl", request.get("imageUrl"),
+                    "current_detections", request.get("current_detections"),
+                    "edits", request.get("edits"));
 
             String response = webClient.post()
                     .uri("/update_thresholds")
@@ -68,7 +75,8 @@ public class AiService {
 
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
-                Map<String, Object> result = objectMapper.readValue(response, new TypeReference<Map<String, Object>>() {});
+                Map<String, Object> result = objectMapper.readValue(response, new TypeReference<Map<String, Object>>() {
+                });
                 log.info("Thresholds updated successfully: {}", result);
                 return result;
             } catch (Exception e) {
@@ -80,8 +88,6 @@ public class AiService {
             throw new RuntimeException("Failed to update thresholds: " + e.getMessage());
         }
     }
-
-    
 
     @Scheduled(fixedRate = 1000 * 60 * 2) // every 2 minutes
     public void analysis() {
@@ -149,6 +155,15 @@ public class AiService {
                     inspectionRepo.save(inspection);
 
                 }
+
+                RecordSheet recordSheet = new RecordSheet();
+
+                recordSheet
+                        .setInspection(inspectionRepo.findByInspectionNo(inspection.getInspectionNo()));
+                recordSheet.setTransformer(
+                        transformerRepo.findByTransformerNo(inspection.getTransformerNo()));
+                recordSheetRepo.save(recordSheet);
+
             }
         } catch (Exception e) {
             log.error("Error during AI analysis: {}", e.getMessage());
