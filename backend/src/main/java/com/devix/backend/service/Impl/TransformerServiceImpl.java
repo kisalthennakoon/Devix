@@ -3,11 +3,13 @@ package com.devix.backend.service.Impl;
 import com.devix.backend.dto.TransformerRequestDto;
 import com.devix.backend.dto.TransformerResponseDto;
 import com.devix.backend.model.Inspection;
+import com.devix.backend.model.RecordSheet;
 import com.devix.backend.model.Transformer;
 import com.devix.backend.repo.AiResultsRepo;
 import com.devix.backend.repo.BaseImageRepo;
 import com.devix.backend.repo.InspectionImageRepo;
 import com.devix.backend.repo.InspectionRepo;
+import com.devix.backend.repo.RecordSheetRepo;
 import com.devix.backend.repo.TransformerRepo;
 import com.devix.backend.service.MapperService;
 import com.devix.backend.service.TransformerService;
@@ -29,15 +31,17 @@ public class TransformerServiceImpl implements TransformerService {
     private final BaseImageRepo baselineImageRepo;
     private final InspectionImageRepo inspectionImageRepo;
     private final AiResultsRepo aiResultsRepo;
+    private final RecordSheetRepo recordSheetRepo;
 
 
-    public TransformerServiceImpl(TransformerRepo transformerRepo, InspectionRepo inspectionRepo, BaseImageRepo baselineImageRepo, InspectionImageRepo inspectionImageRepo, AiResultsRepo aiResultsRepo) {
+    public TransformerServiceImpl(TransformerRepo transformerRepo, InspectionRepo inspectionRepo, BaseImageRepo baselineImageRepo, InspectionImageRepo inspectionImageRepo, AiResultsRepo aiResultsRepo, RecordSheetRepo recordSheetRepo) {
         this.transformerRepo = transformerRepo;
         this.mapperService = MapperService.INSTANCE;
         this.inspectionRepo = inspectionRepo;
         this.inspectionImageRepo = inspectionImageRepo;
         this.baselineImageRepo = baselineImageRepo;
         this.aiResultsRepo = aiResultsRepo;
+        this.recordSheetRepo = recordSheetRepo;
     }
 
     @Override
@@ -152,6 +156,25 @@ public class TransformerServiceImpl implements TransformerService {
         } catch (Exception e) {
             log.error("Error fetching last inspected date: {}", e.getMessage());
             throw new Exception("Error fetching last inspected date: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public RecordSheet getRecordSheetByTransformerNo(String transformerNo) throws Exception {
+        try {
+            log.info("Fetching record sheet for transformer: {}", transformerNo);
+            Transformer transformer = transformerRepo.findByTransformerNo(transformerNo);
+            if (transformer == null) {
+                throw new Exception("Transformer not found");
+            }
+            RecordSheet recordSheet = recordSheetRepo.findByTransformer(transformer);
+            if (recordSheet == null) {
+                throw new Exception("Record sheet not found for transformer");
+            }
+            return recordSheet;
+        } catch (Exception e) {
+            log.error("Error fetching record sheet: {}", e.getMessage());
+            throw new Exception("Error fetching record sheet: " + e.getMessage());
         }
     }
 
