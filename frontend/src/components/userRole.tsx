@@ -45,6 +45,9 @@ const UserRole: React.FC = () => {
       localStorage.removeItem('userRole');
     }
     handleClose();
+    try {
+      window.dispatchEvent(new CustomEvent('userRoleChanged', { detail: { role: selectedRole } }));
+    } catch (_) {}
   };
 
   const getRoleColor = () => {
