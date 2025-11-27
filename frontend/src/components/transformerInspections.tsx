@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Card,
   CardContent,
@@ -17,6 +17,10 @@ import {
   Chip,
   Snackbar,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import {
   Star,
@@ -187,11 +191,93 @@ useEffect(() => {
   fetchInspections();
 }, []);
 
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>(
+    {
       open: false,
       message: "",
       severity: "success",
-    });
+    }
+  );
+
+  // Record sheet dialog state
+  const [recordDialogOpen, setRecordDialogOpen] = useState(false);
+  const [recordHtml, setRecordHtml] = useState<string | null>(null);
+  const [recordLoading, setRecordLoading] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const [currentRecordInspectionNo, setCurrentRecordInspectionNo] = useState<string | null>(null);
+
+  const viewRecordSheet = async (inspectionNo: string) => {
+    setCurrentRecordInspectionNo(inspectionNo);
+    setRecordLoading(true);
+    try {
+      // Try backend record endpoint first
+      try {
+        const r = await axios.get(`/api/inspection/getRecord/${inspectionNo}`);
+        const data = r.data;
+        // Build HTML using returned structure if available
+        const anomalies = (data.anomalies && data.anomalies.aiResults) || [];
+        const imgs = data.anomalies || {};
+        const sheetMeta = data.recordSheet || null;
+
+        const html = `<!doctype html><html><head><meta charset="utf-8"><title>Record ${inspectionNo}</title><style>body{font-family:Arial;padding:16px}img{max-width:100%}</style></head><body><h2>Thermal Image Inspection Form</h2><h3>Inspection ${inspectionNo}</h3><pre>${sheetMeta ? JSON.stringify(sheetMeta, null, 2) : ''}</pre><h4>Anomalies</h4><table border="1" cellpadding="6"><thead><tr><th>#</th><th>Type</th><th>Severity</th><th>BBox</th></tr></thead><tbody>${anomalies.map((a:any,i:number)=>`<tr><td>${i+1}</td><td>${a.faultType||''}</td><td>${a.faultSeverity||''}</td><td>${a.bbox||''}</td></tr>`).join('')}</tbody></table>${imgs.thermal?`<h4>Thermal Image</h4><img src="data:image/png;base64,${imgs.thermal}"/>`:''}</body></html>`;
+        setRecordHtml(html);
+        setRecordDialogOpen(true);
+        setRecordLoading(false);
+        return;
+      } catch (e) {
+        // backend record endpoint not available — fallback
+      }
+
+      // Fallback: fetch inspection image data
+      const r2 = await axios.get(`/api/inspectionImage/get/${inspectionNo}`);
+      const imgs2 = r2.data || {};
+      const anomalies2 = imgs2.aiResults || [];
+      const html2 = `<!doctype html><html><head><meta charset="utf-8"><title>Record ${inspectionNo}</title><style>body{font-family:Arial;padding:16px}img{max-width:100%}</style></head><body><h2>Thermal Image Inspection Form</h2><h3>Inspection ${inspectionNo}</h3><h4>Anomalies</h4><table border="1" cellpadding="6"><thead><tr><th>#</th><th>Type</th><th>Severity</th><th>BBox</th></tr></thead><tbody>${anomalies2.map((a:any,i:number)=>`<tr><td>${i+1}</td><td>${a.faultType||''}</td><td>${a.faultSeverity||''}</td><td>${a.bbox||''}</td></tr>`).join('')}</tbody></table>${imgs2.thermal?`<h4>Thermal Image</h4><img src="data:image/png;base64,${imgs2.thermal}"/>`:''}</body></html>`;
+      setRecordHtml(html2);
+      setRecordDialogOpen(true);
+      return;
+    } catch (err) {
+      // If server/fallback fetch failed, check for a locally-saved record in localStorage
+      try {
+        const raw = localStorage.getItem(`maintenance_record_${inspectionNo}`);
+        if (raw) {
+          const rec = JSON.parse(raw);
+          const inspected = rec.inspectedBy || {};
+          const rectified = rec.rectifiedBy || {};
+          const reinspected = rec.reInspectedBy || {};
+          // prefer annotated image if available
+          const annotated = rec.annotatedImage ? `data:image/png;base64,${rec.annotatedImage}` : null;
+          const htmlLocal = `<!doctype html><html><head><meta charset="utf-8"><title>Local Record ${inspectionNo}</title><style>body{font-family:Arial;padding:16px}h3{margin-bottom:4px}table{width:100%;border-collapse:collapse;margin-top:8px}td{padding:6px;border:1px solid #ddd}section{margin-bottom:12px}.annot{max-width:100%;border:1px solid #ccc;margin-top:8px}</style></head><body><h2>Maintenance Record (Local)</h2><h3>Inspection ${inspectionNo}</h3>${annotated?`<div><h4>Annotated Image</h4><img class="annot" src="${annotated}"/></div>`:''}<section><h4>Inspected By</h4><table><tr><td><strong>Name</strong></td><td>${inspected.inspectorName || ''}</td></tr><tr><td><strong>Status</strong></td><td>${inspected.statusOfTransformer || ''}</td></tr><tr><td><strong>Voltage</strong></td><td>${inspected.voltage || ''}</td></tr><tr><td><strong>Current</strong></td><td>${inspected.current || ''}</td></tr><tr><td><strong>Recommendations</strong></td><td>${inspected.recommendedAction || ''}</td></tr><tr><td><strong>Remarks</strong></td><td>${inspected.additionalRemarks || ''}</td></tr></table></section><section><h4>Rectified By</h4><table><tr><td><strong>Name</strong></td><td>${rectified.inspectorName || ''}</td></tr><tr><td><strong>Status</strong></td><td>${rectified.statusOfTransformer || ''}</td></tr><tr><td><strong>Voltage</strong></td><td>${rectified.voltage || ''}</td></tr><tr><td><strong>Current</strong></td><td>${rectified.current || ''}</td></tr><tr><td><strong>Recommendations</strong></td><td>${rectified.recommendedAction || ''}</td></tr><tr><td><strong>Remarks</strong></td><td>${rectified.additionalRemarks || ''}</td></tr></table></section><section><h4>Re-Inspected By</h4><table><tr><td><strong>Name</strong></td><td>${reinspected.inspectorName || ''}</td></tr><tr><td><strong>Status</strong></td><td>${reinspected.statusOfTransformer || ''}</td></tr><tr><td><strong>Voltage</strong></td><td>${reinspected.voltage || ''}</td></tr><tr><td><strong>Current</strong></td><td>${reinspected.current || ''}</td></tr><tr><td><strong>Recommendations</strong></td><td>${reinspected.reInspectedBy || ''}</td></tr><tr><td><strong>Remarks</strong></td><td>${reinspected.additionalRemarks || ''}</td></tr></table></section></body></html>`;
+          setRecordHtml(htmlLocal);
+          setRecordDialogOpen(true);
+          setRecordLoading(false);
+          return;
+        }
+      } catch (e) {
+        console.warn('Failed to load local record', e);
+      }
+
+      console.error('Failed to load record', err);
+      setSnackbar({ open: true, message: 'Failed to load record sheet', severity: 'error' });
+    } finally {
+      setRecordLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const handler = (ev: any) => {
+      const insNo = ev?.detail?.inspectionNo;
+      if (!insNo) return;
+      // refresh inspections list
+      fetchInspections();
+      // if the preview dialog is open for this inspection, reload it
+      if (insNo === currentRecordInspectionNo && recordDialogOpen) {
+        viewRecordSheet(insNo);
+      }
+    };
+    window.addEventListener('maintenanceRecordUpdated', handler as EventListener);
+    return () => window.removeEventListener('maintenanceRecordUpdated', handler as EventListener);
+  }, [currentRecordInspectionNo, recordDialogOpen]);
 
 
 
@@ -277,6 +363,15 @@ useEffect(() => {
                         >
                           View
                         </Button>
+                        
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          sx={{ ml: 1 }}
+                          onClick={() => viewRecordSheet(inspection.inspectionNo)}
+                        >
+                          View Record
+                        </Button>
                         </TableCell>
                       </TableRow>
                     ))
@@ -295,12 +390,35 @@ useEffect(() => {
       </Box>
 
       <AddInspectionModal 
-        transformerNoInput = {transformerNo}
+        transformerNoInput = {transformerNo ?? ''}
         open={isAddModalOpen}
         onOpenChange={setIsAddModalOpen}
         setSnackbar={setSnackbar} // pass this as a prop
         onInspectionAdded={fetchInspections} 
       />
+
+      {/* Record Sheet Dialog (iframe preview + print) */}
+      <Dialog open={recordDialogOpen} onClose={() => setRecordDialogOpen(false)} fullWidth maxWidth="lg">
+        <DialogTitle>Thermal Image Inspection Form</DialogTitle>
+        <DialogContent dividers sx={{ height: '80vh', p: 0 }}>
+          {recordHtml ? (
+            <iframe
+              ref={iframeRef}
+              title="record-preview"
+              srcDoc={recordHtml}
+              style={{ width: '100%', height: '100%', border: 'none' }}
+            />
+          ) : (
+            <Box sx={{ p: 3 }}>
+              <Typography>Loading...</Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRecordDialogOpen(false)}>Close</Button>
+          <Button onClick={() => { if (iframeRef.current && iframeRef.current.contentWindow) iframeRef.current.contentWindow.print(); }} variant="contained">Print / Download PDF</Button>
+        </DialogActions>
+      </Dialog>
 
       <Snackbar
         open={snackbar.open}
