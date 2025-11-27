@@ -49,7 +49,7 @@ type ApiInspection = {
   inspectionTime: string;
   inspectionBranch: string;
   transformerNo: string;
-  inspectionStatus: "completed" | "progress" | "pending" | null;
+  inspectionStatus: "Completed" | "progress" | "pending" | null;
 };
 
 type Props = {

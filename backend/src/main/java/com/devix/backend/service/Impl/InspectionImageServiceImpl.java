@@ -286,11 +286,11 @@ public class InspectionImageServiceImpl implements InspectionImageService {
             requestData.put("imageUrl", inspectionImagePath);
             
             
-            RecordSheet recordSheet = new RecordSheet();
+            // RecordSheet recordSheet = new RecordSheet();
 
-            recordSheet.setInspection(inspectionRepo.findByInspectionNo(evalResultsList.get(0).get("inspectionNo")));
-            recordSheet.setTransformer(transformerRepo.findByTransformerNo(evalResultsList.get(0).get("transformerNo")));
-            recordSheetRepo.save(recordSheet);
+            // recordSheet.setInspection(inspectionRepo.findByInspectionNo(evalResultsList.get(0).get("inspectionNo")));
+            // recordSheet.setTransformer(transformerRepo.findByTransformerNo(evalResultsList.get(0).get("transformerNo")));
+            // recordSheetRepo.save(recordSheet);
 
             aiService.updateThresholds(requestData);
 
