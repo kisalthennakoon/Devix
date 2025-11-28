@@ -18,6 +18,10 @@ const statusConfig: Record<string, { text: string; color: string }> = {
   pending: {
     text: "Pending",
     color: "#f44336"
+  },
+  Completed: {
+    text: "Completed",
+    color: "#2196f3"
   }
 };
 

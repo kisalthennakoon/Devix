@@ -3,11 +3,13 @@ package com.devix.backend.service.Impl;
 import com.devix.backend.dto.TransformerRequestDto;
 import com.devix.backend.dto.TransformerResponseDto;
 import com.devix.backend.model.Inspection;
+import com.devix.backend.model.RecordSheet;
 import com.devix.backend.model.Transformer;
 import com.devix.backend.repo.AiResultsRepo;
 import com.devix.backend.repo.BaseImageRepo;
 import com.devix.backend.repo.InspectionImageRepo;
 import com.devix.backend.repo.InspectionRepo;
+import com.devix.backend.repo.RecordSheetRepo;
 import com.devix.backend.repo.TransformerRepo;
 import com.devix.backend.service.MapperService;
 import com.devix.backend.service.TransformerService;
@@ -38,6 +40,7 @@ public class TransformerServiceImpl implements TransformerService {
         this.inspectionImageRepo = inspectionImageRepo;
         this.baselineImageRepo = baselineImageRepo;
         this.aiResultsRepo = aiResultsRepo;
+        
     }
 
     @Override
@@ -154,5 +157,7 @@ public class TransformerServiceImpl implements TransformerService {
             throw new Exception("Error fetching last inspected date: " + e.getMessage());
         }
     }
+
+    
 
 }

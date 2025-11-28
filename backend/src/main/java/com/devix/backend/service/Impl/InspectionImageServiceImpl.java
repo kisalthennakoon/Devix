@@ -6,6 +6,8 @@ import com.devix.backend.repo.BaseImageRepo;
 import com.devix.backend.repo.EvalResultsRepo;
 import com.devix.backend.repo.InspectionImageRepo;
 import com.devix.backend.repo.InspectionRepo;
+import com.devix.backend.repo.RecordSheetRepo;
+import com.devix.backend.repo.TransformerRepo;
 import com.devix.backend.service.AiService;
 import com.devix.backend.service.InspectionImageService;
 import lombok.extern.slf4j.Slf4j;
@@ -28,10 +30,12 @@ public class InspectionImageServiceImpl implements InspectionImageService {
     private final AiResultsRepo aiResultsRepo;
     private final EvalResultsRepo evalResultsRepo;
     private final AiService aiService;
+    private final RecordSheetRepo recordSheetRepo;
+    private final TransformerRepo transformerRepo;
 
     public InspectionImageServiceImpl(InspectionImageRepo inspectionImageRepo, BaseImageRepo baseImageRepo,
             LocalImageService localImageService, InspectionRepo inspectionRepo, AiResultsRepo aiResultsRepo,
-            EvalResultsRepo evalResultsRepo, AiService aiService) {
+            EvalResultsRepo evalResultsRepo, AiService aiService, RecordSheetRepo recordSheetRepo, TransformerRepo transformerRepo) {
         this.inspectionImageRepo = inspectionImageRepo;
         this.baseImageRepo = baseImageRepo;
         this.localImageService = localImageService;
@@ -39,6 +43,8 @@ public class InspectionImageServiceImpl implements InspectionImageService {
         this.aiResultsRepo = aiResultsRepo;
         this.evalResultsRepo = evalResultsRepo;
         this.aiService = aiService;
+        this.recordSheetRepo = recordSheetRepo;
+        this.transformerRepo = transformerRepo;
     }
 
     @Override
@@ -278,8 +284,16 @@ public class InspectionImageServiceImpl implements InspectionImageService {
             requestData.put("current_detections", aiResults);
             requestData.put("edits", finalEvalResults);
             requestData.put("imageUrl", inspectionImagePath);
+            
+            
+            // RecordSheet recordSheet = new RecordSheet();
+
+            // recordSheet.setInspection(inspectionRepo.findByInspectionNo(evalResultsList.get(0).get("inspectionNo")));
+            // recordSheet.setTransformer(transformerRepo.findByTransformerNo(evalResultsList.get(0).get("transformerNo")));
+            // recordSheetRepo.save(recordSheet);
 
             aiService.updateThresholds(requestData);
+
 
             log.info("Evaluation results created successfully");
         } catch (Exception e) {

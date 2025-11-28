@@ -104,7 +104,7 @@ export default function Comparison({ inspectionNo, transformerNo, onRefresh }: {
     />;
   }
 
-  if (statusData?.baselineImageStatus == "exist" && statusData?.inspectionStatus == "in_progress") {
+  if (statusData?.baselineImageStatus == "exist" && statusData?.inspectionStatus == "in_progress" || "Completed") {
 
       return(
         <ThermalImageComparison

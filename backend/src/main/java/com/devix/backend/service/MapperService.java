@@ -2,9 +2,11 @@ package com.devix.backend.service;
 
 import com.devix.backend.dto.InspectionRequestDto;
 import com.devix.backend.dto.InspectionResponseDto;
+import com.devix.backend.dto.RecordSheetReqDto;
 import com.devix.backend.dto.TransformerRequestDto;
 import com.devix.backend.dto.TransformerResponseDto;
 import com.devix.backend.model.Inspection;
+import com.devix.backend.model.RecordSheet;
 import com.devix.backend.model.Transformer;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
@@ -18,4 +20,6 @@ public interface MapperService {
 
     InspectionResponseDto toInspectionDto(Inspection inspection);
     Inspection toInspectionEntity(InspectionRequestDto inspectionRequestDto);
+
+    RecordSheet toRecordSheetEntity(RecordSheetReqDto recordSheetReqDto);
 }

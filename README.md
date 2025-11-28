@@ -26,6 +26,11 @@ This project is a **web-based platform** for managing transformer records and th
 - **Annotation export** in JSON format for further analysis and validation  
 - **Threshold recalibration** based on validated user feedback to fine-tune model accuracy  
 
+**Phase 4** focuses on **Maintenance Record Sheet Generation**, including:
+- **Digital Maintenance Records**: Auto-generating reports combining transformer metadata, thermal images, and anomaly details.
+- **Editable Engineer Inputs**: Interfaces for inspectors, rectifiers, and re-inspectors to input voltage, current, and status remarks.
+- **Printable Reports**: Generating PDF-ready HTML views of the inspection history.
+- **Structured Storage**: Persisting maintenance data linked to specific inspections for future audits.
 
 ## 🔍 Anomaly Detection Method (Thermal Fault Analysis)
 
@@ -92,7 +97,7 @@ Set up the PostgreSQL database using Docker:
 1. Navigate to the AI Server Folder.
 2. Create a Python environment using `python -m venv venv` and activate it using `venv\scripts\activate` from windows or `source venv\bin\activate` from Linux.
 3. Install Python Dependencies using `pip install -r requirements.txt`.
-4. Run the Anomaly Detection Server using `python test.py`
+4. Run the Anomaly Detection Server using `python test.py` (or `python api.py` if running the service).
 
    The Anomaly Server will run at: http://localhost:5001
 
@@ -213,6 +218,43 @@ Set up the PostgreSQL database using Docker:
     - Final accepted annotations  
     - Annotator metadata  
 
+## Implemented Features (Phase 4)
+
+Phase 4 introduces the generation and management of Maintenance Record Sheets, bridging the gap between thermal analysis and field engineering actions.
+
+- **FR4.1 – Generate Maintenance Record Form**
+  - **Automated Compilation**: The system dynamically generates a printable HTML record sheet for every inspection.
+
+  - Content:
+
+      - **Transformer Metadata**: ID, Location, Pole No, Region, Capacity.
+
+      - **Inspection Details**: Date, Time, Branch, Inspector Name.
+
+      - **Visual Evidence**: Embedded Annotated Thermal Image showing the detected anomalies (AI or User-validated).
+
+      - **Anomaly List**: A tabular summary of all faults, including type, severity, and status.
+
+- **FR4.2 – Editable Engineer Input Fields**
+  - **Structured Data Entry**: A designated dialog allows authorized users (Admins) to input maintenance-specific data.
+
+  - **Workflow Stages**: The record sheet supports inputs for three distinct stages of maintenance:
+
+    1. **Inspected By**: Initial findings (Voltage, Current, Recommendations, Remarks).
+
+    2. **Rectified By**: Actions taken to fix the issue.
+
+    3. **Re-Inspected By**: Verification details after maintenance.
+
+  - **Field Types**: Supports text fields for names/remarks and numeric inputs for electrical readings (Voltage, Current).
+
+- **FR4.3 – Save and Retrieve Completed Records**
+  - **Persistence**: All maintenance inputs are saved to the PostgreSQL database via the RecordSheet entity.
+
+  - **Versioning/History**: Each inspection (defined by Inspection No) has a unique record sheet.
+
+  - **Print/Export**: Users can generate a PDF of the completed record directly from the browser using the print preview mode.
+
 - **Additional Technical Details (Feedback Mechanism)**
 
   **Feedback Mechanism**
@@ -227,7 +269,31 @@ Set up the PostgreSQL database using Docker:
   - **Annotation retrieval:** When revisiting an inspection, human annotations are sent to the frontend if available; otherwise, model predictions are used.  
   - **Model feedback:** New human annotations are sent to the CV model to recalibrate thresholds and improve accuracy.
   
+  **Database Schema** (`RecordSheet` **Entity**): A new table `record_sheet` stores the maintenance data. It holds a one-to-one relationship with the `Inspection` table and a many-to-one relationship with the `Transformer` table.
 
+  Key Columns:
+
+  - `id`: Primary Key
+
+  - `inspection_id`: Foreign Key to Inspection
+
+  - `transformer_id`: Foreign Key to Transformer
+
+  - `inspector_name`, `inspector_status`, `inspector_voltage`, `inspector_current` ...
+
+  - `rectifier_name`, `rectifier_status`, `rectifier_voltage` ...
+
+  - `re_inspector_name`, `re_inspector_status`, `re_inspector_voltage` ...
+
+  **Form Rendering Mechanism**:
+
+  - The frontend (`transformerInspections.tsx`) constructs a complete HTML document string (`buildRecordHtml`).
+
+  - It captures the currently viewed thermal image—complete with bounding box overlays—as a Base64 string using an HTML Canvas (`captureAnnotatedImage`).
+
+  - This annotated image is embedded directly into the HTML report to ensure the printed record looks exactly like the screen analysis.
+
+  - The report is rendered inside an `<iframe>` for previewing and printing.
 
 ## Known Limitations / Issues
 

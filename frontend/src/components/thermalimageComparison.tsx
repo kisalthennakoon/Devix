@@ -177,6 +177,36 @@ const ThermalImageComparison = ({ inspectionNo, transformerNo }: { inspectionNo:
   const [snackMsg, setSnackMsg] = useState("");
   const [snackSeverity, setSnackSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
 
+  // Maintenance record dialog state
+  const [recordDialogOpen, setRecordDialogOpen] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(localStorage.getItem('userRole'));
+  const defaultPersonFields = {
+    inspectorName: '',
+    statusOfTransformer: '',
+    voltage: '',
+    current: '',
+    recommendedAction: '',
+    additionalRemarks: ''
+  };
+  const [recordData, setRecordData] = useState<{ inspectedBy: any; rectifiedBy: any; reInspectedBy: any }>({
+    inspectedBy: { ...defaultPersonFields },
+    rectifiedBy: { ...defaultPersonFields },
+    reInspectedBy: { ...defaultPersonFields }
+  });
+  const isAdmin = userRole === 'admin';
+
+  // Listen for role changes from the UserRole component
+  useEffect(() => {
+    const handler = (e: any) => {
+      try {
+        const r = e?.detail?.role ?? localStorage.getItem('userRole');
+        setUserRole(r);
+      } catch (_) {}
+    };
+    window.addEventListener('userRoleChanged', handler as EventListener);
+    return () => window.removeEventListener('userRoleChanged', handler as EventListener);
+  }, []);
+
   // Error definition dialog
   const [errorDialogOpen, setErrorDialogOpen] = useState(false);
   const [pendingBbox, setPendingBbox] = useState<number[] | null>(null);
@@ -481,6 +511,204 @@ const ThermalImageComparison = ({ inspectionNo, transformerNo }: { inspectionNo:
     setErrorSeverity("faulty");
   };
 
+  // ----- Maintenance record helpers -----
+  const storageKey = (insNo: string) => `maintenance_record_${insNo}`;
+
+  const openRecordDialog = () => {
+    // Load saved data (if any)
+    try {
+      const raw = localStorage.getItem(storageKey(inspectionNo));
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setRecordData(parsed);
+      }
+    } catch (e) {
+      // ignore
+    }
+    // refresh role when opening dialog (reflect latest selection)
+    setUserRole(localStorage.getItem('userRole'));
+    setRecordDialogOpen(true);
+  };
+
+  const saveRecordLocal = () => {
+    // Try to send user inputs to backend update endpoint; fallback to localStorage
+    (async () => {
+      // captureAnnotatedImage is defined at module scope (see below)
+
+      const payload = {
+        inspectorName: recordData.inspectedBy.inspectorName || '',
+        inspectorStatusOfTransformer: recordData.inspectedBy.statusOfTransformer || '',
+        inspectorElectricalReadingsVoltage: recordData.inspectedBy.voltage || '',
+        inspectorElectricalReadingsCurrent: recordData.inspectedBy.current || '',
+        inspectorRecommendations: recordData.inspectedBy.recommendedAction || '',
+        inspectorRemarks: recordData.inspectedBy.additionalRemarks || '',
+
+        rectifierName: recordData.rectifiedBy.inspectorName || '',
+        rectifierStatusOfTransformer: recordData.rectifiedBy.statusOfTransformer || '',
+        rectifierElectricalReadingsVoltage: recordData.rectifiedBy.voltage || '',
+        rectifierElectricalReadingsCurrent: recordData.rectifiedBy.current || '',
+        rectifierRecommendations: recordData.rectifiedBy.recommendedAction || '',
+        rectifierRemarks: recordData.rectifiedBy.additionalRemarks || '',
+
+        reInspectorName: recordData.reInspectedBy.inspectorName || '',
+        reInspectorStatusOfTransformer: recordData.reInspectedBy.statusOfTransformer || '',
+        reInspectorElectricalReadingsVoltage: recordData.reInspectedBy.voltage || '',
+        reInspectorElectricalReadingsCurrent: recordData.reInspectedBy.current || '',
+        reInspectorRecommendations: recordData.reInspectedBy.recommendedAction || '',
+        reInspectorRemarks: recordData.reInspectedBy.additionalRemarks || '',
+      };
+
+      // Attempt to capture annotated image first, attach to payload and save locally immediately
+      try {
+        const annotated = await captureAnnotatedImage();
+        if (annotated) {
+          (payload as any).annotatedImage = annotated.split(',')[1]; // base64 without prefix
+          // also store annotated image in the recordData so local preview shows it
+          try {
+            const copy = { ...recordData } as any;
+            copy.annotatedImage = (payload as any).annotatedImage;
+            localStorage.setItem(storageKey(inspectionNo), JSON.stringify(copy));
+          } catch (e) {
+            console.warn('Failed to save annotated image locally', e);
+          }
+        } else {
+          // save plain record locally immediately to avoid loss
+          try {
+            localStorage.setItem(storageKey(inspectionNo), JSON.stringify(recordData));
+          } catch (e) {
+            console.warn('Failed to save local record', e);
+          }
+        }
+      } catch (e) {
+        // capture failed — still save local fields
+        try {
+          localStorage.setItem(storageKey(inspectionNo), JSON.stringify(recordData));
+        } catch (ee) {
+          console.warn('Failed to save local record after capture error', ee);
+        }
+      }
+
+      // Now attempt server update (PUT). If it fails, the local copy remains available.
+      try {
+        const res = await axios.put(`/api/inspection/updateRecord/${inspectionNo}`, payload);
+        if (res && res.status >= 200 && res.status < 300) {
+          setSnackMsg('Maintenance record saved to server');
+          setSnackSeverity('success');
+          setSnackOpen(true);
+          setRecordDialogOpen(false);
+          // notify other components that this inspection's record was updated
+          try { window.dispatchEvent(new CustomEvent('maintenanceRecordUpdated', { detail: { inspectionNo } })); } catch (_) {}
+        } else {
+          console.warn('Server update returned non-2xx', res?.status, res?.data);
+          setSnackMsg(`Saved locally; server responded ${res?.status}`);
+          setSnackSeverity('warning');
+          setSnackOpen(true);
+          setRecordDialogOpen(false);
+          try { window.dispatchEvent(new CustomEvent('maintenanceRecordUpdated', { detail: { inspectionNo } })); } catch (_) {}
+        }
+      } catch (err: any) {
+        console.error('Failed to save record to server', err);
+        const msg = err?.response?.data?.message || err?.message || 'Failed to update server';
+        setSnackMsg(`Saved locally; server update failed: ${msg}`);
+        setSnackSeverity('warning');
+        setSnackOpen(true);
+        setRecordDialogOpen(false);
+        try { window.dispatchEvent(new CustomEvent('maintenanceRecordUpdated', { detail: { inspectionNo } })); } catch (_) {}
+      }
+    })();
+  };
+
+  // Capture the current annotated image (display + boxes) into a data URL (module-scoped helper)
+  const captureAnnotatedImage = async (): Promise<string | null> => {
+    try {
+      const base64 = inspectionImages?.thermal;
+      if (!base64) return null;
+      const clean = cleanBase64(base64) || '';
+      const img = new Image();
+      await new Promise<void>((res, rej) => {
+        img.onload = () => res();
+        img.onerror = () => rej();
+        img.src = `data:image/png;base64,${clean}`;
+      });
+      const canvas = document.createElement('canvas');
+      const w = img.naturalWidth || img.width;
+      const h = img.naturalHeight || img.height;
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return null;
+      // draw base image at original size
+      ctx.drawImage(img, 0, 0, w, h);
+
+      // draw AI boxes (from inspectionImages.aiResults)
+      const rawResults: AIResult[] = inspectionImages?.aiResults ?? [];
+      rawResults.forEach((r, i) => {
+        const bb = parseBBox(r.bbox);
+        if (!bb) return;
+        // if user has overridden/edited/deleted this AI result, skip drawing the original AI box
+        const hasOverride = annotations.some((a) => a.originalIndex !== undefined && a.originalIndex === i && a.status !== 'ai');
+        if (hasOverride) return;
+        // legacy: if there's a deleted annotation that exactly matches bbox, hide the AI box
+        const isDeleted = annotations.some((a) => a.status === 'deleted' && a.bbox[0] === bb[0] && a.bbox[1] === bb[1] && a.bbox[2] === bb[2] && a.bbox[3] === bb[3]);
+        if (isDeleted) return;
+
+        const [x, y, bw, bh] = bb;
+        const isPotential = /potential/i.test(String(r.faultType ?? ''));
+        const stroke = isPotential ? '#FB8C00' : '#E53935';
+        ctx.strokeStyle = stroke;
+        // reduce stroke so boxes are thinner on captures
+        ctx.lineWidth = Math.max(1, Math.round((w + h) / 1600));
+        ctx.strokeRect(x, y, bw, bh);
+
+        // index label (top-left)
+        ctx.fillStyle = stroke;
+        ctx.font = `${Math.max(12, Math.round((w + h) / 600))}px Arial`;
+        const labelW = 24;
+        const labelH = 18;
+        ctx.fillRect(x - 2, Math.max(0, y - labelH), labelW, labelH);
+        ctx.fillStyle = '#fff';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(String(i + 1), x + 6, Math.max(labelH / 2, y - labelH / 2));
+
+        // confidence pill (top-right) — neutral background for legibility
+        const conf = toPct(r.faultConfidence, 0);
+        const confText = conf ? `${conf}%` : '—';
+        const pillW = 36;
+        const pillH = 18;
+        ctx.fillStyle = 'rgba(0,0,0,0.75)';
+        ctx.fillRect(x + bw - pillW + 6, Math.max(0, y - pillH), pillW, pillH);
+        ctx.fillStyle = '#fff';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(confText, x + bw - pillW + 12, Math.max(pillH / 2, y - pillH / 2));
+      });
+
+      // draw user annotations
+      annotations.forEach((a) => {
+        if (a.status === 'deleted') return;
+        const [x, y, bw, bh] = a.bbox;
+        const stroke = a.status === 'added' ? '#1976d2' : a.status === 'edited' ? '#2e7d32' : '#E53935';
+        ctx.setLineDash([6, 4]);
+        ctx.strokeStyle = stroke;
+        // thinner outline for user annotations in captured image
+        ctx.lineWidth = Math.max(1, Math.round((w + h) / 1800));
+        ctx.strokeRect(x, y, bw, bh);
+        ctx.setLineDash([]);
+      });
+
+      return canvas.toDataURL('image/png');
+    } catch (e) {
+      console.warn('captureAnnotatedImage failed', e);
+      return null;
+    }
+  };
+
+  const handleRecordFieldChange = (person: 'inspectedBy' | 'rectifiedBy' | 'reInspectedBy', field: string, value: string) => {
+    setRecordData((prev) => ({ ...prev, [person]: { ...prev[person], [field]: value } }));
+  };
+
+  // Note: record generation/printing is handled from the inspection list preview
+  // using the backend `/api/inspection/getRecord/{inspectionNo}` endpoint.
+
   /* ---------- anomaly filtering & flags ---------- */
   const rawResults: AIResult[] = inspectionImages?.aiResults ?? [];
 
@@ -726,7 +954,7 @@ const ThermalImageComparison = ({ inspectionNo, transformerNo }: { inspectionNo:
                           fontSize: 12,
                           fontWeight: 700,
                           color: "#fff",
-                          bgcolor: stroke,
+                          bgcolor: "rgba(0,0,0,0.75)",
                           px: 0.75,
                           py: 0.25,
                           borderRadius: 1,
@@ -875,6 +1103,18 @@ const ThermalImageComparison = ({ inspectionNo, transformerNo }: { inspectionNo:
                 <ZoomInIcon />
               </IconButton>
             </Tooltip>
+          </Box>
+          {/* Add / Edit Maintenance Record (moved here under annotation tools) */}
+          <Box sx={{ mt: 1, display: 'flex', justifyContent: 'flex-end' }}>
+            <Button
+              variant="contained"
+              color="success"
+              onClick={() => openRecordDialog()}
+              disabled={!isAdmin}
+              sx={{ color: '#fff' }}
+            >
+              Add / Edit Maintenance Record
+            </Button>
           </Box>
         </Box>
       </Box>
@@ -1215,11 +1455,48 @@ const ThermalImageComparison = ({ inspectionNo, transformerNo }: { inspectionNo:
               setSnackSeverity('success');
               setSnackOpen(true);
               console.log('Annotations saved to server');
+
+              // Capture final annotated image including user edits and save to local maintenance record
+              try {
+                const annotated = await captureAnnotatedImage();
+                if (annotated) {
+                  const base64 = annotated.split(',')[1];
+                  // merge into existing local record (or create a minimal record) so previews pick it up
+                  try {
+                    const raw = localStorage.getItem(storageKey(inspectionNo));
+                    const rec = raw ? JSON.parse(raw) : { inspectedBy: { ...defaultPersonFields }, rectifiedBy: { ...defaultPersonFields }, reInspectedBy: { ...defaultPersonFields } };
+                    rec.annotatedImage = base64;
+                    // optionally store a lightweight anomalies summary
+                    rec.annotations = annotations.map(a => ({ bbox: a.bbox, status: a.status, notes: a.notes, userId: a.userId, timestamp: a.timestamp }));
+                    localStorage.setItem(storageKey(inspectionNo), JSON.stringify(rec));
+                    try { window.dispatchEvent(new CustomEvent('maintenanceRecordUpdated', { detail: { inspectionNo } })); } catch (_) {}
+                  } catch (e) {
+                    console.warn('Failed to merge annotated image into local record', e);
+                  }
+                }
+              } catch (e) {
+                console.warn('Failed to capture annotated image after confirm', e);
+              }
             } catch (err) {
               console.error('Failed to save annotations to server', err);
               setSnackMsg('Failed to save annotations');
               setSnackSeverity('error');
               setSnackOpen(true);
+              // Attempt to persist annotated image locally so the form can show final annotations
+              try {
+                const annotated = await captureAnnotatedImage();
+                if (annotated) {
+                  const base64 = annotated.split(',')[1];
+                  const raw = localStorage.getItem(storageKey(inspectionNo));
+                  const rec = raw ? JSON.parse(raw) : { inspectedBy: { ...defaultPersonFields }, rectifiedBy: { ...defaultPersonFields }, reInspectedBy: { ...defaultPersonFields } };
+                  rec.annotatedImage = base64;
+                  rec.annotations = annotations.map(a => ({ bbox: a.bbox, status: a.status, notes: a.notes, userId: a.userId, timestamp: a.timestamp }));
+                  localStorage.setItem(storageKey(inspectionNo), JSON.stringify(rec));
+                  try { window.dispatchEvent(new CustomEvent('maintenanceRecordUpdated', { detail: { inspectionNo } })); } catch (_) {}
+                }
+              } catch (e) {
+                console.warn('Failed to capture annotated image after failed confirm', e);
+              }
             }
           }}
         >
@@ -1308,6 +1585,51 @@ const ThermalImageComparison = ({ inspectionNo, transformerNo }: { inspectionNo:
           {snackMsg}
         </Alert>
       </Snackbar>
+
+      {/* Maintenance Record Dialog */}
+      <Dialog open={recordDialogOpen} onClose={() => setRecordDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Add / Edit Maintenance Record</DialogTitle>
+        <DialogContent>
+          {!isAdmin && (
+            <Typography variant="body2" color="error" sx={{ mb: 1 }}>
+              View only: only an admin can edit maintenance records.
+            </Typography>
+          )}
+          <Typography variant="subtitle1" sx={{ mb: 1 }}>Inspected By</Typography>
+          <Box sx={{ display: 'grid', gap: 1, gridTemplateColumns: '1fr 1fr' }}>
+            <TextField disabled={!isAdmin} label="Inspector name" value={recordData.inspectedBy.inspectorName} onChange={(e) => handleRecordFieldChange('inspectedBy','inspectorName', e.target.value)} />
+            <TextField disabled={!isAdmin} label="Status of transformer" value={recordData.inspectedBy.statusOfTransformer} onChange={(e) => handleRecordFieldChange('inspectedBy','statusOfTransformer', e.target.value)} />
+            <TextField disabled={!isAdmin} label="Voltage" value={recordData.inspectedBy.voltage} onChange={(e) => handleRecordFieldChange('inspectedBy','voltage', e.target.value)} />
+            <TextField disabled={!isAdmin} label="Current" value={recordData.inspectedBy.current} onChange={(e) => handleRecordFieldChange('inspectedBy','current', e.target.value)} />
+            <TextField disabled={!isAdmin} label="Recommended action" value={recordData.inspectedBy.recommendedAction} onChange={(e) => handleRecordFieldChange('inspectedBy','recommendedAction', e.target.value)} fullWidth sx={{ gridColumn: '1 / -1' }} />
+            <TextField disabled={!isAdmin} label="Additional remarks" value={recordData.inspectedBy.additionalRemarks} onChange={(e) => handleRecordFieldChange('inspectedBy','additionalRemarks', e.target.value)} fullWidth multiline minRows={2} sx={{ gridColumn: '1 / -1' }} />
+          </Box>
+
+          <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>Rectified By</Typography>
+          <Box sx={{ display: 'grid', gap: 1, gridTemplateColumns: '1fr 1fr' }}>
+            <TextField disabled={!isAdmin} label="Rectified by" value={recordData.rectifiedBy.inspectorName} onChange={(e) => handleRecordFieldChange('rectifiedBy','inspectorName', e.target.value)} />
+            <TextField disabled={!isAdmin} label="Status of transformer" value={recordData.rectifiedBy.statusOfTransformer} onChange={(e) => handleRecordFieldChange('rectifiedBy','statusOfTransformer', e.target.value)} />
+            <TextField disabled={!isAdmin} label="Voltage" value={recordData.rectifiedBy.voltage} onChange={(e) => handleRecordFieldChange('rectifiedBy','voltage', e.target.value)} />
+            <TextField disabled={!isAdmin} label="Current" value={recordData.rectifiedBy.current} onChange={(e) => handleRecordFieldChange('rectifiedBy','current', e.target.value)} />
+            <TextField disabled={!isAdmin} label="Recommended action" value={recordData.rectifiedBy.recommendedAction} onChange={(e) => handleRecordFieldChange('rectifiedBy','recommendedAction', e.target.value)} fullWidth sx={{ gridColumn: '1 / -1' }} />
+            <TextField disabled={!isAdmin} label="Additional remarks" value={recordData.rectifiedBy.additionalRemarks} onChange={(e) => handleRecordFieldChange('rectifiedBy','additionalRemarks', e.target.value)} fullWidth multiline minRows={2} sx={{ gridColumn: '1 / -1' }} />
+          </Box>
+
+          <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>Re-Inspected By</Typography>
+          <Box sx={{ display: 'grid', gap: 1, gridTemplateColumns: '1fr 1fr' }}>
+            <TextField disabled={!isAdmin} label="Re-inspected by" value={recordData.reInspectedBy.inspectorName} onChange={(e) => handleRecordFieldChange('reInspectedBy','inspectorName', e.target.value)} />
+            <TextField disabled={!isAdmin} label="Status of transformer" value={recordData.reInspectedBy.statusOfTransformer} onChange={(e) => handleRecordFieldChange('reInspectedBy','statusOfTransformer', e.target.value)} />
+            <TextField disabled={!isAdmin} label="Voltage" value={recordData.reInspectedBy.voltage} onChange={(e) => handleRecordFieldChange('reInspectedBy','voltage', e.target.value)} />
+            <TextField disabled={!isAdmin} label="Current" value={recordData.reInspectedBy.current} onChange={(e) => handleRecordFieldChange('reInspectedBy','current', e.target.value)} />
+            <TextField disabled={!isAdmin} label="Recommended action" value={recordData.reInspectedBy.recommendedAction} onChange={(e) => handleRecordFieldChange('reInspectedBy','recommendedAction', e.target.value)} fullWidth sx={{ gridColumn: '1 / -1' }} />
+            <TextField disabled={!isAdmin} label="Additional remarks" value={recordData.reInspectedBy.additionalRemarks} onChange={(e) => handleRecordFieldChange('reInspectedBy','additionalRemarks', e.target.value)} fullWidth multiline minRows={2} sx={{ gridColumn: '1 / -1' }} />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRecordDialogOpen(false)}>Close</Button>
+          <Button disabled={!isAdmin} onClick={() => saveRecordLocal()} variant="contained">Save</Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Error Definition Dialog */}
       <Dialog open={errorDialogOpen} onClose={() => setErrorDialogOpen(false)} maxWidth="sm" fullWidth>
